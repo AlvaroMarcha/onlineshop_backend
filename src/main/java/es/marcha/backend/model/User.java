@@ -2,6 +2,11 @@ package es.marcha.backend.model;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -38,13 +43,37 @@ public class User {
 	@Column(name="created_at")
 	private LocalDateTime created_at;
 	@OneToOne(mappedBy = "user")
+	@JsonIgnore
+	@JsonBackReference
 	private Client client;
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name="role_id", referencedColumnName = "id")
+	@JsonManagedReference
 	private Role role;
 	
-	//Getters and Setters
+	public User() {}
 	
+	//Constructor
+	public User(long id, String name, String username, String password, String email, String phone, boolean status,
+			LocalDateTime email_verified_at, boolean locked, LocalDateTime last_login_at, LocalDateTime created_at,
+			Client client, Role role) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.username = username;
+		this.password = password;
+		this.email = email;
+		this.phone = phone;
+		this.status = status;
+		this.email_verified_at = email_verified_at;
+		this.locked = locked;
+		this.last_login_at = last_login_at;
+		this.created_at = created_at;
+		this.client = client;
+		this.role = role;
+	}
+	
+	//Getters and Setters
 	public long getId() {
 		return id;
 	}
@@ -111,12 +140,25 @@ public class User {
 	public void setCreated_at(LocalDateTime created_at) {
 		this.created_at = created_at;
 	}
-	public Role getRole_id() {
+
+	public Client getClient() {
+		return client;
+	}
+
+	public void setClient(Client client) {
+		this.client = client;
+	}
+
+	public Role getRole() {
 		return role;
 	}
-	public void setRole_id(Role role) {
+
+	public void setRole(Role role) {
 		this.role = role;
 	}
+	
+	
+
 	
 	
 	
