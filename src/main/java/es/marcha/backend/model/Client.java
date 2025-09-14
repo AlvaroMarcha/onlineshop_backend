@@ -1,5 +1,8 @@
 package es.marcha.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,7 +36,25 @@ public class Client {
 	private String address;
 	@OneToOne
 	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	@JsonBackReference
+	@JsonManagedReference
 	private User user;
+
+	public Client() {}
+
+	public Client(long id, String first_name, String last_name, String company, String job_title, String email,
+			int phone, String address, User user) {
+		super();
+		this.id = id;
+		this.first_name = first_name;
+		this.last_name = last_name;
+		this.company = company;
+		this.job_title = job_title;
+		this.email = email;
+		this.phone = phone;
+		this.address = address;
+		this.user = user;
+	}
 
 	// Getters and Setters
 
@@ -100,5 +121,15 @@ public class Client {
 	public void setAddress(String address) {
 		this.address = address;
 	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+	
+	
 
 }
