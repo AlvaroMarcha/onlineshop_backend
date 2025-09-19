@@ -21,8 +21,9 @@ public class ConfigSecurity {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll() // login libre
-                        .requestMatchers("/publico").permitAll() // endpoint público
+                        // Define the urls that are public and those that require authentication
+                        .requestMatchers("/auth/**").permitAll() 
+                        .requestMatchers("/publico").permitAll() 
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
