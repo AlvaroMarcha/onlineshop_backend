@@ -3,6 +3,7 @@ package es.marcha.backend.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,7 +35,7 @@ public class Client {
 	private int phone;
 	@Column(name="address")
 	private String address;
-	@OneToOne
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "user_id", referencedColumnName = "id")
 	@JsonBackReference
 	@JsonManagedReference

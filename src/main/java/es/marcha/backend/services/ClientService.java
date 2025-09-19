@@ -7,6 +7,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.request.RequestClientDTO;
+import es.marcha.backend.dto.request.RequestUserDTO;
 import es.marcha.backend.model.Client;
 import es.marcha.backend.model.Role;
 import es.marcha.backend.model.User;
@@ -31,7 +33,7 @@ public class ClientService {
 	}
 
 	//CreateClientWithUser
-	public Client createClientWithUser(Client clientRequest, User userRequest, Role role) {
+	public Client createClientWithUser(RequestClientDTO clientRequest, RequestUserDTO userRequest, Role role) {
 		//Set client data
 		Client client = new Client();
 		BeanUtils.copyProperties(clientRequest, client);
@@ -48,27 +50,23 @@ public class ClientService {
 		return this.clientRepository.save(client);
 	}
 	
+	//UpdateClient
+	 public Client updateClient(Long id, Client newClient) {
+		 Optional<Client> clientOpt = getClientById(id);
+		 Client client = null;
+		 if(clientOpt.isPresent()) {
+			 client = clientOpt.get();
+			 BeanUtils.copyProperties(newClient, client, "id", "created_at");
+		 }
+		 
+		 return this.clientRepository.save(client);
+	 }
+	
 	//DeleteClient
 	public void deleteClient(Long id) {
 		this.clientRepository.deleteById(id);
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+
 	
 }

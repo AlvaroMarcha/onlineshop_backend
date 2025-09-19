@@ -8,9 +8,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import es.marcha.backend.dto.request.CreateClientDTO;
 import es.marcha.backend.model.Client;
 import es.marcha.backend.services.ClientService;
 
@@ -37,8 +40,12 @@ public class ClientController {
 			response = new ResponseEntity<Client>(client, HttpStatus.OK);
 		}
 		return response;
-		
 	}
 	
+	@PostMapping("/clients")
+	public ResponseEntity<Client> createClient(@RequestBody CreateClientDTO request){
+		Client client = this.clientService.createClientWithUser(request.getClient(), request.getUser(), request.getRole());
+		return new ResponseEntity<Client>(client, HttpStatus.OK);
+	}
 	
 }
