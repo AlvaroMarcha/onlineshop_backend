@@ -27,7 +27,6 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 // validar token y sacar usuario
                 String user = JwtUtil.validarToken(token);
-                System.out.println("✅ Token válido para usuario: " + user);
 
                 // crear Authentication sin roles
                 UsernamePasswordAuthenticationToken authentication =
