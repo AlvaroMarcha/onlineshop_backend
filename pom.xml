@@ -60,10 +60,18 @@
         </dependency> -->
 
         <!-- Docker Compose integration -->
-        <dependency>
+        <!-- <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-docker-compose</artifactId>
-        </dependency>
+        </dependency> -->
+
+        <!-- Driver MariaDB (puedes cambiar por mysql-connector-j si prefieres
+		MySQL) -->
+		<dependency>
+			<groupId>org.mariadb.jdbc</groupId>
+			<artifactId>mariadb-java-client</artifactId>
+			 <version>3.5.1</version>
+		</dependency>
 
         <!-- JWT (jjwt) -->
         <dependency>
