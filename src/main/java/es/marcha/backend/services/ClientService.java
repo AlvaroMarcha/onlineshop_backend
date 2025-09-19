@@ -16,9 +16,11 @@ import es.marcha.backend.repository.ClientRepository;
 
 @Service
 public class ClientService {
-	
+	//Attribs
 	@Autowired
     private ClientRepository clientRepository;
+	@Autowired
+	private UserService userService;
 	
 	
 	//GetAllClients
@@ -30,6 +32,11 @@ public class ClientService {
 	//GetClientById
 	public Optional<Client> getClientById(Long id){
 		return this.clientRepository.findById(id);
+	}
+
+	//GetClientUsername
+	public User getClientByUsername(String username){
+		return this.userService.getUserByUsername(username).orElse(null);
 	}
 
 	//CreateClientWithUser
