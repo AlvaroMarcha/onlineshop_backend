@@ -20,6 +20,7 @@ public class ConfigSecurity {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
                         // Define the urls that are public and those that require authentication
                         .requestMatchers("/auth/**").permitAll() 
