@@ -1,6 +1,5 @@
 package es.marcha.backend.dto.response;
 
-import es.marcha.backend.model.User;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,11 +8,13 @@ import lombok.Setter;
 public class ResponseAuthDTO {
     //Attribs
     private String token;
-    private User user;
+    private ResponseUserDTO user;
+	private String message;
 
-    public ResponseAuthDTO(String token, User user) {
+    public ResponseAuthDTO(String token, ResponseUserDTO user, String message) {
         this.token = token;
         this.user = user;
+        this.message = message;
     }
 
 }
