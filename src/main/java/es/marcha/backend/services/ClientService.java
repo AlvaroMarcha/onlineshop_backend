@@ -13,6 +13,8 @@ import es.marcha.backend.model.Client;
 import es.marcha.backend.model.Role;
 import es.marcha.backend.model.User;
 import es.marcha.backend.repository.ClientRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 public class ClientService {
@@ -21,6 +23,8 @@ public class ClientService {
     private ClientRepository clientRepository;
 	@Autowired
 	private UserService userService;
+	@PersistenceContext
+    private EntityManager entityManager;
 	
 	
 	//GetAllClients
@@ -52,7 +56,9 @@ public class ClientService {
 		//Relations
 		client.setUser(user);
 		user.setClient(client);
-		user.setRole(role);
+		// En vez de pasar el objeto role tal cual, crea una referencia "proxy"
+    	Role attachedRole = entityManager.getReference(Role.class, role.getId());
+		user.setRole(attachedRole);
 		
 		return this.clientRepository.save(client);
 	}
