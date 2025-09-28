@@ -19,7 +19,6 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
          String path = request.getServletPath();
-                                        System.out.println("ServletPath: " + request.getServletPath());
 
         // Ignorar rutas públicas
         if (path.startsWith("/auth/login") || path.startsWith("/auth/register")) {

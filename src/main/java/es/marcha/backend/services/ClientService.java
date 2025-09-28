@@ -56,7 +56,7 @@ public class ClientService {
 		//Relations
 		client.setUser(user);
 		user.setClient(client);
-		// En vez de pasar el objeto role tal cual, crea una referencia "proxy"
+		// Pass th reference without create new role
     	Role attachedRole = entityManager.getReference(Role.class, role.getId());
 		user.setRole(attachedRole);
 		
