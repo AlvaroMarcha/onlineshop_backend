@@ -16,9 +16,9 @@ import es.marcha.backend.dto.request.RequestClientDTO;
 import es.marcha.backend.dto.request.RequestUserDTO;
 import es.marcha.backend.dto.response.ResponseAuthDTO;
 import es.marcha.backend.dto.response.ResponseUserDTO;
-import es.marcha.backend.model.Client;
-import es.marcha.backend.model.Role;
-import es.marcha.backend.model.User;
+import es.marcha.backend.model.users.Client;
+import es.marcha.backend.model.users.Role;
+import es.marcha.backend.model.users.User;
 import es.marcha.backend.security.JwtUtil;
 import es.marcha.backend.services.ClientService;
 

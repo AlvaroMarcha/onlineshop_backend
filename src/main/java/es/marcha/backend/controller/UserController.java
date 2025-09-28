@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import es.marcha.backend.model.User;
+import es.marcha.backend.model.users.User;
 import es.marcha.backend.services.UserService;
 
 @RestController

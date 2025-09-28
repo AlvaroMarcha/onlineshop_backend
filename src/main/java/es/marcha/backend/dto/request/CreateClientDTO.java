@@ -1,6 +1,6 @@
 package es.marcha.backend.dto.request;
 
-import es.marcha.backend.model.Role;
+import es.marcha.backend.model.users.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
