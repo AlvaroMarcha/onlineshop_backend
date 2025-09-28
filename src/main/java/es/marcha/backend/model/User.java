@@ -1,7 +1,7 @@
 package es.marcha.backend.model;
 
 import java.time.LocalDateTime;
-
+import org.hibernate.annotations.CreationTimestamp;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -40,7 +40,8 @@ public class User {
 	private boolean locked;
 	@Column(name="last_login_at")
 	private LocalDateTime last_login_at;
-	@Column(name="created_at")
+	@Column(name = "created_at", nullable = false, updatable = false)
+	@CreationTimestamp
 	private LocalDateTime created_at;
 	@OneToOne(mappedBy = "user")
 	@JsonIgnore

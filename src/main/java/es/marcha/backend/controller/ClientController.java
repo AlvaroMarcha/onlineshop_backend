@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import es.marcha.backend.dto.request.CreateClientDTO;
 import es.marcha.backend.model.Client;
 import es.marcha.backend.services.ClientService;
 
+@CrossOrigin(origins = "http://localhost:4200")
 @RestController
 @RequestMapping("api/")
 public class ClientController {

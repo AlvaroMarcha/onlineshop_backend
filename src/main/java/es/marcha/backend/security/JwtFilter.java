@@ -18,6 +18,15 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+         String path = request.getServletPath();
+
+        // Ignorar rutas públicas
+        if (path.startsWith("/auth/login") || path.startsWith("/auth/register")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+
         String authHeader = request.getHeader("Authorization");
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {

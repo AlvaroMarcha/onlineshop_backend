@@ -1,16 +1,18 @@
 package es.marcha.backend.dto.request;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class LoginRequestDTO {
     private String user;
     private String pass;
 
-    LoginRequestDTO(String user, String pass){
-        this.user = user;
-        this.pass = pass;   
-    }
+
+
 }
