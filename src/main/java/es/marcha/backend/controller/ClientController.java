@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.dto.request.CreateClientDTO;
-import es.marcha.backend.model.Client;
+import es.marcha.backend.model.users.Client;
 import es.marcha.backend.services.ClientService;
 
 @CrossOrigin(origins = "http://localhost:4200")

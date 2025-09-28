@@ -6,8 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import es.marcha.backend.model.User;
+import es.marcha.backend.model.users.User;
 import es.marcha.backend.repository.UserRepository;
 
 @Service
