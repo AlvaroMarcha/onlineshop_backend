@@ -24,7 +24,8 @@ public class ConfigSecurity {
                 .authorizeHttpRequests(auth -> auth
                         // Define the urls that are public and those that require authentication
                         .requestMatchers("/auth/**").permitAll() 
-                        .requestMatchers("/publico").permitAll() 
+                        .requestMatchers("/publico").permitAll()
+                        .requestMatchers("/backoffice/**").permitAll()  
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
