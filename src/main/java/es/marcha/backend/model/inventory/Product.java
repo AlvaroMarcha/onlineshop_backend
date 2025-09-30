@@ -14,10 +14,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "productos")
 @AllArgsConstructor
+@Setter
+@Getter
 public class Product {
 
     @Id
@@ -26,6 +30,12 @@ public class Product {
 
     @Column(nullable = false, length = 150)
     private String name;
+
+    @Column(nullable = false, length = 200)
+    private String description;
+
+    @Column(nullable = false,  length = 500)
+    private String urlImg;
 
     private Integer stock;
 
@@ -54,28 +64,5 @@ public class Product {
 
     public Product(){}
 
-
-
-    // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public Integer getStock() { return stock; }
-    public void setStock(Integer stock) { this.stock = stock; }
-    public BigDecimal getPrice() { return price; }
-    public void setPrice(BigDecimal price) { this.price = price; }
-    public String getBarCode() { return barCode; }
-    public void setBarCode(String barCode) { this.barCode = barCode; }
-    public String getReference() { return reference; }
-    public void setReference(String reference) { this.reference = reference; }
-    public Category getCategory() { return category; }
-    public void setCategory(Category category) { this.category = category; }
-    public Subcategory getSubcategory() { return subcategory; }
-    public void setSubcategory(Subcategory subcategory) { this.subcategory = subcategory; }
-    public Boolean getVisible() { return visible; }
-    public void setVisible(Boolean visible) { this.visible = visible; }
-    public List<Inventory> getInventoryMovements() { return inventoryMovements; }
-    public void setInventoryMovements(List<Inventory> inventoryMovements) { this.inventoryMovements = inventoryMovements; }
-    
+   
 }
