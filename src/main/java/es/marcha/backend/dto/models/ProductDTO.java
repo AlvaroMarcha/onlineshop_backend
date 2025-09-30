@@ -13,6 +13,8 @@ import lombok.Setter;
 public class ProductDTO {
     private Long id;
     private String name;
+    private String description;
+    private String urlImg;
     private Integer stock;
     private BigDecimal price;
     private Boolean visible;

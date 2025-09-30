@@ -30,6 +30,8 @@ public class ProductService {
         return new ProductDTO(
             product.getId(),
             product.getName(),
+            product.getDescription(),
+            product.getUrlImg(),
             product.getStock(),
             product.getPrice(),
             product.getVisible(),
