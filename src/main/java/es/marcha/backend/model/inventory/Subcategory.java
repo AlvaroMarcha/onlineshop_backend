@@ -14,7 +14,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "subcategory")
+@Table(name = "subcategories")
 public class Subcategory {
 
     @Id

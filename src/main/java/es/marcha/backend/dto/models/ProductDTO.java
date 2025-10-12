@@ -1,6 +1,7 @@
 package es.marcha.backend.dto.models;
 
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,6 +21,9 @@ public class ProductDTO {
     private Boolean visible;
     private String category;
     private String subcategory;
+    private List<String> images;
+    private String details;
+    private String specifications;
 
-    
+
 }

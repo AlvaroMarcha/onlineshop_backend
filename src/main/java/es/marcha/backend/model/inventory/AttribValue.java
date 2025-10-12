@@ -22,7 +22,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "attribute_values")
+@Table(name = "attribute_value")
 public class AttribValue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
