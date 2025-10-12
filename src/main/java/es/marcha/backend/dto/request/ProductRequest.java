@@ -18,4 +18,7 @@ public class ProductRequest {
     private Long categoryId;
     private Long subcategoryId;
     private List<Long> values;
+    private List<String> images;
+    private String details;
+    private String specifications;
 }

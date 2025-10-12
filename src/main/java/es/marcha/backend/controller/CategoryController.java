@@ -25,7 +25,7 @@ public class CategoryController {
          Category category = this.categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada con ID: " + id));
 
-                System.out.println(id + " " + category.getName() + " " + category.getAttributes().size());
+                System.out.println(id + " " + category.getName() + " " + category.getAttributes());
         return ResponseEntity.ok(category.getAttributes());
     }
     

@@ -1,5 +1,6 @@
 package es.marcha.backend.services.inventory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,14 +43,21 @@ public class ProductService {
     }
     
     @Transactional
-public Product createProduct(ProductRequest request) {
-    Product product = new Product();
-    product.setName(request.getName());
-    product.setDescription(request.getDescription());
-    product.setUrlImg(request.getUrlImg());
-    product.setPrice(request.getPrice());
-    product.setStock(request.getStock());
-    product.setVisible(true);
+    public Product createProduct(ProductRequest request) {
+        Product product = new Product();
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setUrlImg(request.getUrlImg());
+        product.setPrice(request.getPrice());
+        product.setStock(request.getStock());
+        product.setVisible(true);
+        product.setDetails(request.getDetails());
+        product.setSpecifications(request.getSpecifications());
+        if (request.getImages() != null) {
+            product.setImages(new ArrayList<>(request.getImages()));
+        } else {
+            product.setImages(new ArrayList<>());
+        }
 
     // --- Asignar categoría ---
     if (request.getCategoryId() != null) {
@@ -87,7 +95,10 @@ public Product createProduct(ProductRequest request) {
             product.getPrice(),
             product.getVisible(),
             product.getCategory() != null ? product.getCategory().getName() : null,
-            product.getSubcategory() != null ? product.getSubcategory().getName() : null
+            product.getSubcategory() != null ? product.getSubcategory().getName() : null,
+            product.getImages() != null ? new ArrayList<>(product.getImages()) : List.of(),
+            product.getDetails(),
+            product.getSpecifications()
         );
     }
 

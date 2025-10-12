@@ -20,7 +20,7 @@ import lombok.Setter;
 @Setter
 @Getter
 @Entity
-@Table(name = "category")
+@Table(name = "categories")
 public class Category {
 
     @Id

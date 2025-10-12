@@ -23,7 +23,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "attributes")
+@Table(name = "attribute")
 public class Attribute {
     //Attribs
     @Id
