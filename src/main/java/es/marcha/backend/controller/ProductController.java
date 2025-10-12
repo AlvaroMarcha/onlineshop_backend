@@ -8,9 +8,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import es.marcha.backend.dto.models.ProductDTO;
+import es.marcha.backend.dto.request.ProductRequest;
+import es.marcha.backend.model.inventory.Product;
 import es.marcha.backend.services.inventory.ProductService;
 
 @CrossOrigin(origins = "http://localhost:4200")
@@ -37,6 +41,11 @@ public class ProductController {
             response = new ResponseEntity<ProductDTO>(product, HttpStatus.OK);
         }
         return response;
+    }
+
+    @PostMapping("/products")
+    public Product createProduct(@RequestBody ProductRequest request) {
+        return productService.createProduct(request);
     }
     
 }
