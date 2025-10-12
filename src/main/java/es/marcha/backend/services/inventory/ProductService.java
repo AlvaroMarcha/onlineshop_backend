@@ -5,14 +5,31 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import es.marcha.backend.dto.models.ProductDTO;
+import es.marcha.backend.dto.request.ProductRequest;
+import es.marcha.backend.model.inventory.AttribValue;
+import es.marcha.backend.model.inventory.Category;
 import es.marcha.backend.model.inventory.Product;
+import es.marcha.backend.model.inventory.Subcategory;
+import es.marcha.backend.repository.inventory.AttribValueRepository;
+import es.marcha.backend.repository.inventory.CategoryRepository;
 import es.marcha.backend.repository.inventory.ProductRepository;
+import es.marcha.backend.repository.inventory.SubcategoryRepository;
+import jakarta.transaction.Transactional;
 
 @Service
 public class ProductService {
     //Attribs
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private SubcategoryRepository subcategoryRepository;
+
+    @Autowired
+    private AttribValueRepository valueRepository;
 
     //GetAllProducts
     public List<ProductDTO> getAllProducts(){
@@ -24,6 +41,40 @@ public class ProductService {
         return this.productRepository.findById(id).map(this::toDTO);
     }
     
+    @Transactional
+public Product createProduct(ProductRequest request) {
+    Product product = new Product();
+    product.setName(request.getName());
+    product.setDescription(request.getDescription());
+    product.setUrlImg(request.getUrlImg());
+    product.setPrice(request.getPrice());
+    product.setStock(request.getStock());
+    product.setVisible(true);
+
+    // --- Asignar categoría ---
+    if (request.getCategoryId() != null) {
+        Category category = categoryRepository.findById(request.getCategoryId())
+            .orElseThrow(() -> new IllegalArgumentException("Categoría no encontrada con ID: " + request.getCategoryId()));
+        product.setCategory(category); // aquí ya pasas el objeto real, no el Optional
+    }
+
+    // --- Asignar subcategoría ---
+    if (request.getSubcategoryId() != null) {
+        Subcategory subcategory = subcategoryRepository.findById(request.getSubcategoryId())
+            .orElseThrow(() -> new IllegalArgumentException("Subcategoría no encontrada con ID: " + request.getSubcategoryId()));
+        product.setSubcategory(subcategory);
+    }
+
+    // --- Asignar atributos (valores) ---
+    if (request.getValues() != null && !request.getValues().isEmpty()) {
+        List<AttribValue> values = valueRepository.findAllById(request.getValues());
+        product.setValues(values);
+    }
+
+    return productRepository.save(product);
+}
+
+
 
     //Transforms Product to DTO
     public ProductDTO toDTO(Product product) {
