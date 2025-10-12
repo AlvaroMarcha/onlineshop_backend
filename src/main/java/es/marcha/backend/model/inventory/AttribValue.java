@@ -2,6 +2,7 @@ package es.marcha.backend.model.inventory;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,6 +34,7 @@ public class AttribValue {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attribute_id", nullable = false)
+    @JsonIgnore
     private Attribute attribute;
 
     @ManyToMany(mappedBy = "values", fetch = FetchType.LAZY)
