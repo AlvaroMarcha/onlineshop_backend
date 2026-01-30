@@ -51,17 +51,16 @@ public class UserService {
 
     @Transactional
     public String deleteUser(long id) {
-        String msg = "User was deleted";
         Optional<User> existUser = uRepository.findById(id);
         if (!existUser.isPresent()) {
-            return null;
+            return "User was not found";
         }
         User deletedUser = existUser.get();
         deletedUser.setDeletedAt(new Date(System.currentTimeMillis()));
         deletedUser.setDeleted(true);
         uRepository.save(deletedUser);
 
-        return msg;
+        return "User was deleted";
     }
 
 
