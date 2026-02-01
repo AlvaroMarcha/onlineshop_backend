@@ -1,4 +1,4 @@
-package es.marcha.backend.model;
+package es.marcha.backend.model.user;
 
 import java.util.Date;
 import java.util.List;

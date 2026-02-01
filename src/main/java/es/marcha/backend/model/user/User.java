@@ -1,7 +1,6 @@
-package es.marcha.backend.model;
+package es.marcha.backend.model.user;
 
 import java.sql.Date;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -63,6 +62,7 @@ public class User {
     private Date updatedAt;
     @Column(name = "deleted_at")
     private Date deletedAt;
+
 
 
 }
