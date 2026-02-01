@@ -21,7 +21,8 @@ public class UserService {
 
     // Methods
     public User getUserById(long id) {
-        return uRepository.findById(id).orElseThrow(() -> new UserException(UserException.DEFAULT));
+        return uRepository.findById(id).filter(user -> !user.isDeleted())
+                .orElseThrow(() -> new UserException(UserException.DEFAULT));
     }
 
     public List<User> getAllUsers() {
@@ -29,11 +30,16 @@ public class UserService {
         if (users.isEmpty()) {
             throw new UserException(UserException.FAILED_FETCH);
         }
-        return users;
+        List<User> filteredUsers = users.stream().filter(user -> !user.isDeleted()).toList();
+        return filteredUsers;
     }
 
     public User saveUser(User user) {
         try {
+            user.setActive(true);
+            user.setBanned(false);
+            user.setDeleted(false);
+            user.setVerified(false);
             return uRepository.save(user);
         } catch (Exception e) {
             throw new UserException(UserException.FAILED_SAVE, e);
@@ -85,6 +91,7 @@ public class UserService {
         User deletedUser = uRepository.findById(id).orElseThrow(() -> new UserException());
         deletedUser.setDeletedAt(new Date(System.currentTimeMillis()));
         deletedUser.setDeleted(true);
+        deletedUser.setActive(false);
         uRepository.save(deletedUser);
 
         return USER_DELETED;
