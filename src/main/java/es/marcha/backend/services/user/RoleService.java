@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import es.marcha.backend.exception.RolePermissionsException;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.repository.user.RoleRepository;
 
@@ -15,12 +17,15 @@ public class RoleService {
 
     // Methods
     public Role getRoleById(long id) {
-        return rRepository.findById(id).orElse(null);
+        return rRepository.findById(id).orElseThrow(
+                () -> new RolePermissionsException(RolePermissionsException.NOT_EXIST));
     }
 
     public List<Role> getAllRoles() {
-        return rRepository.findAll();
+        List<Role> roles = rRepository.findAll();
+        if (roles.isEmpty()) {
+            throw new RolePermissionsException(RolePermissionsException.FAILED_FETCH);
+        }
+        return roles;
     }
-
-
 }

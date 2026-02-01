@@ -2,10 +2,11 @@ package es.marcha.backend.services.user;
 
 import java.sql.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import es.marcha.backend.exception.UserException;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
@@ -16,17 +17,27 @@ public class UserService {
     @Autowired
     private UserRepository uRepository;
 
+    public static final String USER_DELETED = "USER WAS DELETED";
+
     // Methods
     public User getUserById(long id) {
-        return uRepository.findById(id).orElse(null);
+        return uRepository.findById(id).orElseThrow(() -> new UserException(UserException.DEFAULT));
     }
 
     public List<User> getAllUsers() {
-        return uRepository.findAll();
+        List<User> users = uRepository.findAll();
+        if (users.isEmpty()) {
+            throw new UserException(UserException.FAILED_FETCH);
+        }
+        return users;
     }
 
     public User saveUser(User user) {
-        return uRepository.save(user);
+        try {
+            return uRepository.save(user);
+        } catch (Exception e) {
+            throw new UserException(UserException.FAILED_SAVE, e);
+        }
     }
 
     /**
@@ -40,22 +51,25 @@ public class UserService {
      */
     @Transactional
     public User updateUser(User updatedUser) {
-        Optional<User> existUser = uRepository.findById(updatedUser.getId());
-        if (!existUser.isPresent())
-            return null;
-        User user = existUser.get();
-        user.setName(updatedUser.getName());
-        user.setSurname(updatedUser.getSurname());
-        user.setUsername(updatedUser.getUsername());
-        user.setEmail(updatedUser.getEmail());
-        user.setPhone(updatedUser.getPhone());
-        user.setProfileImageUrl(updatedUser.getProfileImageUrl());
+        try {
+            User user = uRepository.findById(updatedUser.getId())
+                    .orElseThrow(() -> new UserException());
 
-        user.setActive(updatedUser.isActive());
-        user.setLastLogin(updatedUser.getLastLogin());
-        user.setUpdatedAt(new Date(System.currentTimeMillis()));
+            user.setName(updatedUser.getName());
+            user.setSurname(updatedUser.getSurname());
+            user.setUsername(updatedUser.getUsername());
+            user.setEmail(updatedUser.getEmail());
+            user.setPhone(updatedUser.getPhone());
+            user.setProfileImageUrl(updatedUser.getProfileImageUrl());
 
-        return uRepository.save(updatedUser);
+            user.setActive(updatedUser.isActive());
+            user.setLastLogin(updatedUser.getLastLogin());
+            user.setUpdatedAt(new Date(System.currentTimeMillis()));
+
+            return uRepository.save(updatedUser);
+        } catch (Exception e) {
+            throw new UserException(UserException.FAILED_UPDATE, e);
+        }
     }
 
     /**
@@ -68,16 +82,12 @@ public class UserService {
      */
     @Transactional
     public String deleteUser(long id) {
-        Optional<User> existUser = uRepository.findById(id);
-        if (!existUser.isPresent()) {
-            return "User was not found";
-        }
-        User deletedUser = existUser.get();
+        User deletedUser = uRepository.findById(id).orElseThrow(() -> new UserException());
         deletedUser.setDeletedAt(new Date(System.currentTimeMillis()));
         deletedUser.setDeleted(true);
         uRepository.save(deletedUser);
 
-        return "User was deleted";
+        return USER_DELETED;
     }
 
 
