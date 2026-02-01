@@ -1,12 +1,11 @@
-package es.marcha.backend.services;
+package es.marcha.backend.services.user;
 
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import es.marcha.backend.model.Role;
-import es.marcha.backend.repository.RoleRepository;
+import es.marcha.backend.model.user.Role;
+import es.marcha.backend.repository.user.RoleRepository;
 
 @Service
 public class RoleService {

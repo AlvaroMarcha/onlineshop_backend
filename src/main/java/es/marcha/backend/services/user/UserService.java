@@ -1,4 +1,4 @@
-package es.marcha.backend.services;
+package es.marcha.backend.services.user;
 
 import java.sql.Date;
 import java.util.List;
@@ -6,9 +6,8 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import es.marcha.backend.model.User;
-import es.marcha.backend.repository.UserRepository;
+import es.marcha.backend.model.user.User;
+import es.marcha.backend.repository.user.UserRepository;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -30,6 +29,16 @@ public class UserService {
         return uRepository.save(user);
     }
 
+    /**
+     * Actualiza los datos de un usuario existente en la base de datos. Solo se actualizan ciertos
+     * campos, y se marca la fecha de actualización con la hora actual.
+     *
+     * @param updatedUser El objeto {@link User} que contiene los nuevos datos a actualizar. Debe
+     *        incluir un ID válido de un usuario existente.
+     * @return El {@link User} actualizado después de guardarlo en la base de datos, o {@code null}
+     *         si el usuario no existe.
+     */
+    @Transactional
     public User updateUser(User updatedUser) {
         Optional<User> existUser = uRepository.findById(updatedUser.getId());
         if (!existUser.isPresent())
@@ -49,6 +58,14 @@ public class UserService {
         return uRepository.save(updatedUser);
     }
 
+    /**
+     * Marca un usuario como eliminado en la base de datos, sin borrarlo físicamente. Se establece
+     * la fecha de eliminación y se activa el flag {@code isDeleted}.
+     *
+     * @param id El ID del usuario que se desea eliminar.
+     * @return Un mensaje {@link String} indicando si el usuario fue eliminado correctamente o si no
+     *         se encontró.
+     */
     @Transactional
     public String deleteUser(long id) {
         Optional<User> existUser = uRepository.findById(id);
