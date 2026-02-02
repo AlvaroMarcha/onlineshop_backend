@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.dto.request.LoginRequestDTO;
 import es.marcha.backend.dto.request.RegisterRequestDTO;
 import es.marcha.backend.dto.response.AuthResponseDTO;
+import es.marcha.backend.dto.response.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
@@ -53,13 +54,15 @@ public class AuthService {
      */
     public AuthResponseDTO login(LoginRequestDTO credentials) {
         User user = uService.getUserByUsernameOrEmail(credentials.getUsernameOrEmail());
+        user.setActive(true);
+
 
         if (!Validations.comparePasswords(credentials.getPassword(), user.getPassword())) {
             throw new UserException(UserException.FAILED_LOGIN);
         }
 
         String token = JwtUtil.generateToken(user.getUsername());
-        return new AuthResponseDTO(user, token);
+        return new AuthResponseDTO(uService.saveUser(user), token);
     }
 
     /**
@@ -85,7 +88,7 @@ public class AuthService {
      *         válido
      */
     public AuthResponseDTO register(RegisterRequestDTO userData) {
-        Optional<User> existUser = uService.getUserByUsername(userData.getUsername());
+        Optional<UserResponseDTO> existUser = uService.getUserByUsername(userData.getUsername());
         Role role = rService.getRoleById(2);
         boolean isValidEmail = Validations.validateEmail(userData.getEmail());
         if (existUser.isPresent()) {
@@ -102,7 +105,7 @@ public class AuthService {
                 .profileImageUrl("").lastLogin(null).createdAt(new Date(System.currentTimeMillis()))
                 .updatedAt(null).deletedAt(null).build();
 
-        User savedUser = uService.saveUser(user);
+        UserResponseDTO savedUser = uService.saveUser(user);
         String token = JwtUtil.generateToken(savedUser.getUsername());
         return new AuthResponseDTO(savedUser, token);
     }
