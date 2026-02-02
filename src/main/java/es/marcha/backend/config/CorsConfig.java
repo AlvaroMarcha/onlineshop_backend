@@ -6,7 +6,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-public class ConfigCors {
+public class CorsConfig {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
@@ -15,13 +15,11 @@ public class ConfigCors {
                 registry.addMapping("/**") // aplica a todas las rutas
                         .allowedOrigins("http://localhost:4200") // tu Angular
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .allowedHeaders("*").allowCredentials(true);
             }
         };
     }
 
 }
 
-    
 
