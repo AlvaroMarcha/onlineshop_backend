@@ -2,6 +2,7 @@ package es.marcha.backend.services.user;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;
+import es.marcha.backend.utils.Validations;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -22,7 +24,41 @@ public class UserService {
     // Methods
     public User getUserById(long id) {
         return uRepository.findById(id).filter(user -> !user.isDeleted())
-                .orElseThrow(() -> new UserException(UserException.DEFAULT));
+                .orElseThrow(() -> new UserException());
+    }
+
+    public Optional<User> getUserByUsername(String username) {
+        return uRepository.findByUsername(username);
+    }
+
+
+    /**
+     * Obtiene un usuario a partir de su username o email.
+     * <p>
+     * Este método primero determina si el parámetro proporcionado es un email válido o un username.
+     * Dependiendo del caso, busca al usuario en la base de datos usando
+     * {@code uRepository.findByEmail} o {@code uRepository.findByUsername}. Además, filtra los
+     * usuarios que estén marcados como eliminados ({@code isDeleted}) o baneados
+     * ({@code isBanned}), de modo que solo se devuelvan usuarios activos. Si no se encuentra ningún
+     * usuario válido, se lanza una excepción {@link UserException}.
+     * </p>
+     *
+     * @param usernameOrEmail el username o email del usuario a buscar
+     * @return el usuario encontrado y activo
+     * @throws UserException si no existe un usuario con ese username/email, o si el usuario está
+     *         eliminado o baneado
+     */
+    public User getUserByUsernameOrEmail(String usernameOrEmail) {
+        boolean isEmail = Validations.validateEmail(usernameOrEmail);
+        if (isEmail) {
+            return uRepository.findByEmail(usernameOrEmail)
+                    .filter(user -> !user.isDeleted() || !user.isBanned())
+                    .orElseThrow(() -> new UserException());
+        } else {
+            return uRepository.findByUsername(usernameOrEmail)
+                    .filter(user -> !user.isDeleted() || !user.isBanned())
+                    .orElseThrow(() -> new UserException());
+        }
     }
 
     public List<User> getAllUsers() {
