@@ -7,7 +7,10 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.response.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
+import es.marcha.backend.mapper.UserMapper;
+import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;
 import es.marcha.backend.utils.Validations;
@@ -18,17 +21,19 @@ public class UserService {
     // Attribs
     @Autowired
     private UserRepository uRepository;
+    @Autowired
+    private RoleService rService;
 
     public static final String USER_DELETED = "USER WAS DELETED";
 
     // Methods
-    public User getUserById(long id) {
-        return uRepository.findById(id).filter(user -> !user.isDeleted())
+    public UserResponseDTO getUserById(long id) {
+        return uRepository.findById(id).filter(user -> !user.isDeleted()).map(UserMapper::toUserDTO)
                 .orElseThrow(() -> new UserException());
     }
 
-    public Optional<User> getUserByUsername(String username) {
-        return uRepository.findByUsername(username);
+    public Optional<UserResponseDTO> getUserByUsername(String username) {
+        return uRepository.findByUsername(username).map(UserMapper::toUserDTO);
     }
 
 
@@ -61,22 +66,25 @@ public class UserService {
         }
     }
 
-    public List<User> getAllUsers() {
+    public List<UserResponseDTO> getAllUsers() {
         List<User> users = uRepository.findAll();
         if (users.isEmpty()) {
             throw new UserException(UserException.FAILED_FETCH);
         }
         List<User> filteredUsers = users.stream().filter(user -> !user.isDeleted()).toList();
-        return filteredUsers;
+        List<UserResponseDTO> usersDTO = filteredUsers.stream().map(UserMapper::toUserDTO).toList();
+        return usersDTO;
     }
 
-    public User saveUser(User user) {
+    public UserResponseDTO saveUser(User user) {
+        Role role = rService.getRoleById(user.getRole().getId());
         try {
+            user.setRole(role);
             user.setActive(true);
             user.setBanned(false);
             user.setDeleted(false);
             user.setVerified(false);
-            return uRepository.save(user);
+            return UserMapper.toUserDTO(uRepository.save(user));
         } catch (Exception e) {
             throw new UserException(UserException.FAILED_SAVE, e);
         }
@@ -92,7 +100,7 @@ public class UserService {
      *         si el usuario no existe.
      */
     @Transactional
-    public User updateUser(User updatedUser) {
+    public UserResponseDTO updateUser(User updatedUser) {
         try {
             User user = uRepository.findById(updatedUser.getId())
                     .orElseThrow(() -> new UserException());
@@ -108,7 +116,7 @@ public class UserService {
             user.setLastLogin(updatedUser.getLastLogin());
             user.setUpdatedAt(new Date(System.currentTimeMillis()));
 
-            return uRepository.save(updatedUser);
+            return UserMapper.toUserDTO(uRepository.save(updatedUser));
         } catch (Exception e) {
             throw new UserException(UserException.FAILED_UPDATE, e);
         }

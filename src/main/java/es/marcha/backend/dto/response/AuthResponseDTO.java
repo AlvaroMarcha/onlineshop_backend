@@ -1,6 +1,5 @@
 package es.marcha.backend.dto.response;
 
-import es.marcha.backend.model.user.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,6 +13,6 @@ import lombok.Setter;
 @Getter
 public class AuthResponseDTO {
     // Attribs
-    private User user;
+    private UserResponseDTO user;
     private String token;
 }

@@ -13,9 +13,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import es.marcha.backend.dto.response.UserResponseDTO;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
-import es.marcha.backend.services.user.RoleService;
 import es.marcha.backend.services.user.UserService;
 
 @RestController
@@ -25,17 +26,14 @@ public class UserController {
     @Autowired
     private UserService uService;
 
-    @Autowired
-    private RoleService rService;
-
     /**
      * Obtiene todos los usuarios de la base de datos.
      *
      * @return {@link ResponseEntity} con la lista de {@link User} y código HTTP 200 OK.
      */
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = uService.getAllUsers();
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
+        List<UserResponseDTO> users = uService.getAllUsers();
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
@@ -47,8 +45,8 @@ public class UserController {
      *         no existe, devuelve {@code null} en el cuerpo.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable long id) {
-        User user = uService.getUserById(id);
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable long id) {
+        UserResponseDTO user = uService.getUserById(id);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -59,10 +57,8 @@ public class UserController {
      * @return {@link ResponseEntity} con el {@link User} guardado y código HTTP 200 OK.
      */
     @PostMapping
-    public ResponseEntity<User> saveUser(@RequestBody User user) {
-        Role role = rService.getRoleById(user.getRole().getId());
-        User userSaved = uService.saveUser(user);
-        userSaved.setRole(role);
+    public ResponseEntity<UserResponseDTO> saveUser(@RequestBody User user) {
+        UserResponseDTO userSaved = uService.saveUser(user);
         return new ResponseEntity<>(userSaved, HttpStatus.OK);
     }
 
@@ -75,8 +71,8 @@ public class UserController {
      *         usuario no existe, devuelve {@code null} en el cuerpo.
      */
     @PutMapping
-    public ResponseEntity<User> updateUser(@RequestBody User updatedUser) {
-        User user = uService.updateUser(updatedUser);
+    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody User updatedUser) {
+        UserResponseDTO user = uService.updateUser(updatedUser);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
