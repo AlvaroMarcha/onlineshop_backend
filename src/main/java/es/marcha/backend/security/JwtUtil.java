@@ -11,31 +11,23 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
 
-    private static  SecretKey SECRET_KEY;
+    private static SecretKey SECRET_KEY;
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
-        System.out.println("SECRET: "+secret);
         SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
 
     }
-       
 
-    public static String generarToken(String username) {
-        return Jwts.builder()
-                .setSubject(username)
-                .setIssuedAt(new Date())
+
+    public static String generateToken(String username) {
+        return Jwts.builder().setSubject(username).setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-                .signWith(SECRET_KEY)
-                .compact();
+                .signWith(SECRET_KEY).compact();
     }
 
-    public static String validarToken(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+    public static String validateToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token)
+                .getBody().getSubject();
     }
-    
+
 }

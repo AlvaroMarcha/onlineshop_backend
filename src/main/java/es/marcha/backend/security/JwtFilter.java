@@ -1,4 +1,5 @@
 package es.marcha.backend.security;
+
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -14,11 +15,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
-         String path = request.getServletPath();
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
+        String path = request.getServletPath();
 
         // Ignorar rutas públicas
         if (path.startsWith("/auth/login") || path.startsWith("/auth/register")) {
@@ -34,7 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             try {
                 // validar token y sacar usuario
-                String user = JwtUtil.validarToken(token);
+                String user = JwtUtil.validateToken(token);
 
                 // crear Authentication sin roles
                 UsernamePasswordAuthenticationToken authentication =
@@ -44,8 +44,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (Exception e) {
-                e.printStackTrace();
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token inválido o expirado");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "INVALID_TOKEN_OR_EXPIRED");
                 return;
             }
         }
