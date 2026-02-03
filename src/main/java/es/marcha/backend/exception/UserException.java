@@ -11,6 +11,7 @@ public class UserException extends NoHandlerException {
     public static final String FAILED_REGISTER = "FAILED_TO_REGISTER";
     public static final String FAILED_CREATE_USER = "USER_ALREADY_EXIST";
     public static final String TOKEN_FAILED = "TOKEN_NOT_ALLOWED";
+    public static final String USER_LOGGEDOUT = "USER_IS_LOGGEDOUT";
 
     public UserException() {
         this(DEFAULT);
