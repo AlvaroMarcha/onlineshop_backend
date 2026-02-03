@@ -36,7 +36,6 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponseDTO> logout(@RequestBody LogoutRequestDTO data) {
-        System.out.println(data.getUserId());
         LogoutResponseDTO msg = aService.logout(data.getUserId());
         return new ResponseEntity<>(msg, HttpStatus.OK);
     }
