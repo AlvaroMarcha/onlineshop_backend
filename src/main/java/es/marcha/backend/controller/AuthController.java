@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.dto.request.LoginRequestDTO;
+import es.marcha.backend.dto.request.LogoutRequestDTO;
 import es.marcha.backend.dto.request.RegisterRequestDTO;
 import es.marcha.backend.dto.response.AuthResponseDTO;
+import es.marcha.backend.dto.response.LogoutResponseDTO;
 import es.marcha.backend.services.security.AuthService;
 
 @RestController
@@ -30,6 +32,12 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO userData) {
         AuthResponseDTO response = aService.register(userData);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<LogoutResponseDTO> logout(@RequestBody LogoutRequestDTO data) {
+        LogoutResponseDTO msg = aService.logout(data.getUserId());
+        return new ResponseEntity<>(msg, HttpStatus.OK);
     }
 
 }

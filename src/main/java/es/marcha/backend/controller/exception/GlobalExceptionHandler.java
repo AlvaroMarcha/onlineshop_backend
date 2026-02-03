@@ -37,9 +37,18 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handlerException(NoHandlerException ex) {
         ErrorResponse error = new ErrorResponse(ex.getMessage());
 
+
         HttpStatus status = switch (ex.getMessage()) {
             case UserException.DEFAULT -> HttpStatus.NOT_FOUND;
-            case UserException.FAILED_SAVE, UserException.FAILED_UPDATE -> HttpStatus.BAD_REQUEST;
+            case UserException.FAILED_SAVE -> HttpStatus.BAD_REQUEST;
+            case UserException.FAILED_UPDATE -> HttpStatus.BAD_REQUEST;
+            case UserException.FAILED_DELETE -> HttpStatus.BAD_REQUEST;
+            case UserException.FAILED_FETCH -> HttpStatus.INTERNAL_SERVER_ERROR;
+            case UserException.FAILED_LOGIN -> HttpStatus.UNAUTHORIZED;
+            case UserException.FAILED_REGISTER -> HttpStatus.BAD_REQUEST;
+            case UserException.FAILED_CREATE_USER -> HttpStatus.CONFLICT;
+            case UserException.TOKEN_FAILED -> HttpStatus.UNAUTHORIZED;
+            case UserException.USER_LOGGEDOUT -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
 
