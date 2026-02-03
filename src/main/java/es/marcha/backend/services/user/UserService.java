@@ -28,7 +28,14 @@ public class UserService {
 
     // Methods
     public UserResponseDTO getUserById(long id) {
-        return uRepository.findById(id).filter(user -> !user.isDeleted()).map(UserMapper::toUserDTO)
+        return uRepository.findById(id)
+                .filter(user -> !user.isDeleted())
+                .map(UserMapper::toUserDTO)
+                .orElseThrow(() -> new UserException());
+    }
+
+    public User getUserByIdForHandler(long id) {
+        return uRepository.findById(id).filter(user -> !user.isDeleted())
                 .orElseThrow(() -> new UserException());
     }
 
@@ -71,8 +78,13 @@ public class UserService {
         if (users.isEmpty()) {
             throw new UserException(UserException.FAILED_FETCH);
         }
-        List<User> filteredUsers = users.stream().filter(user -> !user.isDeleted()).toList();
-        List<UserResponseDTO> usersDTO = filteredUsers.stream().map(UserMapper::toUserDTO).toList();
+
+        List<User> filteredUsers = users.stream()
+                .filter(user -> !user.isDeleted())
+                .toList();
+        List<UserResponseDTO> usersDTO = filteredUsers.stream()
+                .map(UserMapper::toUserDTO)
+                .toList();
         return usersDTO;
     }
 
@@ -88,6 +100,10 @@ public class UserService {
         } catch (Exception e) {
             throw new UserException(UserException.FAILED_SAVE, e);
         }
+    }
+
+    public User saveUserForHandler(User user) {
+        return uRepository.save(user);
     }
 
     /**
@@ -132,7 +148,8 @@ public class UserService {
      */
     @Transactional
     public String deleteUser(long id) {
-        User deletedUser = uRepository.findById(id).orElseThrow(() -> new UserException());
+        User deletedUser = uRepository.findById(id)
+                .orElseThrow(() -> new UserException());
         deletedUser.setDeletedAt(new Date(System.currentTimeMillis()));
         deletedUser.setDeleted(true);
         deletedUser.setActive(false);
