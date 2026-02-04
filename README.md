@@ -45,7 +45,6 @@ El proyecto incluye modelos JPA de ejemplo con relaciones uno a uno:
 
 - `User`
 - `Role`
-- `Client`
 
 ## Pruebas
 
