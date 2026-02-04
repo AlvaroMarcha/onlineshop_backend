@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.config.StartupConfig;
 import es.marcha.backend.dto.request.LoginRequestDTO;
 import es.marcha.backend.dto.request.RegisterRequestDTO;
 import es.marcha.backend.dto.response.AuthResponseDTO;
@@ -26,6 +27,8 @@ public class AuthService {
     private UserService uService;
     @Autowired
     private RoleService rService;
+    @Autowired
+    private StartupConfig files;
 
     // Methods
     // !! REVISAR MAS ADELANTE, ESTO DEBE IR CON USERDETAILSSERVICE
@@ -122,7 +125,7 @@ public class AuthService {
                 .isActive(true)
                 .isVerified(false).isBanned(false)
                 .isDeleted(false)
-                .profileImageUrl("")
+                .profileImageUrl(files.getDestinationPathURLImage().toString())
                 .lastLogin(null)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(null)

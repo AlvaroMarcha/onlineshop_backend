@@ -22,7 +22,7 @@ public class UserResponseDTO {
     private String email;
     private String phone;
     private String roleName;
-    private String profileImageUrl;
+    // private String profileImageUrl;
     private LocalDateTime createdAt;
     private boolean isActive;
     private boolean isVerified;
