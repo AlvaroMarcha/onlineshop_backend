@@ -1,6 +1,7 @@
 package es.marcha.backend.model.user;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -55,13 +56,13 @@ public class User {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
     @Column(name = "last_login")
-    private Date lastLogin;
+    private LocalDateTime lastLogin;
     @Column(name = "created_at", nullable = false)
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Column(name = "updated_at")
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
     @Column(name = "deleted_at")
-    private Date deletedAt;
+    private LocalDateTime deletedAt;
 
 
 

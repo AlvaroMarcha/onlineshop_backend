@@ -1,6 +1,6 @@
 package es.marcha.backend.model.order;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.user.User;
@@ -49,8 +49,7 @@ public class Order {
     @Column(name = "payment_method")
     private String paymentMethod;
     @Column(name = "created_at")
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Column(name = "updated_at")
-    private Date updatedAt;
-
+    private LocalDateTime updatedAt;
 }

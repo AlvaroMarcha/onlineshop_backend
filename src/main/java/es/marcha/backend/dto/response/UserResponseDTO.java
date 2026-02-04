@@ -1,6 +1,6 @@
 package es.marcha.backend.dto.response;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +23,7 @@ public class UserResponseDTO {
     private String phone;
     private String roleName;
     private String profileImageUrl;
-    private Date createdAt;
+    private LocalDateTime createdAt;
     private boolean isActive;
     private boolean isVerified;
 }

@@ -1,8 +1,10 @@
 package es.marcha.backend.model.user;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -39,9 +41,9 @@ public class Role {
     private List<User> users;
     @Column(name = "created_at", nullable = false)
     @JsonIgnore
-    private Date createdAt;
+    private LocalDateTime createdAt;
     @Column(name = "updated_at")
     @JsonIgnore
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
 
 }

@@ -1,7 +1,7 @@
 package es.marcha.backend.services.security;
 
-import java.sql.Date;
 import java.util.Optional;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -124,7 +124,7 @@ public class AuthService {
                 .isDeleted(false)
                 .profileImageUrl("")
                 .lastLogin(null)
-                .createdAt(new Date(System.currentTimeMillis()))
+                .createdAt(LocalDateTime.now())
                 .updatedAt(null)
                 .deletedAt(null)
                 .build();
@@ -140,7 +140,7 @@ public class AuthService {
             throw new UserException(UserException.USER_LOGGEDOUT);
         }
         user.setActive(false);
-        user.setLastLogin(new Date(System.currentTimeMillis()));
+        user.setLastLogin(LocalDateTime.now());
         uService.saveUserForHandler(user);
         return LogoutResponseDTO.builder()
                 .userId(user.getId())

@@ -1,6 +1,6 @@
 package es.marcha.backend.dto.response;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,5 +17,5 @@ public class LogoutResponseDTO {
     private long userId;
     private String username;
     private boolean isActive;
-    private Date lastLogin;
+    private LocalDateTime lastLogin;
 }
