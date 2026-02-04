@@ -1,6 +1,6 @@
 package es.marcha.backend.services.user;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -130,7 +130,7 @@ public class UserService {
 
             user.setActive(updatedUser.isActive());
             user.setLastLogin(updatedUser.getLastLogin());
-            user.setUpdatedAt(new Date(System.currentTimeMillis()));
+            user.setUpdatedAt(LocalDateTime.now());
 
             return UserMapper.toUserDTO(uRepository.save(updatedUser));
         } catch (Exception e) {
@@ -150,7 +150,7 @@ public class UserService {
     public String deleteUser(long id) {
         User deletedUser = uRepository.findById(id)
                 .orElseThrow(() -> new UserException());
-        deletedUser.setDeletedAt(new Date(System.currentTimeMillis()));
+        deletedUser.setDeletedAt(LocalDateTime.now());
         deletedUser.setDeleted(true);
         deletedUser.setActive(false);
         uRepository.save(deletedUser);
