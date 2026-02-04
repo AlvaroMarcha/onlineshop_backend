@@ -124,7 +124,7 @@ public class AuthService {
                 .isDeleted(false)
                 .profileImageUrl("")
                 .lastLogin(null)
-                .createdAt(LocalDateTime().now())
+                .createdAt(LocalDateTime.now())
                 .updatedAt(null)
                 .deletedAt(null)
                 .build();
@@ -140,7 +140,7 @@ public class AuthService {
             throw new UserException(UserException.USER_LOGGEDOUT);
         }
         user.setActive(false);
-        user.setLastLogin(LocalDateTime().now());
+        user.setLastLogin(LocalDateTime.now());
         uService.saveUserForHandler(user);
         return LogoutResponseDTO.builder()
                 .userId(user.getId())
