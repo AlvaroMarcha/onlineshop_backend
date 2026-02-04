@@ -5,7 +5,7 @@ Este proyecto es una plantilla básica de backend desarrollada con [Spring Boot]
 ## Requisitos
 
 - Java 21
-- Maven 3.9+
+- Maven 3.5+
 - Base de datos compatible con MariaDB/MySQL
 
 ## Configuración
@@ -21,9 +21,11 @@ spring.jpa.database-platform=${DB_DIALECT}
 spring.jpa.show-sql=${DB_SHOW_SQL}
 spring.jpa.hibernate.ddl-auto=${DB_HBM2DDL}
 server.port=${SERVER_PORT:8080}
+app.images.storage-path=${IMAGES_STORAGE_PATH}
 ```
 
-Asegúrate de definir estas variables antes de ejecutar la aplicación.
+Asegúrate de definir estas variables antes de ejecutar la aplicación. 
+Recuerda definirlas en tu archivo .env, con los nombres correspondientes. Ejem: ${DB_URL}
 
 ## Ejecución
 
