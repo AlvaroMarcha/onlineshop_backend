@@ -58,7 +58,7 @@ public class StartupConfig implements CommandLineRunner {
                     default_pic_profile);
 
             if (Files.notExists(sourcePath)) {
-                System.err.println("Archivo NO encontrado: " + sourcePath);
+                System.err.println("FILE_NOT_FOUND: " + sourcePath);
                 return;
             }
 
