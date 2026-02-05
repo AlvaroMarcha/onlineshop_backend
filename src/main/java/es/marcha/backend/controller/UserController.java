@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import es.marcha.backend.dto.response.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.UserResponseDTO;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
@@ -88,6 +89,9 @@ public class UserController {
         return new ResponseEntity<>(msg, HttpStatus.OK);
     }
 
-
-
+    @PostMapping("/ban/{id}")
+    public ResponseEntity<BannedUserResponseDTO> banUser(@PathVariable long id) {
+        BannedUserResponseDTO bannedUser = uService.banUserById(id);
+        return new ResponseEntity<>(bannedUser, HttpStatus.OK);
+    }
 }

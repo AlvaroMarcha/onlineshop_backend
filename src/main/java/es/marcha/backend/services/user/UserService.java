@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.response.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.mapper.UserMapper;
@@ -29,18 +30,20 @@ public class UserService {
     // Methods
     public UserResponseDTO getUserById(long id) {
         return uRepository.findById(id)
-                .filter(user -> !user.isDeleted())
+                .filter(user -> !user.isDeleted() || !user.isBanned())
                 .map(UserMapper::toUserDTO)
                 .orElseThrow(() -> new UserException());
     }
 
     public User getUserByIdForHandler(long id) {
-        return uRepository.findById(id).filter(user -> !user.isDeleted())
+        return uRepository.findById(id)
+                .filter(user -> !user.isDeleted() || !user.isBanned())
                 .orElseThrow(() -> new UserException());
     }
 
     public Optional<UserResponseDTO> getUserByUsername(String username) {
-        return uRepository.findByUsername(username).map(UserMapper::toUserDTO);
+        return uRepository.findByUsername(username)
+                .map(UserMapper::toUserDTO);
     }
 
 
@@ -156,6 +159,42 @@ public class UserService {
         uRepository.save(deletedUser);
 
         return USER_DELETED;
+    }
+
+    /**
+     * Banea a un usuario identificado por su ID.
+     *
+     * <p>
+     * Este método localiza al usuario en el sistema y genera una respuesta que
+     * representa su estado tras ser baneado. El baneo implica:
+     * <ul>
+     * <li>Marcar al usuario como baneado.</li>
+     * <li>Desactivar su cuenta para impedir cualquier interacción.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Si el usuario no existe, se lanza una excepción {@link UserException}.
+     * </p>
+     *
+     * @param id identificador único del usuario a banear
+     * @return {@link BannedUserResponseDTO} con la información básica del usuario
+     *         y su nuevo estado (baneado e inactivo)
+     * @throws UserException si el usuario no existe
+     */
+    public BannedUserResponseDTO banUserById(long id) {
+        User user = uRepository.findById(id).orElseThrow(() -> new UserException());
+        user.setBanned(true);
+        user.setActive(false);
+        user.setUpdatedAt(LocalDateTime.now());
+        BannedUserResponseDTO bannedUser = BannedUserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .isBanned(user.isBanned())
+                .isActive(user.isActive())
+                .build();
+        uRepository.save(user);
+        return bannedUser;
     }
 
 
