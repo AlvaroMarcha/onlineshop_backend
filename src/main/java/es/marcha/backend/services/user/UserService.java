@@ -30,14 +30,14 @@ public class UserService {
     // Methods
     public UserResponseDTO getUserById(long id) {
         return uRepository.findById(id)
-                .filter(user -> !user.isDeleted() || !user.isBanned())
+                .filter(user -> !user.isDeleted() && !user.isBanned())
                 .map(UserMapper::toUserDTO)
                 .orElseThrow(() -> new UserException());
     }
 
     public User getUserByIdForHandler(long id) {
         return uRepository.findById(id)
-                .filter(user -> !user.isDeleted() || !user.isBanned())
+                .filter(user -> !user.isDeleted() && !user.isBanned())
                 .orElseThrow(() -> new UserException());
     }
 
@@ -67,11 +67,11 @@ public class UserService {
         boolean isEmail = Validations.validateEmail(usernameOrEmail);
         if (isEmail) {
             return uRepository.findByEmail(usernameOrEmail)
-                    .filter(user -> !user.isDeleted() || !user.isBanned())
+                    .filter(user -> !user.isDeleted() && !user.isBanned())
                     .orElseThrow(() -> new UserException());
         } else {
             return uRepository.findByUsername(usernameOrEmail)
-                    .filter(user -> !user.isDeleted() || !user.isBanned())
+                    .filter(user -> !user.isDeleted() && !user.isBanned())
                     .orElseThrow(() -> new UserException());
         }
     }
@@ -83,7 +83,7 @@ public class UserService {
         }
 
         List<User> filteredUsers = users.stream()
-                .filter(user -> !user.isDeleted())
+                .filter(user -> !user.isDeleted() && !user.isBanned())
                 .toList();
         List<UserResponseDTO> usersDTO = filteredUsers.stream()
                 .map(UserMapper::toUserDTO)
