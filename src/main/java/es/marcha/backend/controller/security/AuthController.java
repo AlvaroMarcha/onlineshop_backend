@@ -1,4 +1,4 @@
-package es.marcha.backend.controller;
+package es.marcha.backend.controller.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

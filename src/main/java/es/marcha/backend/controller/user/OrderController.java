@@ -1,4 +1,4 @@
-package es.marcha.backend.controller;
+package es.marcha.backend.controller.user;
 
 import java.util.List;
 
@@ -37,7 +37,8 @@ public class OrderController {
      * Devuelve una orden específica según su identificador.
      *
      * @param id El ID de la orden que se desea recuperar.
-     * @return ResponseEntity con la {@link Order} correspondiente y el estado HTTP 200 OK.
+     * @return ResponseEntity con la {@link Order} correspondiente y el estado HTTP
+     *         200 OK.
      */
     @GetMapping("/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable long id) {
@@ -46,14 +47,18 @@ public class OrderController {
     }
 
     /**
-     * Avanza el estado de una orden según la lógica de negocio. Permite marcar la orden como
+     * Avanza el estado de una orden según la lógica de negocio. Permite marcar la
+     * orden como
      * cancelada o devuelta en casos especiales.
      *
-     * @param orderId El ID de la orden que se desea actualizar.
-     * @param cancelled Si es {@code true}, la orden se marcará como {@link OrderStatus#CANCELLED}.
-     * @param returned Si es {@code true} y la orden está entregada ({@link OrderStatus#DELIVERED}),
-     *        la orden se marcará como {@link OrderStatus#RETURNED}.
-     * @return ResponseEntity con el nuevo {@link OrderStatus} de la orden y el estado HTTP 202
+     * @param orderId   El ID de la orden que se desea actualizar.
+     * @param cancelled Si es {@code true}, la orden se marcará como
+     *                  {@link OrderStatus#CANCELLED}.
+     * @param returned  Si es {@code true} y la orden está entregada
+     *                  ({@link OrderStatus#DELIVERED}),
+     *                  la orden se marcará como {@link OrderStatus#RETURNED}.
+     * @return ResponseEntity con el nuevo {@link OrderStatus} de la orden y el
+     *         estado HTTP 202
      *         ACCEPTED.
      */
     @PostMapping("/nextStatus")
