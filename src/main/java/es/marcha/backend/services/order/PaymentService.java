@@ -69,8 +69,6 @@ public class PaymentService {
         order.setTotalAmount(order.getTotalAmount() + payment.getAmount());
         oService.saveOrder(order);
 
-        System.out.println(order.getCreatedAt());
-
         return PaymentMapper.toPaymentDTO(pRepository.save(payment));
     }
 
