@@ -16,7 +16,9 @@ public class UserMapper {
                 .isActive(user.isActive())
                 .isVerified(user.isVerified())
                 // .profileImageUrl(user.getProfileImageUrl())
-                .createdAt(user.getCreatedAt()).build();
+                .createdAt(user.getCreatedAt())
+                .addresses(user.getAddresses())
+                .build();
     }
 
 }

@@ -1,4 +1,4 @@
-package es.marcha.backend.controller;
+package es.marcha.backend.controller.user;
 
 import java.util.List;
 
@@ -30,7 +30,8 @@ public class UserController {
     /**
      * Obtiene todos los usuarios de la base de datos.
      *
-     * @return {@link ResponseEntity} con la lista de {@link User} y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con la lista de {@link User} y código HTTP 200
+     *         OK.
      */
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
@@ -42,7 +43,8 @@ public class UserController {
      * Obtiene un usuario por su ID.
      *
      * @param id El ID del usuario que se desea obtener.
-     * @return {@link ResponseEntity} con el {@link User} correspondiente y código HTTP 200 OK. Si
+     * @return {@link ResponseEntity} con el {@link User} correspondiente y código
+     *         HTTP 200 OK. Si
      *         no existe, devuelve {@code null} en el cuerpo.
      */
     @GetMapping("/{id}")
@@ -54,8 +56,10 @@ public class UserController {
     /**
      * Crea un nuevo usuario en la base de datos.
      *
-     * @param user El {@link User} que se desea crear. Debe incluir un {@link Role} válido.
-     * @return {@link ResponseEntity} con el {@link User} guardado y código HTTP 200 OK.
+     * @param user El {@link User} que se desea crear. Debe incluir un {@link Role}
+     *             válido.
+     * @return {@link ResponseEntity} con el {@link User} guardado y código HTTP 200
+     *         OK.
      */
     @PostMapping
     public ResponseEntity<UserResponseDTO> saveUser(@RequestBody User user) {
@@ -66,9 +70,11 @@ public class UserController {
     /**
      * Actualiza un usuario existente en la base de datos.
      *
-     * @param updatedUser El {@link User} con los nuevos datos a actualizar. Debe incluir un ID
-     *        válido.
-     * @return {@link ResponseEntity} con el {@link User} actualizado y código HTTP 200 OK. Si el
+     * @param updatedUser El {@link User} con los nuevos datos a actualizar. Debe
+     *                    incluir un ID
+     *                    válido.
+     * @return {@link ResponseEntity} con el {@link User} actualizado y código HTTP
+     *         200 OK. Si el
      *         usuario no existe, devuelve {@code null} en el cuerpo.
      */
     @PutMapping
@@ -81,7 +87,8 @@ public class UserController {
      * Marca un usuario como eliminado (soft delete) en la base de datos.
      *
      * @param id El ID del usuario a eliminar.
-     * @return {@link ResponseEntity} con un mensaje de éxito o error y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con un mensaje de éxito o error y código HTTP
+     *         200 OK.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable long id) {

@@ -46,22 +46,25 @@ public class UserService {
                 .map(UserMapper::toUserDTO);
     }
 
-
     /**
      * Obtiene un usuario a partir de su username o email.
      * <p>
-     * Este método primero determina si el parámetro proporcionado es un email válido o un username.
+     * Este método primero determina si el parámetro proporcionado es un email
+     * válido o un username.
      * Dependiendo del caso, busca al usuario en la base de datos usando
-     * {@code uRepository.findByEmail} o {@code uRepository.findByUsername}. Además, filtra los
+     * {@code uRepository.findByEmail} o {@code uRepository.findByUsername}. Además,
+     * filtra los
      * usuarios que estén marcados como eliminados ({@code isDeleted}) o baneados
-     * ({@code isBanned}), de modo que solo se devuelvan usuarios activos. Si no se encuentra ningún
+     * ({@code isBanned}), de modo que solo se devuelvan usuarios activos. Si no se
+     * encuentra ningún
      * usuario válido, se lanza una excepción {@link UserException}.
      * </p>
      *
      * @param usernameOrEmail el username o email del usuario a buscar
      * @return el usuario encontrado y activo
-     * @throws UserException si no existe un usuario con ese username/email, o si el usuario está
-     *         eliminado o baneado
+     * @throws UserException si no existe un usuario con ese username/email, o si el
+     *                       usuario está
+     *                       eliminado o baneado
      */
     public User getUserByUsernameOrEmail(String usernameOrEmail) {
         boolean isEmail = Validations.validateEmail(usernameOrEmail);
@@ -93,16 +96,13 @@ public class UserService {
 
     public UserResponseDTO saveUser(User user) {
         Role role = rService.getRoleById(user.getRole().getId());
-        try {
-            user.setRole(role);
-            user.setActive(true);
-            user.setBanned(false);
-            user.setDeleted(false);
-            user.setVerified(false);
-            return UserMapper.toUserDTO(uRepository.save(user));
-        } catch (Exception e) {
-            throw new UserException(UserException.FAILED_SAVE, e);
-        }
+
+        user.setRole(role);
+        user.setActive(true);
+        user.setBanned(false);
+        user.setDeleted(false);
+        user.setVerified(false);
+        return UserMapper.toUserDTO(uRepository.save(user));
     }
 
     public User saveUserForHandler(User user) {
@@ -110,43 +110,45 @@ public class UserService {
     }
 
     /**
-     * Actualiza los datos de un usuario existente en la base de datos. Solo se actualizan ciertos
+     * Actualiza los datos de un usuario existente en la base de datos. Solo se
+     * actualizan ciertos
      * campos, y se marca la fecha de actualización con la hora actual.
      *
-     * @param updatedUser El objeto {@link User} que contiene los nuevos datos a actualizar. Debe
-     *        incluir un ID válido de un usuario existente.
-     * @return El {@link User} actualizado después de guardarlo en la base de datos, o {@code null}
+     * @param updatedUser El objeto {@link User} que contiene los nuevos datos a
+     *                    actualizar. Debe
+     *                    incluir un ID válido de un usuario existente.
+     * @return El {@link User} actualizado después de guardarlo en la base de datos,
+     *         o {@code null}
      *         si el usuario no existe.
      */
     @Transactional
     public UserResponseDTO updateUser(User updatedUser) {
-        try {
-            User user = uRepository.findById(updatedUser.getId())
-                    .orElseThrow(() -> new UserException());
 
-            user.setName(updatedUser.getName());
-            user.setSurname(updatedUser.getSurname());
-            user.setUsername(updatedUser.getUsername());
-            user.setEmail(updatedUser.getEmail());
-            user.setPhone(updatedUser.getPhone());
-            user.setProfileImageUrl(updatedUser.getProfileImageUrl());
+        User user = uRepository.findById(updatedUser.getId())
+                .orElseThrow(() -> new UserException());
 
-            user.setActive(updatedUser.isActive());
-            user.setLastLogin(updatedUser.getLastLogin());
-            user.setUpdatedAt(LocalDateTime.now());
+        user.setName(updatedUser.getName());
+        user.setSurname(updatedUser.getSurname());
+        user.setUsername(updatedUser.getUsername());
+        user.setEmail(updatedUser.getEmail());
+        user.setPhone(updatedUser.getPhone());
+        user.setProfileImageUrl(updatedUser.getProfileImageUrl());
 
-            return UserMapper.toUserDTO(uRepository.save(updatedUser));
-        } catch (Exception e) {
-            throw new UserException(UserException.FAILED_UPDATE, e);
-        }
+        user.setActive(updatedUser.isActive());
+        user.setLastLogin(updatedUser.getLastLogin());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        return UserMapper.toUserDTO(uRepository.save(updatedUser));
     }
 
     /**
-     * Marca un usuario como eliminado en la base de datos, sin borrarlo físicamente. Se establece
+     * Marca un usuario como eliminado en la base de datos, sin borrarlo
+     * físicamente. Se establece
      * la fecha de eliminación y se activa el flag {@code isDeleted}.
      *
      * @param id El ID del usuario que se desea eliminar.
-     * @return Un mensaje {@link String} indicando si el usuario fue eliminado correctamente o si no
+     * @return Un mensaje {@link String} indicando si el usuario fue eliminado
+     *         correctamente o si no
      *         se encontró.
      */
     @Transactional
@@ -196,6 +198,5 @@ public class UserService {
         uRepository.save(user);
         return bannedUser;
     }
-
 
 }
