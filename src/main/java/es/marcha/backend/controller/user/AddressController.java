@@ -38,8 +38,6 @@ public class AddressController {
 
     @PutMapping
     public ResponseEntity<AddressResponseDTO> updateAddress(@RequestBody Address address) {
-        System.out.println("ID: " + address.getId());
-        System.out.println("city: " + address.getCity());
         AddressResponseDTO updatedAddress = aService.updateAddress(address);
         return new ResponseEntity<>(updatedAddress, HttpStatus.OK);
     }
