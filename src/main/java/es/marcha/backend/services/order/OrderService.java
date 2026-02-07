@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import es.marcha.backend.dto.response.OrderResponseDTO;
+import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.mapper.OrderMapper;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.repository.order.OrderRepository;
@@ -16,17 +20,30 @@ public class OrderService {
     private OrderRepository oRepository;
 
     // Methods
-    public Order getOrderById(long id) {
-        return oRepository.findById(id).orElse(null);
+    public Order getOrderByIdHandler(long id) {
+        return oRepository.findById(id)
+                .orElseThrow(() -> new OrderException());
     }
 
-    public List<Order> getAllOrders() {
-        return oRepository.findAll();
+    public OrderResponseDTO getOrderById(long id) {
+        return oRepository.findById(id)
+                .map(OrderMapper::toOrderDTO)
+                .orElseThrow(() -> new OrderException());
     }
 
-    public Order saveNewOrder(Order order) {
+    public List<OrderResponseDTO> getAllOrders(long userId) {
+        List<OrderResponseDTO> orders = oRepository.findAllByUserId(userId).stream()
+                .map(OrderMapper::toOrderDTO)
+                .toList();
+        if (orders.isEmpty()) {
+            throw new OrderException(OrderException.FAILED_FETCH);
+        }
+        return orders;
+    }
+
+    public OrderResponseDTO saveNewOrder(Order order) {
         order.setStatus(OrderStatus.CREATED);
-        return oRepository.save(order);
+        return OrderMapper.toOrderDTO(oRepository.save(order));
     }
 
     public Order saveOrder(Order order) {
@@ -36,13 +53,16 @@ public class OrderService {
     /**
      * Avanza el estado de una orden según la lógica de negocio definida.
      * <p>
-     * Este método recupera la orden por su ID y actualiza su estado según las siguientes reglas:
+     * Este método recupera la orden por su ID y actualiza su estado según las
+     * siguientes reglas:
      * <ul>
      * <li>Si {@code isCancelled} es {@code true}, el estado se establece en
      * {@link OrderStatus#CANCELLED} inmediatamente.</li>
      * <li>Si {@code isReturned} es {@code true} y el estado actual es
-     * {@link OrderStatus#DELIVERED}, el estado se cambia a {@link OrderStatus#RETURNED}.</li>
-     * <li>En condiciones normales, el estado se avanza secuencialmente según la transición
+     * {@link OrderStatus#DELIVERED}, el estado se cambia a
+     * {@link OrderStatus#RETURNED}.</li>
+     * <li>En condiciones normales, el estado se avanza secuencialmente según la
+     * transición
      * definida:
      * <ul>
      * <li>{@link OrderStatus#CREATED} -> {@link OrderStatus#PAID}</li>
@@ -53,18 +73,23 @@ public class OrderService {
      * </li>
      * </ul>
      * <p>
-     * La orden se guarda automáticamente tras actualizar su estado. Este método está marcado con
-     * {@link jakarta.transaction.Transactional} para asegurar la consistencia en la base de datos.
+     * La orden se guarda automáticamente tras actualizar su estado. Este método
+     * está marcado con
+     * {@link jakarta.transaction.Transactional} para asegurar la consistencia en la
+     * base de datos.
      *
-     * @param orderId el ID de la orden cuyo estado se desea actualizar
+     * @param orderId     el ID de la orden cuyo estado se desea actualizar
      * @param isCancelled indica si la orden debe ser marcada como cancelada
-     * @param isReturned indica si la orden entregada debe ser marcada como devuelta
-     * @return el nuevo estado de la orden después de aplicar las reglas de transición
-     * @throws IllegalArgumentException si no existe ninguna orden con el ID proporcionado
+     * @param isReturned  indica si la orden entregada debe ser marcada como
+     *                    devuelta
+     * @return el nuevo estado de la orden después de aplicar las reglas de
+     *         transición
+     * @throws IllegalArgumentException si no existe ninguna orden con el ID
+     *                                  proporcionado
      */
     @Transactional
     public OrderStatus nextStatus(long orderId, boolean isCancelled, boolean isReturned) {
-        Order order = getOrderById(orderId);
+        Order order = getOrderByIdHandler(orderId);
         if (isCancelled) {
             order.setStatus(OrderStatus.CANCELLED);
             return order.getStatus();
@@ -93,6 +118,4 @@ public class OrderService {
         saveOrder(order);
         return order.getStatus();
     }
-
-
 }
