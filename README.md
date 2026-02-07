@@ -41,10 +41,44 @@ curl http://localhost:8080/health/status
 
 ## Entidades de ejemplo
 
-El proyecto incluye modelos JPA de ejemplo con relaciones uno a uno:
+El proyecto incluye modelos JPA con relaciones entre usuarios, direcciones,
+órdenes y pagos:
 
 - `User`
 - `Role`
+- `Address`
+- `Order`
+- `Payment`
+
+## Endpoints principales
+
+Estos son los endpoints más relevantes que expone la API:
+
+- Salud:
+  - `GET /health/status`
+- Autenticación:
+  - `POST /auth/login`
+  - `POST /auth/register`
+  - `POST /auth/logout`
+- Usuarios:
+  - `GET /users`
+  - `GET /users/{id}`
+  - `POST /users`
+  - `PUT /users`
+  - `DELETE /users/{id}`
+  - `POST /users/ban/{id}`
+- Direcciones:
+  - `GET /address/{id}`
+  - `POST /address`
+  - `PUT /address`
+  - `DELETE /address/{id}`
+- Órdenes y pagos:
+  - `GET /orders/users/{id}`
+  - `GET /orders/{id}`
+  - `POST /orders/nextStatus`
+  - `POST /orders/{orderId}/payments`
+  - `GET /orders/{orderId}/payments/last`
+  - `POST /orders/payments/{paymentId}/nextStatus`
 
 ## Pruebas
 
@@ -53,4 +87,3 @@ Para ejecutar la suite de pruebas:
 ```bash
 mvn test
 ```
-
