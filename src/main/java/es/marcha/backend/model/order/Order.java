@@ -1,7 +1,11 @@
 package es.marcha.backend.model.order;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.user.User;
 import jakarta.persistence.Column;
@@ -13,6 +17,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,12 +40,12 @@ public class Order {
     private long id;
     @ManyToOne(optional = false)
     @JoinColumn(name = "user_id", nullable = false)
-    // Convertir lo que se devuelve en un DTO especifico mas adelante (Esto es para salir del paso)
-    @JsonIgnoreProperties({"surname", "username", "email", "password", "phone", "role", "isActive",
+    // Revisar en el proximom - REFACTOR
+    @JsonIgnoreProperties({ "surname", "username", "email", "password", "phone", "role", "isActive",
             "isVerified", "isBanned", "isDeleted", "profileImageUrl", "lastLogin", "createdAt",
-            "updatedAt", "deletedAt"})
+            "updatedAt", "deletedAt" })
     private User user;
-    // 1. CREATED 2. PAID 3. PROCESSING 4. SHIPPED 5. DELIVERED 6. CANCELLED 7. RETURNED
+
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -52,4 +57,7 @@ public class Order {
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @OneToMany(mappedBy = "order")
+    @JsonManagedReference
+    List<Payment> payments;
 }
