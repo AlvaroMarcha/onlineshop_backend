@@ -1,7 +1,9 @@
 package es.marcha.backend.dto.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+import es.marcha.backend.model.user.Address;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,4 +28,5 @@ public class UserResponseDTO {
     private LocalDateTime createdAt;
     private boolean isActive;
     private boolean isVerified;
+    private List<Address> addresses;
 }
