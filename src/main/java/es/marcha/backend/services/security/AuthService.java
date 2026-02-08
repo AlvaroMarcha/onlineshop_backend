@@ -1,7 +1,7 @@
 package es.marcha.backend.services.security;
 
-import java.util.Optional;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -57,7 +57,7 @@ public class AuthService {
      * </p>
      *
      * @param credentials DTO que contiene las credenciales del usuario
-     *        (username/email y password)
+     *                    (username/email y password)
      * @return AuthResponseDTO que incluye el usuario autenticado y el token JWT
      *         generado
      * @throws UserException si el usuario no existe o la contraseña es incorrecta
@@ -65,6 +65,7 @@ public class AuthService {
     public AuthResponseDTO login(LoginRequestDTO credentials) {
         User user = uService.getUserByUsernameOrEmail(credentials.getUsernameOrEmail());
         user.setActive(true);
+        user.setSessionCount(user.getSessionCount() + 1);
 
         if (!Validations.comparePasswords(credentials.getPassword(), user.getPassword())) {
             throw new UserException(UserException.FAILED_LOGIN);
@@ -95,13 +96,13 @@ public class AuthService {
      * </p>
      *
      * @param userData DTO que contiene los datos necesarios para registrar un
-     *        usuario (nombre,
-     *        apellido, username, email, contraseña, teléfono)
+     *                 usuario (nombre,
+     *                 apellido, username, email, contraseña, teléfono)
      * @return AuthResponseDTO que incluye el usuario registrado y el token JWT
      *         generado
      * @throws UserException si ya existe un usuario con el mismo username o si el
-     *         email no es
-     *         válido
+     *                       email no es
+     *                       válido
      */
     public AuthResponseDTO register(RegisterRequestDTO userData) {
         Optional<UserResponseDTO> existUser = uService.getUserByUsername(userData.getUsername());
@@ -130,6 +131,7 @@ public class AuthService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(null)
                 .deletedAt(null)
+                .sessionCount(0)
                 .build();
 
         UserResponseDTO savedUser = uService.saveUser(user);
