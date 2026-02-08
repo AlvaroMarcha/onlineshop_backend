@@ -138,7 +138,7 @@ public class UserService {
         user.setLastLogin(updatedUser.getLastLogin());
         user.setUpdatedAt(LocalDateTime.now());
 
-        return UserMapper.toUserDTO(uRepository.save(updatedUser));
+        return UserMapper.toUserDTO(uRepository.save(user));
     }
 
     /**
