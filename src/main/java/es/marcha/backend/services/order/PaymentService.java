@@ -148,7 +148,17 @@ public class PaymentService {
                 if (targetStatus == PaymentStatus.REFUNDED)
                     currentStatus = PaymentStatus.REFUNDED;
             }
-            case FAILED, CANCELLED, EXPIRED, REFUNDED -> {
+            case FAILED, EXPIRED -> {
+                throw new OrderException(
+                        OrderException.TERMINAL_STATUS_PAYMENT + ": " + currentStatus);
+            }
+            case CANCELLED -> {
+                cancelPayment(paymentId);
+                throw new OrderException(
+                        OrderException.TERMINAL_STATUS_PAYMENT + ": " + currentStatus);
+            }
+            case REFUNDED -> {
+                refundPayment(paymentId);
                 throw new OrderException(
                         OrderException.TERMINAL_STATUS_PAYMENT + ": " + currentStatus);
             }
@@ -229,6 +239,103 @@ public class PaymentService {
         oService.saveOrder(order);
     }
 
-    // TODO: Faltaran metodos para lanzar metricas de pedidos y pagos
+    /**
+     * Cancela un pago existente y revierte su impacto en el total de la orden
+     * asociada.
+     *
+     * <p>
+     * Este método es {@link Transactional}, por lo que todas las operaciones se
+     * ejecutan
+     * dentro de una única transacción. Si ocurre un error durante el proceso, no se
+     * persisten cambios en la base de datos.
+     * </p>
+     *
+     * <p>
+     * Comportamiento:
+     * <ul>
+     * <li>Si el pago no existe, lanza una {@link OrderException}.</li>
+     * <li>Si el pago ya está en estado {@code CANCELLED}, el método es idempotente:
+     * no modifica la orden ni el pago y devuelve el estado actual.</li>
+     * <li>Si el pago no está cancelado, se resta su {@code amount} del
+     * {@code totalAmount} de la orden asociada.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Este enfoque evita dobles restas en escenarios de reintentos, llamadas
+     * duplicadas
+     * o cancelaciones repetidas, garantizando consistencia en el total de la orden.
+     * </p>
+     *
+     * @param paymentId identificador del pago a cancelar
+     * @return {@link PaymentResponseDTO} con el estado actualizado del pago
+     * @throws OrderException si el pago no existe
+     */
+    @Transactional
+    public PaymentResponseDTO cancelPayment(long paymentId) {
+        Payment payment = pRepository.findById(paymentId).orElseThrow(() -> new OrderException());
+        if (payment.getStatus() == PaymentStatus.CANCELLED) {
+            // Si el pago es cancelled, no resta el amount, solo devuelve el objeto como
+            // esta.
+            return PaymentMapper.toPaymentDTO(payment);
+        }
+
+        Order order = payment.getOrder();
+        order.setTotalAmount(order.getTotalAmount() - payment.getAmount());
+        oService.saveOrder(order);
+
+        payment.setStatus(PaymentStatus.CANCELLED);
+        return PaymentMapper.toPaymentDTO(pRepository.save(payment));
+    }
+
+    /**
+     * Realiza el reembolso de un pago confirmado y revierte su impacto en el total
+     * de la orden asociada.
+     *
+     * <p>
+     * Este método es {@link Transactional}, por lo que todas las operaciones se
+     * ejecutan en una única transacción. Si ocurre un error durante el proceso, no
+     * se persisten cambios en la base de datos.
+     * </p>
+     *
+     * <p>
+     * Comportamiento:
+     * <ul>
+     * <li>Si el pago no existe, lanza una {@link OrderException}.</li>
+     * <li>Si el pago ya está en estado {@code REFUNDED}, el método es idempotente:
+     * no modifica la orden ni el pago y devuelve el estado actual.</li>
+     * <li>Si el pago no está reembolsado, se resta su {@code amount} del
+     * {@code totalAmount} de la orden asociada y se marca como
+     * {@code REFUNDED}.</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * Esta lógica asegura que el total de la orden refleje correctamente los pagos
+     * que han sido reembolsados, evitando dobles restas y manteniendo la
+     * consistencia
+     * del sistema.
+     * </p>
+     *
+     * @param paymentId identificador del pago a reembolsar
+     * @return {@link PaymentResponseDTO} con el estado actualizado del pago
+     * @throws OrderException si el pago no existe
+     */
+    @Transactional
+    public PaymentResponseDTO refundPayment(long paymentId) {
+        Payment payment = pRepository.findById(paymentId)
+                .orElseThrow(() -> new OrderException());
+
+        if (payment.getStatus() == PaymentStatus.REFUNDED) {
+            return PaymentMapper.toPaymentDTO(payment);
+        }
+
+        Order order = payment.getOrder();
+        order.setTotalAmount(order.getTotalAmount() - payment.getAmount());
+        oService.saveOrder(order);
+
+        payment.setStatus(PaymentStatus.REFUNDED);
+        return PaymentMapper.toPaymentDTO(pRepository.save(payment));
+    }
 
 }
