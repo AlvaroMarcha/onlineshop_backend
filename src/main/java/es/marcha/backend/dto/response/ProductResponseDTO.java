@@ -16,7 +16,7 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class ProductReponseDTO {
+public class ProductResponseDTO {
     private long id;
     private String name;
     private String sku;
@@ -37,6 +37,6 @@ public class ProductReponseDTO {
     private String metaTitle;
     private String metaDescription;
     private double rating;
-    private int ratingCount;
+    private double ratingCount;
 
 }

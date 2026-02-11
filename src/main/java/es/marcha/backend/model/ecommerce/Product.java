@@ -76,10 +76,10 @@ public class Product {
     private LocalDateTime deletedAt;
     @Column(name = "weight", nullable = false)
     private double weight;
-    @Column(name = "digital", nullable = false)
-    private boolean digital;
-    @Column(name = "featured")
-    private boolean featured;
+    @Column(name = "is_digital", nullable = false)
+    private boolean isDigital;
+    @Column(name = "is_featured", nullable = false)
+    private boolean isFeatured;
     // SEO && Marketing
     @Column(name = "slug", nullable = false)
     private String slug;
@@ -92,6 +92,6 @@ public class Product {
     @Column(name = "rating", nullable = false)
     private double rating;
     @Column(name = "rating_count", nullable = false)
-    private int ratingCount;
+    private double ratingCount;
 
 }
