@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import es.marcha.backend.model.enums.TypeAddresses;
+import es.marcha.backend.model.enums.AddressesType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -41,7 +41,7 @@ public class Address {
     private User user;
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
-    private TypeAddresses type;
+    private AddressesType type;
     @Column(name = "is_default", nullable = false)
     private boolean isDefault;
     @Column(name = "address_line_1", nullable = false)

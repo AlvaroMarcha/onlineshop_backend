@@ -1,5 +1,5 @@
 package es.marcha.backend.model.enums;
 
-public enum TypeAddresses {
+public enum AddressesType {
     SHIPPING, BILLING
 }
