@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -58,6 +59,9 @@ public class Product {
     @ManyToMany
     @JoinTable(name = "product_subcategory", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "subcategory_id"))
     private List<Subcategory> subcategories;
+    @OneToMany(mappedBy = "product")
+    @JsonBackReference
+    private List<Movement> movements;
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
     @Column(name = "is_deleted", nullable = false)
