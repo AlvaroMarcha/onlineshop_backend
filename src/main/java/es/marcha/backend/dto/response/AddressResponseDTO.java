@@ -2,7 +2,7 @@ package es.marcha.backend.dto.response;
 
 import java.time.LocalDateTime;
 
-import es.marcha.backend.model.enums.TypeAddresses;
+import es.marcha.backend.model.enums.AddressesType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +17,7 @@ import lombok.Setter;
 public class AddressResponseDTO {
     private long id;
     private boolean isDefault;
-    private TypeAddresses type;
+    private AddressesType type;
     private String addressLine1;
     private String addressLine2;
     private String country;
