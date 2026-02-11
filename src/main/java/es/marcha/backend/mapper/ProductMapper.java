@@ -1,11 +1,11 @@
 package es.marcha.backend.mapper;
 
-import es.marcha.backend.dto.response.ProductReponseDTO;
+import es.marcha.backend.dto.response.ProductResponseDTO;
 import es.marcha.backend.model.ecommerce.Product;
 
 public class ProductMapper {
-    public static ProductReponseDTO toProductDTO(Product product) {
-        return ProductReponseDTO.builder()
+    public static ProductResponseDTO toProductDTO(Product product) {
+        return ProductResponseDTO.builder()
                 .id(product.getId())
                 .name(product.getName())
                 .sku(product.getSku())
