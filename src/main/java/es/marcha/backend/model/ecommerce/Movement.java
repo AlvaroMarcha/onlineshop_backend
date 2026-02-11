@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import es.marcha.backend.model.enums.MovementType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -43,6 +45,7 @@ public class Movement {
     @Column(name = "new_quantity")
     private int newQuantity;
     @Column(name = "movement_type", nullable = false)
+    @Enumerated(EnumType.STRING)
     private MovementType movementType;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
