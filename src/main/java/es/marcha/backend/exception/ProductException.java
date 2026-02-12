@@ -7,6 +7,7 @@ public class ProductException extends NoHandlerException {
     public static final String FAILED_CREATE = "FAILED_TO_CREATE_PRODUCT";
     public static final String FAILED_UPDATE = "FAILED_TO_UPDATE_PRODUCT";
     public static final String FAILED_DELETE = "FAILED_TO_DELETE_PRODUCT";
+    public static final String FAILED_FETCH_SUBCATEGORY = "FAILED_TO_FETCH_SUBCATEGORY";
 
     public ProductException() {
         this(DEFAULT);

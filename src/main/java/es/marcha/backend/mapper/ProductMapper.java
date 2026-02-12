@@ -1,8 +1,11 @@
 package es.marcha.backend.mapper;
 
+import java.util.List;
+
 import es.marcha.backend.dto.request.ProductRequestDTO;
 import es.marcha.backend.dto.response.ProductResponseDTO;
 import es.marcha.backend.model.ecommerce.Product;
+import es.marcha.backend.model.ecommerce.Subcategory;
 
 public class ProductMapper {
     public static ProductResponseDTO toProductDTO(Product product) {
@@ -26,7 +29,7 @@ public class ProductMapper {
                 .build();
     }
 
-    public static Product toProductByRequestProduct(ProductRequestDTO productDTO) {
+    public static Product toProductByRequestProduct(ProductRequestDTO productDTO, List<Subcategory> subcategories) {
         return Product.builder()
                 .name(productDTO.getName())
                 .sku(productDTO.getSku())
@@ -38,6 +41,7 @@ public class ProductMapper {
                 .createdBy(productDTO.getCreatedBy())
                 .isDigital(productDTO.isDigital())
                 .isFeatured(productDTO.isFeatured())
+                .subcategories(subcategories)
                 .build();
     }
 }

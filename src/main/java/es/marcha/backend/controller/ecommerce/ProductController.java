@@ -18,7 +18,9 @@ import es.marcha.backend.dto.request.ProductRequestDTO;
 import es.marcha.backend.dto.response.ProductResponseDTO;
 import es.marcha.backend.mapper.ProductMapper;
 import es.marcha.backend.model.ecommerce.Product;
+import es.marcha.backend.model.ecommerce.Subcategory;
 import es.marcha.backend.services.ecommerce.ProductService;
+import es.marcha.backend.services.ecommerce.SubcategoryService;
 
 @RestController
 @RequestMapping("/products")
@@ -26,6 +28,9 @@ public class ProductController {
 
     @Autowired
     private ProductService prodService;
+
+    @Autowired
+    private SubcategoryService subcatService;
 
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
@@ -41,7 +46,8 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productDTO) {
-        Product product = ProductMapper.toProductByRequestProduct(productDTO);
+        List<Subcategory> subcategories = subcatService.getAllSubcategories(productDTO.getSubcategoryIds());
+        Product product = ProductMapper.toProductByRequestProduct(productDTO, subcategories);
         ProductResponseDTO createdProduct = prodService.createProduct(product);
         return new ResponseEntity<>(createdProduct, HttpStatus.OK);
     }
