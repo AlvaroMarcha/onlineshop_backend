@@ -11,6 +11,7 @@ import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ProductMapper;
 import es.marcha.backend.model.ecommerce.Product;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
+import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -65,11 +66,18 @@ public class ProductService {
         if (product == null) {
             throw new ProductException(ProductException.FAILED_CREATE);
         }
+
+        String name = product.getName().trim();
+
+        product.setSku(ProductUtils.generateSKU(name));
         product.setActive(true);
         product.setDeleted(false);
         product.setVersion(0);
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
+        product.setSlug(ProductUtils.createSlug(name));
+        product.setMetaTitle(ProductUtils.generateTitleES(name));
+        product.setMetaDescription(ProductUtils.generateMetaDescriptionES(name));
 
         return ProductMapper.toProductDTO(prodRepository.save(product));
     }
