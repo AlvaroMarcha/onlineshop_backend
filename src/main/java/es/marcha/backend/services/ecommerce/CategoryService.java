@@ -12,6 +12,7 @@ import es.marcha.backend.mapper.CategoryMapper;
 import es.marcha.backend.model.ecommerce.Category;
 import es.marcha.backend.repository.ecommerce.CategoryRepository;
 import es.marcha.backend.utils.ProductUtils;
+import jakarta.transaction.Transactional;
 
 @Service
 public class CategoryService {
@@ -41,6 +42,7 @@ public class CategoryService {
         return categories;
     }
 
+    @Transactional
     public CategoryResponseDTO saveCategory(Category category) {
         category.setActive(true);
         category.setCreatedAt(LocalDateTime.now());
@@ -49,6 +51,7 @@ public class CategoryService {
         return CategoryMapper.toCategoryDTO(catRepository.save(category));
     }
 
+    @Transactional
     public CategoryResponseDTO updateCategory(Category category) {
         Category existingCategory = catRepository.findById(category.getId())
                 .filter(c -> c.isActive())
@@ -62,6 +65,7 @@ public class CategoryService {
         return CategoryMapper.toCategoryDTO(catRepository.save(existingCategory));
     }
 
+    @Transactional
     public String deleteCategory(long id) {
         Category category = catRepository.findById(id).filter(c -> c.isActive())
                 .orElseThrow(() -> new ProductException(ProductException.FAILED_FETCH_CATEGORY));
