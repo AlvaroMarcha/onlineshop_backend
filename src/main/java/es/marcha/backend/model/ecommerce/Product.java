@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -54,13 +54,13 @@ public class Product {
     @Column(name = "tax_rate", nullable = false)
     private BigDecimal taxRate;
     @OneToOne(mappedBy = "product", optional = false, fetch = FetchType.LAZY)
-    @JsonBackReference
+    @JsonIgnore
     private Inventory inventory;
     @ManyToMany
     @JoinTable(name = "product_subcategory", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "subcategory_id"))
     private List<Subcategory> subcategories;
     @OneToMany(mappedBy = "product")
-    @JsonBackReference
+    @JsonIgnore
     private List<Movement> movements;
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
@@ -76,7 +76,7 @@ public class Product {
     private LocalDateTime deletedAt;
     @Column(name = "weight", nullable = false)
     private double weight;
-    @Column(name = "is_digital", nullable = false)
+    @Column(name = "is_digital")
     private boolean isDigital;
     @Column(name = "is_featured", nullable = false)
     private boolean isFeatured;
@@ -89,9 +89,9 @@ public class Product {
     private String metaDescription;
     @Column(name = "views")
     private int views;
-    @Column(name = "rating", nullable = false)
+    @Column(name = "rating")
     private double rating;
-    @Column(name = "rating_count", nullable = false)
+    @Column(name = "rating_count")
     private double ratingCount;
 
 }
