@@ -69,6 +69,7 @@ public class ProductService {
 
         String name = product.getName().trim();
 
+        product.setSku(ProductUtils.generateSKU(name));
         product.setActive(true);
         product.setDeleted(false);
         product.setVersion(0);
