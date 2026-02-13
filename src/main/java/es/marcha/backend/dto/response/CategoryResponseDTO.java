@@ -1,5 +1,8 @@
 package es.marcha.backend.dto.response;
 
+import java.util.List;
+
+import es.marcha.backend.model.ecommerce.Subcategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,4 +19,5 @@ public class CategoryResponseDTO {
     private String name;
     private String description;
     private String slug;
+    private List<Subcategory> subcategories;
 }

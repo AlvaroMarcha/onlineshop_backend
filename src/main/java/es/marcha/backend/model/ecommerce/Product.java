@@ -56,6 +56,9 @@ public class Product {
     @OneToOne(mappedBy = "product", optional = false, fetch = FetchType.LAZY)
     @JsonIgnore
     private Inventory inventory;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "product_category", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private List<Category> categories;
     @ManyToMany
     @JoinTable(name = "product_subcategory", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "subcategory_id"))
     private List<Subcategory> subcategories;
@@ -88,10 +91,10 @@ public class Product {
     @Column(name = "meta_description", nullable = false)
     private String metaDescription;
     @Column(name = "views")
-    private int views;
+    private Integer views;
     @Column(name = "rating")
-    private double rating;
+    private Double rating;
     @Column(name = "rating_count")
-    private double ratingCount;
+    private Double ratingCount;
 
 }
