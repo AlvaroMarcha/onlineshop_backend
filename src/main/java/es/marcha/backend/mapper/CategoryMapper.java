@@ -11,6 +11,7 @@ public class CategoryMapper {
                 .name(category.getName())
                 .description(category.getDescription())
                 .slug(category.getSlug())
+                .subcategories(category.getSubcategories())
                 .build();
     }
 }

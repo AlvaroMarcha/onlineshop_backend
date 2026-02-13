@@ -13,7 +13,7 @@ public class ProductMapper {
                 .id(product.getId())
                 .name(product.getName())
                 .sku(product.getSku())
-                .subcategories(product.getSubcategories())
+                .categories(product.getCategories())
                 .description(product.getDescription())
                 .price(product.getPrice())
                 .discountPrice(product.getDiscountPrice())
