@@ -3,7 +3,7 @@ package es.marcha.backend.dto.response;
 import java.math.BigDecimal;
 import java.util.List;
 
-import es.marcha.backend.model.ecommerce.Subcategory;
+import es.marcha.backend.model.ecommerce.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,7 +23,7 @@ public class ProductResponseDTO {
     private BigDecimal price;
     private BigDecimal discountPrice;
     private BigDecimal taxRate;
-    private List<Subcategory> subcategories;
+    private List<Category> categories;
     private double weight;
     private boolean isDigital;
     private boolean isFeatured;
