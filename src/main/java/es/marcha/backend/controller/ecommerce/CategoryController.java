@@ -15,8 +15,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.dto.response.CategoryResponseDTO;
+import es.marcha.backend.dto.response.SubcategoryResponseDTO;
 import es.marcha.backend.model.ecommerce.Category;
 import es.marcha.backend.services.ecommerce.CategoryService;
+import es.marcha.backend.services.ecommerce.SubcategoryService;
 
 @RestController
 @RequestMapping("/categories")
@@ -24,6 +26,9 @@ public class CategoryController {
 
     @Autowired
     private CategoryService catService;
+
+    @Autowired
+    private SubcategoryService subcatService;
 
     @GetMapping
     public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
@@ -54,4 +59,15 @@ public class CategoryController {
         return new ResponseEntity<>(catService.deleteCategory(id), HttpStatus.OK);
     }
 
+    // !!! ESTE METODO DEBE DEVOLVER TODAS LAS SUBCATEGORIAS DE UNA CATEGORIA!!
+    @GetMapping("/subcategories")
+    public ResponseEntity<List<SubcategoryResponseDTO>> getAllSubcategories() {
+        List<SubcategoryResponseDTO> subcategories = subcatService.getAllSubcategories();
+        return new ResponseEntity<>(subcategories, HttpStatus.OK);
+    }
+
+    // TODO: falta metodo para obtener una sola subcategoria por ID
+    // TODO: falta metodo para crear una subcategoria
+    // TODO: falta metodo para actualizar una subcategoria
+    // TODO: falta metodo para eliminar una subcategoria
 }
