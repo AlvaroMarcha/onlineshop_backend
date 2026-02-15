@@ -6,6 +6,7 @@ Este proyecto es una plantilla básica de backend desarrollada con [Spring Boot]
 
 - Java 21
 - Maven 3.5+
+- Docker (opcional para desarrollo)
 - Base de datos compatible con MariaDB/MySQL
 
 ## Configuración
@@ -38,6 +39,23 @@ La aplicación expone un endpoint de salud en `/health/status` que devuelve el e
 ```bash
 curl http://localhost:8080/health/status
 ```
+
+## Levantar BBDD y proyecto por separado para HotReload
+
+1. **Base de datos** (Docker)
+   - Levantar: 
+     ```bash
+     ./dev.sh db-start
+     ```
+   - Detener:
+     ```bash
+     ./dev.sh db-stop
+     ```
+
+2. **Spring Boot** (con hot reload)
+   ```bash
+   mvn spring-boot:run
+
 
 ## Entidades de ejemplo
 
@@ -79,6 +97,12 @@ Estos son los endpoints más relevantes que expone la API:
   - `POST /orders/{orderId}/payments`
   - `GET /orders/{orderId}/payments/last`
   - `POST /orders/payments/{paymentId}/nextStatus`
+  - Categorías:
+  - `GET /categories`
+  - `GET /categories/{id}`
+  - `POST /categories`
+  - `PUT /categories`
+  - `DELETE /categories/{id}`
 
 ## Pruebas
 
