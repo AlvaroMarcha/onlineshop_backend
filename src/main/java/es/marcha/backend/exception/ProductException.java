@@ -8,6 +8,9 @@ public class ProductException extends NoHandlerException {
     public static final String FAILED_UPDATE = "FAILED_TO_UPDATE_PRODUCT";
     public static final String FAILED_DELETE = "FAILED_TO_DELETE_PRODUCT";
     public static final String FAILED_FETCH_SUBCATEGORY = "FAILED_TO_FETCH_SUBCATEGORY";
+    public static final String FAILED_CREATE_SUBCATEGORY = "FAILED_TO_CREATE_SUBCATEGORY";
+    public static final String FAILED_UPDATE_SUBCATEGORY = "FAILED_TO_UPDATE_SUBCATEGORY";
+    public static final String FAILED_DELETE_SUBCATEGORY = "FAILED_TO_DELETE_SUBCATEGORY";
     public static final String FAILED_FETCH_CATEGORY = "FAILED_TO_FETCH_CATEGORY";
     public static final String FAILED_SAVE_CATEGORY = "FAILED_TO_SAVE_CATEGORY";
     public static final String FAILED_DELETE_CATEGORY = "FAILED_TO_DELETE_CATEGORY";
