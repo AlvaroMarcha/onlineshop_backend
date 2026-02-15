@@ -138,7 +138,7 @@ Estos son los endpoints más relevantes que expone la API:
   - `POST /orders/{orderId}/payments`
   - `GET /orders/{orderId}/payments/last`
   - `POST /orders/payments/{paymentId}/nextStatus`
-  - Categorías:
+- Categorías:
   - `GET /categories`
   - `GET /categories/{id}`
   - `POST /categories`
