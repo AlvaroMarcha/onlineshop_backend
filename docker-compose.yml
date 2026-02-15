@@ -13,7 +13,9 @@ services:
       - mysql_data:/var/lib/mysql
 
   app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: marcha-backend
     depends_on:
       - mysql
