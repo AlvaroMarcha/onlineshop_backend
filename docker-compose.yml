@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mariadb:11
+    container_name: marcha-mysql
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: marcha-backend
+    depends_on:
+      - mysql
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/uploads
+    restart: always
+
+volumes:
+  mysql_data:
