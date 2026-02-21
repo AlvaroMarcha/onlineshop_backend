@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import es.marcha.backend.dto.response.CategoryResponseDTO;
 import es.marcha.backend.dto.response.SubcategoryResponseDTO;
 import es.marcha.backend.model.ecommerce.Category;
+import es.marcha.backend.model.ecommerce.Subcategory;
 import es.marcha.backend.services.ecommerce.CategoryService;
 import es.marcha.backend.services.ecommerce.SubcategoryService;
 
@@ -59,15 +60,22 @@ public class CategoryController {
         return new ResponseEntity<>(catService.deleteCategory(id), HttpStatus.OK);
     }
 
-    // !!! ESTE METODO DEBE DEVOLVER TODAS LAS SUBCATEGORIAS DE UNA CATEGORIA!!
-    @GetMapping("/subcategories")
-    public ResponseEntity<List<SubcategoryResponseDTO>> getAllSubcategories() {
-        List<SubcategoryResponseDTO> subcategories = subcatService.getAllSubcategories();
-        return new ResponseEntity<>(subcategories, HttpStatus.OK);
+    // ** SUBCATEGORIES **
+
+    @PostMapping("/subcategories")
+    public ResponseEntity<SubcategoryResponseDTO> createSubcategory(@RequestBody Subcategory subcategory) {
+        SubcategoryResponseDTO savedSubcategory = subcatService.createSubcategory(subcategory);
+        return new ResponseEntity<>(savedSubcategory, HttpStatus.OK);
     }
 
-    // TODO: falta metodo para obtener una sola subcategoria por ID
-    // TODO: falta metodo para crear una subcategoria
-    // TODO: falta metodo para actualizar una subcategoria
-    // TODO: falta metodo para eliminar una subcategoria
+    @PutMapping("/subcategories")
+    public ResponseEntity<SubcategoryResponseDTO> updateSubcategory(@RequestBody Subcategory subcategory) {
+        SubcategoryResponseDTO updatedSubcategory = subcatService.updateSubcategory(subcategory);
+        return new ResponseEntity<>(updatedSubcategory, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/subcategories/{id}")
+    public ResponseEntity<String> deleteSubcategory(@PathVariable Long id) {
+        return new ResponseEntity<>(subcatService.deleteSubcategory(id), HttpStatus.OK);
+    }
 }

@@ -124,6 +124,9 @@ public class SubcategoryService {
             throw new ProductException(ProductException.FAILED_CREATE_SUBCATEGORY);
         }
 
+        subcategory.setActive(true);
+        subcategory.setSlug(ProductUtils.createSlug(subcategory.getName()));
+        subcategory.setCreatedAt(LocalDateTime.now());
         Subcategory savedSubcategory = subcatRepository.save(subcategory);
         return SubcategoryMapper.toResponseDTO(savedSubcategory);
     }
