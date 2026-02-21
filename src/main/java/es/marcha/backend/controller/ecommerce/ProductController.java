@@ -46,7 +46,7 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productDTO) {
-        List<Subcategory> subcategories = subcatService.getAllSubcategories(productDTO.getSubcategoryIds());
+        List<Subcategory> subcategories = subcatService.getAllSubcategoriesHandler(productDTO.getSubcategoryIds());
         Product product = ProductMapper.toProductByRequestProduct(productDTO, subcategories);
         ProductResponseDTO createdProduct = prodService.createProduct(product);
         return new ResponseEntity<>(createdProduct, HttpStatus.OK);
