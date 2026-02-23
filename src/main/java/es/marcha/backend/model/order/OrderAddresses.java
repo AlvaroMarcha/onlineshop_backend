@@ -44,8 +44,6 @@ public class OrderAddresses {
     private String addressLine2;
     @Column(name = "city", nullable = false)
     private String city;
-    @Column(name = "state", nullable = false)
-    private String state;
     @Column(name = "posta_code", nullable = false)
     private String postalCode;
     @Column(name = "country", nullable = false)

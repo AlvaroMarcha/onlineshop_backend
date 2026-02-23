@@ -12,7 +12,6 @@ public class OrderAddrMapper {
                 .addressLine1(orderAddress.getAddressLine1())
                 .addressLine2(orderAddress.getAddressLine2())
                 .city(orderAddress.getCity())
-                .state(orderAddress.getState())
                 .postalCode(orderAddress.getPostalCode())
                 .country(orderAddress.getCountry())
                 .createdAt(orderAddress.getCreatedAt())
