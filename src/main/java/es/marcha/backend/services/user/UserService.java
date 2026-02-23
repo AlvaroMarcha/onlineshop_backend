@@ -1,6 +1,7 @@
 package es.marcha.backend.services.user;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,10 +99,12 @@ public class UserService {
         Role role = rService.getRoleById(user.getRole().getId());
 
         user.setRole(role);
+        user.setAddresses(new ArrayList<>());
         user.setActive(true);
         user.setBanned(false);
         user.setDeleted(false);
         user.setVerified(false);
+        user.setCreatedAt(LocalDateTime.now());
         return UserMapper.toUserDTO(uRepository.save(user));
     }
 
