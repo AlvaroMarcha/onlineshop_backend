@@ -34,7 +34,6 @@ public class Role {
     @Column(name = "name", nullable = false, unique = true)
     private String name;
     @Column(name = "description")
-    @JsonIgnore
     private String description;
     @OneToMany(mappedBy = "role")
     @JsonIgnore

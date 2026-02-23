@@ -7,4 +7,5 @@ import es.marcha.backend.model.user.Role;
 @Repository
 public interface RoleRepository extends JpaRepository<Role, Long> {
 
+    boolean existsByName(String name);
 }
