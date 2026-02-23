@@ -56,6 +56,12 @@ public class OrderController {
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
+    @PostMapping
+    public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody Order order) {
+        OrderResponseDTO newOrder = oService.saveNewOrder(order);
+        return new ResponseEntity<>(newOrder, HttpStatus.OK);
+    }
+
     /**
      * Avanza el estado de una orden según la lógica de negocio. Permite marcar la
      * orden como
@@ -71,7 +77,7 @@ public class OrderController {
      *         estado HTTP 202
      *         ACCEPTED.
      */
-    @PostMapping("/nextStatus")
+    @PostMapping("/next-status")
     public ResponseEntity<OrderStatus> nextOrderStatus(@RequestParam long orderId,
             @RequestParam boolean cancelled, @RequestParam boolean returned) {
         OrderStatus status = oService.nextStatus(orderId, cancelled, returned);
