@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.dto.response.OrderResponseDTO;
+import es.marcha.backend.dto.response.order.OrderResponseDTO;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.mapper.OrderAddrMapper;
 import es.marcha.backend.mapper.OrderMapper;

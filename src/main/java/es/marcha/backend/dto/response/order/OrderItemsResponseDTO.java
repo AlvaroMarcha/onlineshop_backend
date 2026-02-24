@@ -1,9 +1,9 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.response.order;
 
 import java.math.BigDecimal;
-import java.util.List;
 
-import es.marcha.backend.model.ecommerce.Category;
+import es.marcha.backend.model.ecommerce.Product;
+import es.marcha.backend.model.order.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,23 +15,20 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class ProductResponseDTO {
+public class OrderItemsResponseDTO {
+    // Attribs
     private long id;
+    private Order order;
+    private Product product;
     private String name;
     private String sku;
     private String description;
     private BigDecimal price;
     private BigDecimal discountPrice;
+    private int quantity;
     private BigDecimal taxRate;
-    private List<Category> categories;
     private double weight;
     private boolean isDigital;
     private boolean isFeatured;
-    // SEO && Marketing
-    private String slug;
-    private String metaTitle;
-    private String metaDescription;
-    private double rating;
-    private double ratingCount;
 
 }

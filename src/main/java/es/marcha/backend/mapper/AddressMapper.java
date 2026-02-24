@@ -1,6 +1,6 @@
 package es.marcha.backend.mapper;
 
-import es.marcha.backend.dto.response.AddressResponseDTO;
+import es.marcha.backend.dto.response.user.AddressResponseDTO;
 import es.marcha.backend.model.user.Address;
 
 public class AddressMapper {

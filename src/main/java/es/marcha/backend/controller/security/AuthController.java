@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.request.LoginRequestDTO;
-import es.marcha.backend.dto.request.LogoutRequestDTO;
-import es.marcha.backend.dto.request.RegisterRequestDTO;
-import es.marcha.backend.dto.response.AuthResponseDTO;
-import es.marcha.backend.dto.response.LogoutResponseDTO;
+import es.marcha.backend.dto.request.security.LoginRequestDTO;
+import es.marcha.backend.dto.request.security.LogoutRequestDTO;
+import es.marcha.backend.dto.request.security.RegisterRequestDTO;
+import es.marcha.backend.dto.response.security.AuthResponseDTO;
+import es.marcha.backend.dto.response.user.LogoutResponseDTO;
 import es.marcha.backend.services.security.AuthService;
 
 @RestController

@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.response.user;
 
 import java.time.LocalDateTime;
 

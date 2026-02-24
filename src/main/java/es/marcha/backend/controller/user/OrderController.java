@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.response.OrderResponseDTO;
-import es.marcha.backend.dto.response.PaymentResponseDTO;
+import es.marcha.backend.dto.response.order.OrderResponseDTO;
+import es.marcha.backend.dto.response.order.PaymentResponseDTO;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.enums.PaymentStatus;

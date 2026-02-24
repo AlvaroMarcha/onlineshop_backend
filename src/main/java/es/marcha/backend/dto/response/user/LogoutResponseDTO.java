@@ -1,4 +1,6 @@
-package es.marcha.backend.dto.request;
+package es.marcha.backend.dto.response.user;
+
+import java.time.LocalDateTime;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,13 +13,9 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class RegisterRequestDTO {
-    // Attribs
-    private String name;
-    private String surname;
+public class LogoutResponseDTO {
+    private long userId;
     private String username;
-    private String email;
-    private String password;
-    private String phone;
-
+    private boolean isActive;
+    private LocalDateTime lastLogin;
 }

@@ -1,6 +1,6 @@
 package es.marcha.backend.mapper;
 
-import es.marcha.backend.dto.response.OrderResponseDTO;
+import es.marcha.backend.dto.response.order.OrderResponseDTO;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.user.User;
 

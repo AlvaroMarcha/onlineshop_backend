@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.response.AddressResponseDTO;
+import es.marcha.backend.dto.response.user.AddressResponseDTO;
 import es.marcha.backend.model.user.Address;
 import es.marcha.backend.services.user.AddressService;
 

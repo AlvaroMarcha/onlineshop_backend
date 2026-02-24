@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.request.ProductRequestDTO;
-import es.marcha.backend.dto.response.ProductResponseDTO;
+import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
+import es.marcha.backend.dto.response.ecommerce.ProductResponseDTO;
 import es.marcha.backend.mapper.ProductMapper;
 import es.marcha.backend.model.ecommerce.Product;
 import es.marcha.backend.model.ecommerce.Subcategory;

@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.request;
+package es.marcha.backend.dto.request.ecommerce;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

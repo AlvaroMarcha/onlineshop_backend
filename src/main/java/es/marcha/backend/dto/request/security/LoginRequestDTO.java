@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.request.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,8 +11,9 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class AuthResponseDTO {
+public class LoginRequestDTO {
     // Attribs
-    private UserResponseDTO user;
-    private String token;
+    private String usernameOrEmail;
+    private String password;
+
 }

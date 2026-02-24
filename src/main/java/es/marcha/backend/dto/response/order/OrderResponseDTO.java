@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.response.order;
 
 import java.time.LocalDateTime;
 import java.util.List;

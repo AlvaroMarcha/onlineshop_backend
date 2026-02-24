@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,10 +11,11 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class SubcategoryResponseDTO {
+public class BannedUserResponseDTO {
+    // Attribs
     private long id;
-    private String name;
-    private String description;
-    private String slug;
+    private String username;
+    private boolean isBanned;
+    private boolean isActive;
 
 }

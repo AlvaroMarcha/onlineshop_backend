@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.response.OrderAddrResponseDTO;
+import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.model.order.OrderAddresses;
 import es.marcha.backend.services.order.OrderAddressService;
 

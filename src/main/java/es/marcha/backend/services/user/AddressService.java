@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.dto.response.AddressResponseDTO;
+import es.marcha.backend.dto.response.user.AddressResponseDTO;
 import es.marcha.backend.exception.AddressException;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.mapper.AddressMapper;

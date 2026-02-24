@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.request;
+package es.marcha.backend.dto.request.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +11,13 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class LoginRequestDTO {
+public class RegisterRequestDTO {
     // Attribs
-    private String usernameOrEmail;
+    private String name;
+    private String surname;
+    private String username;
+    private String email;
     private String password;
+    private String phone;
 
 }
