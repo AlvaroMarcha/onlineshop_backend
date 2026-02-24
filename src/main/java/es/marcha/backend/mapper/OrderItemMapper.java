@@ -1,6 +1,6 @@
 package es.marcha.backend.mapper;
 
-import es.marcha.backend.dto.response.OrderItemsResponseDTO;
+import es.marcha.backend.dto.response.order.OrderItemsResponseDTO;
 import es.marcha.backend.model.order.OrderItems;
 
 public class OrderItemMapper {
