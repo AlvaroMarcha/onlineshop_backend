@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,8 +11,11 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class AuthResponseDTO {
+public class BannedUserResponseDTO {
     // Attribs
-    private UserResponseDTO user;
-    private String token;
+    private long id;
+    private String username;
+    private boolean isBanned;
+    private boolean isActive;
+
 }
