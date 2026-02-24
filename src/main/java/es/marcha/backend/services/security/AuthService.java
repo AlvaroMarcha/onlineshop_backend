@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.config.StartupConfig;
-import es.marcha.backend.dto.request.LoginRequestDTO;
-import es.marcha.backend.dto.request.RegisterRequestDTO;
-import es.marcha.backend.dto.response.AuthResponseDTO;
-import es.marcha.backend.dto.response.LogoutResponseDTO;
-import es.marcha.backend.dto.response.UserResponseDTO;
+import es.marcha.backend.dto.request.security.LoginRequestDTO;
+import es.marcha.backend.dto.request.security.RegisterRequestDTO;
+import es.marcha.backend.dto.response.security.AuthResponseDTO;
+import es.marcha.backend.dto.response.user.LogoutResponseDTO;
+import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
