@@ -3,6 +3,8 @@ package es.marcha.backend.model.order;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import es.marcha.backend.model.ecommerce.Product;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +35,7 @@ public class OrderItems {
     private long id;
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonBackReference
     private Order order;
     @ManyToOne
     @JoinColumn(name = "product_id")
