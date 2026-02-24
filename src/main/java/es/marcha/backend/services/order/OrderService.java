@@ -59,12 +59,16 @@ public class OrderService {
                 .orElseThrow(() -> new OrderException(OrderException.USER_ADDRESS_LENGHT_0));
 
         // SNAPSHOTS
-        oAddrService.saveOrderAddr(OrderAddrMapper.fromAddresstoOrderAddr(addressDefault, order));
-        oItemsService.saveOrderItems(order.getOrderItems());
-
         order.setStatus(OrderStatus.CREATED);
         order.setCreatedAt(LocalDateTime.now());
-        return OrderMapper.toOrderDTO(oRepository.save(order));
+        Order savedOrder = oRepository.save(order);
+
+        order.getOrderItems().forEach(item -> item.setOrder(savedOrder));
+        oItemsService.saveOrderItems(order.getOrderItems());
+
+        oAddrService.saveOrderAddr(OrderAddrMapper.fromAddresstoOrderAddr(addressDefault, savedOrder));
+
+        return OrderMapper.toOrderDTO(savedOrder);
     }
 
     public Order saveOrder(Order order) {
