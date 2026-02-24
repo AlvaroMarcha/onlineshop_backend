@@ -3,11 +3,13 @@ package es.marcha.backend.model.order;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.user.User;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -59,8 +61,9 @@ public class Order {
     private LocalDateTime updatedAt;
     @OneToMany(mappedBy = "order")
     @JsonManagedReference
+    @JsonIgnore
     List<Payment> payments;
-    @OneToMany(mappedBy = "order")
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<OrderItems> orderItems;
 }
