@@ -2,6 +2,7 @@ package es.marcha.backend.services.order;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -43,10 +44,11 @@ public class OrderItemsService {
 
     @Transactional
     public List<OrderItemsResponseDTO> saveOrderItems(List<OrderItems> orderItems) {
-        if (orderItems.isEmpty())
+        if (orderItems == null || orderItems.isEmpty())
             throw new OrderException(OrderException.FAILED_ORDER_ITEMS);
 
         return orderItems.stream()
+                .filter(Objects::nonNull)
                 .peek(item -> item.setCreatedAt(LocalDateTime.now()))
                 .map(oItemRepository::save)
                 .map(OrderItemMapper::toOrderItemDTO)
