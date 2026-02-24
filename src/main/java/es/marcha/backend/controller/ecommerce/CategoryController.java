@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.response.CategoryResponseDTO;
-import es.marcha.backend.dto.response.SubcategoryResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.CategoryResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.SubcategoryResponseDTO;
 import es.marcha.backend.model.ecommerce.Category;
 import es.marcha.backend.model.ecommerce.Subcategory;
 import es.marcha.backend.services.ecommerce.CategoryService;

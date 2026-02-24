@@ -1,8 +1,7 @@
 package es.marcha.backend.mapper;
 
+import es.marcha.backend.dto.response.ecommerce.CategoryResponseDTO;
 import es.marcha.backend.model.ecommerce.Category;
-
-import es.marcha.backend.dto.response.CategoryResponseDTO;
 
 public class CategoryMapper {
     public static CategoryResponseDTO toCategoryDTO(Category category) {
