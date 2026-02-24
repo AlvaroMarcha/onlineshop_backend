@@ -83,6 +83,8 @@ public class Product {
     private boolean isDigital;
     @Column(name = "is_featured", nullable = false)
     private boolean isFeatured;
+    @Column(name = "sold_count")
+    private int soldCount;
     // SEO && Marketing
     @Column(name = "slug", nullable = false)
     private String slug;
