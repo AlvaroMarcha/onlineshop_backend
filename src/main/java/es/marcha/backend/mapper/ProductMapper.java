@@ -2,8 +2,8 @@ package es.marcha.backend.mapper;
 
 import java.util.List;
 
-import es.marcha.backend.dto.request.ProductRequestDTO;
-import es.marcha.backend.dto.response.ProductResponseDTO;
+import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
+import es.marcha.backend.dto.response.ecommerce.ProductResponseDTO;
 import es.marcha.backend.model.ecommerce.Product;
 import es.marcha.backend.model.ecommerce.Subcategory;
 
