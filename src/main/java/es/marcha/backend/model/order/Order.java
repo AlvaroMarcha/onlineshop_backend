@@ -60,4 +60,7 @@ public class Order {
     @OneToMany(mappedBy = "order")
     @JsonManagedReference
     List<Payment> payments;
+    @OneToMany(mappedBy = "order")
+    @JsonManagedReference
+    private List<OrderItems> orderItems;
 }
