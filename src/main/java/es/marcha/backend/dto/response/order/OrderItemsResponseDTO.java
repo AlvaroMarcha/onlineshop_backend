@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.response.order;
 
 import java.math.BigDecimal;
 
