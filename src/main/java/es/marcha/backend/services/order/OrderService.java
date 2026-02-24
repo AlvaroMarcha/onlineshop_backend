@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.OrderResponseDTO;
 import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.mapper.OrderAddrMapper;
 import es.marcha.backend.mapper.OrderMapper;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.order.Order;
-import es.marcha.backend.model.order.OrderAddresses;
 import es.marcha.backend.model.user.Address;
 import es.marcha.backend.repository.order.OrderRepository;
 import jakarta.transaction.Transactional;
@@ -24,6 +24,9 @@ public class OrderService {
 
     @Autowired
     private OrderAddressService oAddrService;
+
+    @Autowired
+    private OrderItemsService oItemsService;
 
     // Methods
     public Order getOrderByIdHandler(long id) {
@@ -48,42 +51,16 @@ public class OrderService {
     }
 
     // CREAR SNAPSHOT!!!
+    @Transactional
     public OrderResponseDTO saveNewOrder(Order order) {
-        List<Address> addresses = order.getUser().getAddresses().stream()
+        Address addressDefault = order.getUser().getAddresses().stream()
                 .filter(Address::isDefault)
-                .toList();
+                .findFirst()
+                .orElseThrow(() -> new OrderException(OrderException.USER_ADDRESS_LENGHT_0));
 
-        if (addresses.isEmpty())
-            throw new OrderException(OrderException.USER_ADDRESS_LENGHT_0);
-
-        Address addressDefault = Address.builder()
-                .id(addresses.get(0).getId())
-                .type(addresses.get(0).getType())
-                .isDefault(addresses.get(0).isDefault())
-                .addressLine1(addresses.get(0).getAddressLine1())
-                .addressLine2(addresses.get(0).getAddressLine2())
-                .country(addresses.get(0).getCountry())
-                .city(addresses.get(0).getCity())
-                .postalCode(addresses.get(0).getPostalCode())
-                .createdAt(addresses.get(0).getCreatedAt())
-                .updatedAt(addresses.get(0).getUpdatedAt())
-                .build();
-
-        // SNAPSHOT_ADDRESSES
-        OrderAddresses orderDefault = OrderAddresses.builder()
-                .order(order)
-                .type(addressDefault.getType())
-                .addressLine1(addressDefault.getAddressLine1())
-                .addressLine2(addressDefault.getAddressLine2())
-                .city(addressDefault.getCity())
-                .postalCode(addressDefault.getPostalCode())
-                .country(addressDefault.getCountry())
-                .createdAt(addressDefault.getCreatedAt())
-                .build();
-
-        oAddrService.saveOrderAddr(orderDefault);
-
-        // SNAPSHOT_ITEMS
+        // SNAPSHOTS
+        oAddrService.saveOrderAddr(OrderAddrMapper.fromAddresstoOrderAddr(addressDefault, order));
+        oItemsService.saveOrderItems(order.getOrderItems());
 
         order.setStatus(OrderStatus.CREATED);
         order.setCreatedAt(LocalDateTime.now());
