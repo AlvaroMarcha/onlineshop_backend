@@ -1,6 +1,6 @@
 package es.marcha.backend.mapper;
 
-import es.marcha.backend.dto.response.UserResponseDTO;
+import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.model.user.User;
 
 public class UserMapper {

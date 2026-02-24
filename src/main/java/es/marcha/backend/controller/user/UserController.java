@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.response.BannedUserResponseDTO;
-import es.marcha.backend.dto.response.UserResponseDTO;
+import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
+import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.services.user.UserService;
