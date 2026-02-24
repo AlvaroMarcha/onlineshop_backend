@@ -1,6 +1,6 @@
 package es.marcha.backend.mapper;
 
-import es.marcha.backend.dto.response.SubcategoryResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.SubcategoryResponseDTO;
 import es.marcha.backend.model.ecommerce.Subcategory;
 
 public class SubcategoryMapper {
