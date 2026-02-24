@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.request;
+package es.marcha.backend.dto.request.security;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
