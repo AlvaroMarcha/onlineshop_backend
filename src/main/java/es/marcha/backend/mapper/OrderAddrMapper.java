@@ -1,7 +1,9 @@
 package es.marcha.backend.mapper;
 
 import es.marcha.backend.dto.response.OrderAddrResponseDTO;
+import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.OrderAddresses;
+import es.marcha.backend.model.user.Address;
 
 public class OrderAddrMapper {
     public static OrderAddrResponseDTO toOrderAddressDTO(OrderAddresses orderAddress) {
@@ -16,5 +18,19 @@ public class OrderAddrMapper {
                 .country(orderAddress.getCountry())
                 .createdAt(orderAddress.getCreatedAt())
                 .build();
+    }
+
+    public static OrderAddresses fromAddresstoOrderAddr(Address address, Order order) {
+        return OrderAddresses.builder()
+                .order(order)
+                .type(address.getType())
+                .addressLine1(address.getAddressLine1())
+                .addressLine2(address.getAddressLine2())
+                .city(address.getCity())
+                .postalCode(address.getPostalCode())
+                .country(address.getCountry())
+                .createdAt(address.getCreatedAt())
+                .build();
+
     }
 }
