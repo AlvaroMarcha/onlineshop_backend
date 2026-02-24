@@ -3,7 +3,6 @@ package es.marcha.backend.dto.response.order;
 import java.time.LocalDateTime;
 
 import es.marcha.backend.model.enums.AddressesType;
-import es.marcha.backend.model.order.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +16,6 @@ import lombok.Setter;
 @Getter
 public class OrderAddrResponseDTO {
     private long id;
-    private Order order;
     private AddressesType type;
     private String addressLine1;
     private String addressLine2;
