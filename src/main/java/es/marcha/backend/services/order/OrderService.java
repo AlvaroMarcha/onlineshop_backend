@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.dto.response.order.OrderResponseDTO;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.mapper.OrderAddrMapper;
@@ -13,7 +14,9 @@ import es.marcha.backend.mapper.OrderMapper;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.user.Address;
+import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.order.OrderRepository;
+import es.marcha.backend.services.user.UserService;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -28,32 +31,44 @@ public class OrderService {
     @Autowired
     private OrderItemsService oItemsService;
 
+    @Autowired
+    private UserService uService;
+
     // Methods
     public Order getOrderByIdHandler(long id) {
         return oRepository.findById(id)
                 .orElseThrow(() -> new OrderException());
-    }
 
-    public OrderResponseDTO getOrderById(long id) {
-        return oRepository.findById(id)
-                .map(OrderMapper::toOrderDTO)
-                .orElseThrow(() -> new OrderException());
     }
 
     public List<OrderResponseDTO> getAllOrders(long userId) {
         List<OrderResponseDTO> orders = oRepository.findAllByUserId(userId).stream()
                 .map(OrderMapper::toOrderDTO)
+                .map(order -> {
+                    OrderAddrResponseDTO addressSnapshot = oAddrService.getOrderAddressByOrderId(order.getId());
+                    order.setAddress(addressSnapshot);
+                    return order;
+                })
                 .toList();
-        if (orders.isEmpty()) {
+
+        if (orders == null || orders.isEmpty()) {
             throw new OrderException(OrderException.FAILED_FETCH);
         }
+
         return orders;
     }
 
     // CREAR SNAPSHOT!!!
     @Transactional
     public OrderResponseDTO saveNewOrder(Order order) {
-        Address addressDefault = order.getUser().getAddresses().stream()
+        User user = uService.getUserByIdForHandler(order.getUser().getId());
+
+        List<Address> addresses = user.getAddresses();
+
+        if (addresses.size() == 0 || addresses == null)
+            throw new OrderException(OrderException.USER_ADDRESS_LENGHT_0);
+
+        Address addressDefault = addresses.stream()
                 .filter(Address::isDefault)
                 .findFirst()
                 .orElseThrow(() -> new OrderException(OrderException.USER_ADDRESS_LENGHT_0));
@@ -66,9 +81,15 @@ public class OrderService {
         order.getOrderItems().forEach(item -> item.setOrder(savedOrder));
         oItemsService.saveOrderItems(order.getOrderItems());
 
-        oAddrService.saveOrderAddr(OrderAddrMapper.fromAddresstoOrderAddr(addressDefault, savedOrder));
+        OrderAddrResponseDTO snapOrderAddress = oAddrService.saveOrderAddr(
+                OrderAddrMapper.fromAddresstoOrderAddr(
+                        addressDefault,
+                        savedOrder));
 
-        return OrderMapper.toOrderDTO(savedOrder);
+        OrderResponseDTO finalOrder = OrderMapper.toOrderDTO(savedOrder);
+        finalOrder.setAddress(snapOrderAddress);
+
+        return finalOrder;
     }
 
     public Order saveOrder(Order order) {
