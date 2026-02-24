@@ -23,4 +23,6 @@ public class OrderResponseDTO {
     private String paymentMethod;
     private LocalDateTime createdAt;
     private List<PaymentResponseDTO> payments;
+    private OrderAddrResponseDTO address;
+    private List<OrderItemsResponseDTO> orderItems;
 }
