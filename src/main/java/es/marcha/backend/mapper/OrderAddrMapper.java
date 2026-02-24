@@ -9,7 +9,6 @@ public class OrderAddrMapper {
     public static OrderAddrResponseDTO toOrderAddressDTO(OrderAddresses orderAddress) {
         return OrderAddrResponseDTO.builder()
                 .id(orderAddress.getId())
-                .order(orderAddress.getOrder())
                 .type(orderAddress.getType())
                 .addressLine1(orderAddress.getAddressLine1())
                 .addressLine2(orderAddress.getAddressLine2())
