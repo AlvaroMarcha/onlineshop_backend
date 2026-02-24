@@ -2,7 +2,7 @@ package es.marcha.backend.mapper;
 
 import java.time.LocalDateTime;
 
-import es.marcha.backend.dto.response.PaymentResponseDTO;
+import es.marcha.backend.dto.response.order.PaymentResponseDTO;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.Payment;
 

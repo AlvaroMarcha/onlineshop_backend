@@ -8,7 +8,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.dto.response.PaymentResponseDTO;
+import es.marcha.backend.dto.response.order.PaymentResponseDTO;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.mapper.PaymentMapper;
 import es.marcha.backend.model.enums.OrderStatus;
