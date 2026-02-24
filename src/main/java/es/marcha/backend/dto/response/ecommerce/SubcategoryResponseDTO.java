@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response;
+package es.marcha.backend.dto.response.ecommerce;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
