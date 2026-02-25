@@ -2,6 +2,8 @@ package es.marcha.backend.model.order;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import es.marcha.backend.model.enums.AddressesType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,6 +36,7 @@ public class OrderAddresses {
     private long id;
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
     private Order order;
     @Column(name = "type", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -48,6 +51,8 @@ public class OrderAddresses {
     private String postalCode;
     @Column(name = "country", nullable = false)
     private String country;
+    @Column(name = "is_default", nullable = false)
+    private boolean isDefault;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

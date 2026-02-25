@@ -43,19 +43,6 @@ public class OrderController {
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
-    /**
-     * Devuelve una orden específica según su identificador.
-     *
-     * @param id El ID de la orden que se desea recuperar.
-     * @return ResponseEntity con la {@link Order} correspondiente y el estado HTTP
-     *         200 OK.
-     */
-    @GetMapping("/{id}")
-    public ResponseEntity<OrderResponseDTO> getOrderById(@PathVariable long id) {
-        OrderResponseDTO order = oService.getOrderById(id);
-        return new ResponseEntity<>(order, HttpStatus.OK);
-    }
-
     @PostMapping
     public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody Order order) {
         OrderResponseDTO newOrder = oService.saveNewOrder(order);

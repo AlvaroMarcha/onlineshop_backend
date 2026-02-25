@@ -19,6 +19,10 @@ public class OrderMapper {
                                                                 .map(PaymentMapper::toPaymentDTO)
                                                                 .toList()
                                                 : null)
+                                .orderItems(order.getOrderItems() != null
+                                                ? order.getOrderItems().stream()
+                                                                .map(OrderItemMapper::toOrderItemDTO).toList()
+                                                : null)
                                 .build();
 
         }

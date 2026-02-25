@@ -7,7 +7,6 @@ public class OrderItemMapper {
     public static OrderItemsResponseDTO toOrderItemDTO(OrderItems orderItems) {
         return OrderItemsResponseDTO.builder()
                 .id(orderItems.getId())
-                .order(orderItems.getOrder())
                 .product(orderItems.getProduct())
                 .name(orderItems.getName())
                 .description(orderItems.getDescription())

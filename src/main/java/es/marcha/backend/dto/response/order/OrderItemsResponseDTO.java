@@ -18,7 +18,6 @@ import lombok.Setter;
 public class OrderItemsResponseDTO {
     // Attribs
     private long id;
-    private Order order;
     private Product product;
     private String name;
     private String sku;

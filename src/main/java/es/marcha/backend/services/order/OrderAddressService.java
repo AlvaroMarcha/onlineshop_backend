@@ -29,14 +29,14 @@ public class OrderAddressService {
         return orderSnapshots;
     }
 
-    public OrderAddrResponseDTO getOrderAddressById(long id) {
-        return oAddrRepository.findById(id)
-                .map(OrderAddrMapper::toOrderAddressDTO)
+    public OrderAddresses getOrderAddressById(long id) {
+        return oAddrRepository.findByOrderId(id)
                 .orElseThrow(() -> new OrderException(OrderException.FAILED_ORDER_ADDRESS));
     }
 
-    public OrderAddresses getOrderAddressByIdHandler(long id) {
-        return oAddrRepository.findById(id)
+    public OrderAddrResponseDTO getOrderAddressByOrderId(long id) {
+        return oAddrRepository.findByOrderId(id)
+                .map(OrderAddrMapper::toOrderAddressDTO)
                 .orElseThrow(() -> new OrderException(OrderException.FAILED_ORDER_ADDRESS));
     }
 
