@@ -3,7 +3,6 @@ package es.marcha.backend.dto.response.order;
 import java.math.BigDecimal;
 
 import es.marcha.backend.model.ecommerce.Product;
-import es.marcha.backend.model.order.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
