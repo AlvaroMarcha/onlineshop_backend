@@ -51,6 +51,8 @@ public class OrderAddresses {
     private String postalCode;
     @Column(name = "country", nullable = false)
     private String country;
+    @Column(name = "is_default", nullable = false)
+    private boolean isDefault;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

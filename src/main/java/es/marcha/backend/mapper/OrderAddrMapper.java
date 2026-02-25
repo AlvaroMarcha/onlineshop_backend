@@ -15,6 +15,7 @@ public class OrderAddrMapper {
                 .city(orderAddress.getCity())
                 .postalCode(orderAddress.getPostalCode())
                 .country(orderAddress.getCountry())
+                .isDefault(orderAddress.isDefault())
                 .createdAt(orderAddress.getCreatedAt())
                 .build();
     }
@@ -28,6 +29,7 @@ public class OrderAddrMapper {
                 .city(address.getCity())
                 .postalCode(address.getPostalCode())
                 .country(address.getCountry())
+                .isDefault(address.isDefault())
                 .createdAt(address.getCreatedAt())
                 .build();
 
