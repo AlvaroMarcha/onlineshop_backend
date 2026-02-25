@@ -1,5 +1,7 @@
 package es.marcha.backend.utils;
 
+import es.marcha.backend.model.ecommerce.Product;
+
 /**
  * Clase de utilidad para la generación automática de información
  * relacionada con productos como slugs, SKU y metadatos SEO.
@@ -91,7 +93,6 @@ public class ProductUtils {
                 + ", crafted for quality and performance. Enjoy fast shipping, secure checkout, and exceptional value in every purchase.";
     }
 
-    
     /**
      * Genera una meta description genérica orientada a SEO en español.
      *
@@ -104,6 +105,23 @@ public class ProductUtils {
     public static String generateMetaDescriptionES(String name) {
         return "Descubre " + name
                 + ", diseñado con calidad y rendimiento. Disfruta de envío rápido, pago seguro y un valor excepcional en cada compra.";
+    }
+
+    public void updateRating(Product product, double newPuntuation) {
+        if (product.getRating() == null) {
+            product.setRating(0.0);
+        }
+        if (product.getRatingCount() == null) {
+            product.setRatingCount(0.0);
+        }
+
+        double currentRating = product.getRating();
+        double currentRatingCount = product.getRatingCount();
+
+        double newRating = ((currentRating * currentRatingCount) + newPuntuation) / (currentRatingCount + 1);
+
+        product.setRating(newRating);
+        product.setRatingCount(currentRatingCount + 1);
     }
 
 }

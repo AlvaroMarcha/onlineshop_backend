@@ -78,6 +78,8 @@ public class ProductService {
         product.setSlug(ProductUtils.createSlug(name));
         product.setMetaTitle(ProductUtils.generateTitleES(name));
         product.setMetaDescription(ProductUtils.generateMetaDescriptionES(name));
+        product.setRating(0.0);
+        product.setRatingCount(0.0);
 
         return ProductMapper.toProductDTO(prodRepository.save(product));
     }
