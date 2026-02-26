@@ -15,6 +15,7 @@ import es.marcha.backend.model.ecommerce.ProductReview;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.ecommerce.ProductReviewRepository;
 import es.marcha.backend.services.user.UserService;
+import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -58,9 +59,13 @@ public class ProductReviewService {
         review.setLikes(0);
         review.setDislikes(0);
         review.setActive(true);
+        review.setDeleted(false);
         review.setCreatedAt(LocalDateTime.now());
 
         User user = uService.getUserByIdForHandler(review.getUser().getId());
+
+        ProductUtils.validateRating(review.getRating());
+
         review.setUser(user);
 
         return ProductReviewMapper.toProductReviewDTO(pReviewRepository.save(review));
