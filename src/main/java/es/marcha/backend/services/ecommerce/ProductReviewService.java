@@ -29,6 +29,14 @@ public class ProductReviewService {
 
     public static final String REVIEW_DELETED = "REVIEW WAS DELETED";
 
+    /**
+     * Obtiene todas las reseñas activas y no eliminadas de un producto.
+     * Lanza excepción si no hay ninguna reseña.
+     *
+     * @param productId El ID del producto cuyas reseñas se desean obtener.
+     * @return Lista de {@link ProductReviewResponseDTO} con las reseñas del producto.
+     * @throws ProductException si el producto no tiene reseñas activas.
+     */
     public List<ProductReviewResponseDTO> getAllReviewsByProduct(long productId) {
         List<ProductReviewResponseDTO> reviews = pReviewRepository.findAllByProductId(productId).stream()
                 .filter(review -> review.isActive() && !review.isDeleted())
@@ -42,6 +50,13 @@ public class ProductReviewService {
         return reviews;
     }
 
+    /**
+     * Obtiene todas las reseñas activas y no eliminadas de un producto para uso interno.
+     * A diferencia de {@link #getAllReviewsByProduct}, no lanza excepción si la lista está vacía.
+     *
+     * @param productId El ID del producto cuyas reseñas se desean obtener.
+     * @return Lista de {@link ProductReviewResponseDTO}, posiblemente vacía.
+     */
     public List<ProductReviewResponseDTO> getAllReviewsByProductHandler(long productId) {
         List<ProductReviewResponseDTO> reviews = pReviewRepository.findAllByProductId(productId).stream()
                 .filter(review -> review.isActive() && !review.isDeleted())
@@ -71,6 +86,14 @@ public class ProductReviewService {
         return ProductReviewMapper.toProductReviewDTO(pReviewRepository.save(review));
     }
 
+    /**
+     * Persiste una reseña directamente en la base de datos para uso interno.
+     * No inicializa campos por defecto; debe usarse cuando la entidad ya está preparada.
+     *
+     * @param review La reseña {@link ProductReview} a guardar.
+     * @return La entidad {@link ProductReview} persistida.
+     * @throws ProductException si la reseña es {@code null}.
+     */
     public ProductReview saveReview(ProductReview review) {
         if (review == null)
             throw new ProductException(ProductException.FAILED_SAVE_REVIEW);
@@ -95,6 +118,14 @@ public class ProductReviewService {
         return ProductReviewMapper.toProductReviewDTO(saveReview(updatedReview));
     }
 
+    /**
+     * Realiza la eliminación lógica de una reseña por su ID.
+     * Marca la reseña como inactiva y eliminada sin borrarla físicamente.
+     *
+     * @param id El ID de la reseña a eliminar.
+     * @return Mensaje de confirmación de la eliminación.
+     * @throws ProductException si la reseña no existe.
+     */
     @Transactional
     public String deleteReview(long id) {
         ProductReview deletedReview = pReviewRepository.findById(id)
@@ -108,6 +139,13 @@ public class ProductReviewService {
         return REVIEW_DELETED;
     }
 
+    /**
+     * Incrementa en uno el contador de likes de una reseña.
+     *
+     * @param id El ID de la reseña a la que se incrementan los likes.
+     * @return Mapa con {@code reviewId} y {@code likes} actualizados.
+     * @throws ProductException si la reseña no existe.
+     */
     @Transactional
     public Map<String, Integer> incrementLikes(long id) {
         Map<String, Integer> likes = new HashMap<>();
@@ -122,6 +160,13 @@ public class ProductReviewService {
         return likes;
     }
 
+    /**
+     * Incrementa en uno el contador de dislikes de una reseña.
+     *
+     * @param id El ID de la reseña a la que se incrementan los dislikes.
+     * @return Mapa con {@code reviewId} y {@code dislikes} actualizados.
+     * @throws ProductException si la reseña no existe.
+     */
     @Transactional
     public Map<String, Integer> incrementDislikes(long id) {
         Map<String, Integer> dislikes = new HashMap<>();

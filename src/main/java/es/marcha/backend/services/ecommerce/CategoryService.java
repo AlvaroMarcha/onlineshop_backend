@@ -22,6 +22,13 @@ public class CategoryService {
 
     public static final String CATEGORY_DELETED = "CATEGORY WAS DELETED";
 
+    /**
+     * Obtiene una categoría activa por su ID.
+     *
+     * @param id El ID de la categoría a buscar.
+     * @return {@link CategoryResponseDTO} con los datos de la categoría.
+     * @throws ProductException si la categoría no existe o no está activa.
+     */
     public CategoryResponseDTO getCategoryById(long id) {
         CategoryResponseDTO category = catRepository.findById(id)
                 .filter(c -> c.isActive())
@@ -30,6 +37,12 @@ public class CategoryService {
         return category;
     }
 
+    /**
+     * Obtiene todas las categorías activas del sistema.
+     *
+     * @return Lista de {@link CategoryResponseDTO} con todas las categorías activas.
+     * @throws ProductException si no hay ninguna categoría activa.
+     */
     public List<CategoryResponseDTO> getAllCategories() {
         List<CategoryResponseDTO> categories = catRepository.findAll().stream()
                 .filter(c -> c.isActive())
@@ -42,6 +55,13 @@ public class CategoryService {
         return categories;
     }
 
+    /**
+     * Crea y persiste una nueva categoría en el sistema.
+     * Inicializa el estado activo, la fecha de creación y genera el slug a partir del nombre.
+     *
+     * @param category La entidad {@link Category} a crear.
+     * @return {@link CategoryResponseDTO} con los datos de la categoría creada.
+     */
     @Transactional
     public CategoryResponseDTO saveCategory(Category category) {
         category.setActive(true);
@@ -51,6 +71,13 @@ public class CategoryService {
         return CategoryMapper.toCategoryDTO(catRepository.save(category));
     }
 
+    /**
+     * Actualiza el nombre, descripción y slug de una categoría existente.
+     *
+     * @param category La entidad {@link Category} con los nuevos datos. Debe incluir un ID válido.
+     * @return {@link CategoryResponseDTO} con los datos actualizados de la categoría.
+     * @throws ProductException si la categoría no existe o no está activa.
+     */
     @Transactional
     public CategoryResponseDTO updateCategory(Category category) {
         Category existingCategory = catRepository.findById(category.getId())
@@ -65,6 +92,13 @@ public class CategoryService {
         return CategoryMapper.toCategoryDTO(catRepository.save(existingCategory));
     }
 
+    /**
+     * Elimina una categoría activa de la base de datos por su ID.
+     *
+     * @param id El ID de la categoría a eliminar.
+     * @return Mensaje de confirmación de la eliminación.
+     * @throws ProductException si la categoría no existe o no está activa.
+     */
     @Transactional
     public String deleteCategory(long id) {
         Category category = catRepository.findById(id).filter(c -> c.isActive())

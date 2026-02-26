@@ -96,6 +96,13 @@ public class UserController {
         return new ResponseEntity<>(msg, HttpStatus.OK);
     }
 
+    /**
+     * Banea a un usuario por su ID, desactivando su cuenta e impidiendo futuros accesos.
+     *
+     * @param id El ID del usuario a banear.
+     * @return {@link ResponseEntity} con el {@link BannedUserResponseDTO} que refleja
+     *         el nuevo estado del usuario, con código HTTP 200 OK.
+     */
     @PostMapping("/ban/{id}")
     public ResponseEntity<BannedUserResponseDTO> banUser(@PathVariable long id) {
         BannedUserResponseDTO bannedUser = uService.banUserById(id);

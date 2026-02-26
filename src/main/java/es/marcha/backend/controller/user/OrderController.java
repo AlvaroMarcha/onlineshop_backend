@@ -43,6 +43,16 @@ public class OrderController {
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
+    /**
+     * Crea una nueva orden para un usuario.
+     * <p>
+     * Genera un snapshot de la dirección por defecto del usuario en el momento del pedido
+     * y persiste los ítems asociados.
+     * </p>
+     *
+     * @param order La entidad {@link Order} a crear. Debe incluir el ID del usuario y la lista de ítems.
+     * @return {@link ResponseEntity} con el {@link OrderResponseDTO} creado y código HTTP 200 OK.
+     */
     @PostMapping
     public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody Order order) {
         OrderResponseDTO newOrder = oService.saveNewOrder(order);

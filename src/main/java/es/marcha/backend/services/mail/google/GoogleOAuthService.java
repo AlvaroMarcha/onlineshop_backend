@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class GoogleOAuthService {
 
-    /** Seconds before real expiry to consider the token stale and pre-refresh it. */
+    /** Segundos de margen antes de la expiración real para considerar el token como obsoleto y pre-refrescarlo. */
     private static final int EXPIRY_BUFFER_SECONDS = 60;
 
     @Value("${app.google.client-id}")
@@ -40,16 +40,24 @@ public class GoogleOAuthService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ReentrantLock lock = new ReentrantLock();
 
-    // volatile ensures all threads see the latest written values immediately
+    // volatile garantiza que todos los hilos lean siempre los últimos valores escritos
     private volatile String cachedAccessToken;
     private volatile Instant tokenExpiry = Instant.EPOCH;
 
     /**
-     * Returns a valid OAuth2 access token, hitting Google's token endpoint only
-     * when the cached token is absent or about to expire (within {@value #EXPIRY_BUFFER_SECONDS}s).
+     * Devuelve un access token OAuth2 válido para autenticarse con Gmail SMTP.
+     * <p>
+     * Utiliza un sistema de caché con double-checked locking para minimizar las llamadas
+     * al endpoint de Google. Solo lanza una petición HTTP cuando el token está ausente
+     * o a punto de expirar (dentro del margen de {@value #EXPIRY_BUFFER_SECONDS} segundos).
+     * </p>
+     * <p>
+     * El método es thread-safe: solo un hilo refresca el token a la vez; el resto espera
+     * y reutiliza el token recién obtenido.
+     * </p>
      *
-     * Thread-safe: only one thread refreshes at a time; others wait and then reuse
-     * the freshly obtained token.
+     * @return Access token de OAuth2 válido.
+     * @throws RuntimeException si no se puede obtener un token de Google.
      */
     public String getAccessToken() {
         // Fast path — no lock needed if the cached token is still valid
@@ -75,10 +83,26 @@ public class GoogleOAuthService {
     // Private helpers
     // ------------------------------------------------------------------
 
+    /**
+     * Comprueba si el token en caché sigue siendo válido.
+     * Se considera válido si existe y su fecha de expiración (con margen) es posterior al momento actual.
+     *
+     * @return {@code true} si el token es válido, {@code false} si está ausente o caducado.
+     */
     private boolean isTokenValid() {
         return cachedAccessToken != null && Instant.now().isBefore(tokenExpiry);
     }
 
+    /**
+     * Solicita un nuevo access token a Google usando el refresh token almacenado.
+     * Actualiza el token en caché y su fecha de expiración.
+     * <p>
+     * Este método solo debe llamarse desde dentro del bloque de bloqueo de {@link #getAccessToken()}.
+     * </p>
+     *
+     * @return El nuevo access token obtenido de Google.
+     * @throws RuntimeException si la petición falla o la respuesta está vacía.
+     */
     private String refreshAccessToken() {
         log.info("Google OAuth2 — cached token expired or absent, requesting a new one");
 
