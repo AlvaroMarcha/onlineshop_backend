@@ -18,6 +18,16 @@ public class MailController {
 
     private final MailService mailService;
 
+    /**
+     * Envía un email de prueba mediante Gmail SMTP con autenticación OAuth2.
+     * <p>
+     * Útil para verificar que la integración con Google OAuth2 funciona correctamente.
+     * El destinatario, asunto y cuerpo del mensaje están definidos de forma fija para este endpoint de pruebas.
+     * </p>
+     *
+     * @return {@link ResponseEntity} con mensaje de confirmación y código HTTP 200 OK,
+     *         o mensaje de error y código HTTP 500 si el envío falla.
+     */
     @PostMapping("/testing/send")
     public ResponseEntity<String> sendTestEmail() {
         try {

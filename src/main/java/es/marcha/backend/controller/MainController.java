@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MainController {
 	
+	/**
+	 * Verifica el estado de salud de la API.
+	 *
+	 * @return {@link ResponseEntity} con un mapa que incluye el timestamp actual y el estado {@code UP},
+	 *         con código HTTP 200 OK.
+	 */
 	@GetMapping("/health/status")
 	public ResponseEntity<Map<String, Object>> checkingHealth() throws Exception {
 		Map<String, Object> body = Map.of(
@@ -22,6 +28,11 @@ public class MainController {
 	}
 
 
+	/**
+	 * Endpoint público accesible sin autenticación.
+	 *
+	 * @return Mensaje de bienvenida para cualquier usuario.
+	 */
 	@GetMapping("/publico")
     public String publico() {
         return "Cualquiera puede ver esto";

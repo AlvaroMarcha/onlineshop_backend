@@ -26,6 +26,13 @@ public class ProductService {
 
     public static final String PRODUCT_DELETED = "PRODUCT WAS DELETED";
 
+    /**
+     * Obtiene un producto activo y no eliminado por su ID.
+     *
+     * @param id El ID del producto a buscar.
+     * @return {@link ProductResponseDTO} con los datos del producto.
+     * @throws ProductException si el producto no existe, está inactivo o eliminado.
+     */
     public ProductResponseDTO getProductById(long id) {
         return prodRepository.findById(id)
                 .filter(p -> p.isActive() && !p.isDeleted())
@@ -33,6 +40,13 @@ public class ProductService {
                 .orElseThrow(() -> new ProductException());
     }
 
+    /**
+     * Obtiene todos los productos activos y no eliminados del sistema,
+     * incluyendo las reseñas activas de cada uno.
+     *
+     * @return Lista de {@link ProductResponseDTO} con todos los productos disponibles.
+     * @throws ProductException si no hay productos activos.
+     */
     public List<ProductResponseDTO> getAllProducts() {
         List<ProductResponseDTO> products = prodRepository.findAll().stream()
                 .filter(p -> p.isActive() && !p.isDeleted())

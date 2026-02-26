@@ -29,6 +29,13 @@ public class UserService {
     public static final String USER_DELETED = "USER WAS DELETED";
 
     // Methods
+    /**
+     * Obtiene un usuario activo y no baneado por su ID, mapeado a DTO.
+     *
+     * @param id El ID del usuario a buscar.
+     * @return {@link UserResponseDTO} con los datos del usuario.
+     * @throws UserException si el usuario no existe, está eliminado o baneado.
+     */
     public UserResponseDTO getUserById(long id) {
         return uRepository.findById(id)
                 .filter(user -> !user.isDeleted() && !user.isBanned())
@@ -36,12 +43,27 @@ public class UserService {
                 .orElseThrow(() -> new UserException());
     }
 
+    /**
+     * Obtiene un usuario activo y no baneado por su ID como entidad, para uso interno de otros servicios.
+     * A diferencia de {@link #getUserById}, devuelve la entidad completa sin mapear a DTO.
+     *
+     * @param id El ID del usuario a buscar.
+     * @return La entidad {@link User} correspondiente.
+     * @throws UserException si el usuario no existe, está eliminado o baneado.
+     */
     public User getUserByIdForHandler(long id) {
         return uRepository.findById(id)
                 .filter(user -> !user.isDeleted() && !user.isBanned())
                 .orElseThrow(() -> new UserException());
     }
 
+    /**
+     * Busca un usuario por su username y lo devuelve como {@link Optional} de DTO.
+     * No lanza excepción si no existe, por lo que es seguro para comprobaciones de existencia.
+     *
+     * @param username El nombre de usuario a buscar.
+     * @return {@link Optional} con el {@link UserResponseDTO} si existe, o vacío si no.
+     */
     public Optional<UserResponseDTO> getUserByUsername(String username) {
         return uRepository.findByUsername(username)
                 .map(UserMapper::toUserDTO);
@@ -80,6 +102,12 @@ public class UserService {
         }
     }
 
+    /**
+     * Obtiene todos los usuarios activos y no baneados del sistema.
+     *
+     * @return Lista de {@link UserResponseDTO} con los usuarios activos.
+     * @throws UserException si no hay ningún usuario en la base de datos.
+     */
     public List<UserResponseDTO> getAllUsers() {
         List<User> users = uRepository.findAll();
         if (users.isEmpty()) {
@@ -95,6 +123,13 @@ public class UserService {
         return usersDTO;
     }
 
+    /**
+     * Guarda o actualiza un usuario en la base de datos, resolviendo su rol
+     * e inicializando los campos de estado por defecto.
+     *
+     * @param user El {@link User} a guardar. Debe incluir un {@link Role} con ID válido.
+     * @return {@link UserResponseDTO} con los datos del usuario persistido.
+     */
     public UserResponseDTO saveUser(User user) {
         Role role = rService.getRoleById(user.getRole().getId());
 
@@ -108,6 +143,13 @@ public class UserService {
         return UserMapper.toUserDTO(uRepository.save(user));
     }
 
+    /**
+     * Guarda directamente un usuario en la base de datos sin inicializar campos por defecto.
+     * Destinado a uso interno de servicios que necesitan persistir cambios parciales sobre la entidad.
+     *
+     * @param user El {@link User} a persistir.
+     * @return La entidad {@link User} guardada.
+     */
     public User saveUserForHandler(User user) {
         return uRepository.save(user);
     }

@@ -25,12 +25,16 @@ public class MailService {
     private final GoogleOAuthService googleOAuthService;
 
     /**
-     * Sends a plain-text e-mail via Gmail SMTP using OAuth2 (XOAUTH2).
-     * A fresh access token is requested on every call so the token is never stale.
+     * Envía un correo electrónico de texto plano mediante Gmail SMTP con autenticación OAuth2 (XOAUTH2).
+     * <p>
+     * Obtiene un access token fresco de {@link GoogleOAuthService} en cada llamada,
+     * garantizando que el token nunca esté caducado en el momento del envío.
+     * </p>
      *
-     * @param to      recipient address
-     * @param subject e-mail subject
-     * @param body    plain-text body
+     * @param to      Dirección de correo del destinatario.
+     * @param subject Asunto del mensaje.
+     * @param body    Cuerpo del mensaje en texto plano.
+     * @throws MessagingException si ocurre un error durante el envío por SMTP.
      */
     public void sendEmail(String to, String subject, String body) throws MessagingException {
         String accessToken = googleOAuthService.getAccessToken();

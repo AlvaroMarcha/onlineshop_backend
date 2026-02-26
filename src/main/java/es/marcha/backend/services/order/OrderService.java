@@ -35,12 +35,27 @@ public class OrderService {
     private UserService uService;
 
     // Methods
+    /**
+     * Obtiene una orden por su ID para uso interno de otros servicios.
+     * Lanza una excepción si la orden no existe.
+     *
+     * @param id El ID de la orden a buscar.
+     * @return La entidad {@link Order} correspondiente.
+     * @throws OrderException si la orden no existe.
+     */
     public Order getOrderByIdHandler(long id) {
         return oRepository.findById(id)
                 .orElseThrow(() -> new OrderException());
 
     }
 
+    /**
+     * Obtiene todas las órdenes de un usuario, incluyendo el snapshot de dirección de cada una.
+     *
+     * @param userId El ID del usuario cuyas órdenes se desean obtener.
+     * @return Lista de {@link OrderResponseDTO} con las órdenes del usuario.
+     * @throws OrderException si el usuario no tiene órdenes.
+     */
     public List<OrderResponseDTO> getAllOrders(long userId) {
         List<OrderResponseDTO> orders = oRepository.findAllByUserId(userId).stream()
                 .map(OrderMapper::toOrderDTO)
@@ -92,6 +107,13 @@ public class OrderService {
         return finalOrder;
     }
 
+    /**
+     * Persiste una orden directamente en la base de datos sin inicialización adicional.
+     * Destinado a uso interno de otros servicios que necesiten actualizar el estado de una orden.
+     *
+     * @param order La entidad {@link Order} a guardar.
+     * @return La entidad {@link Order} persistida.
+     */
     public Order saveOrder(Order order) {
         return oRepository.save(order);
     }

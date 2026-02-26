@@ -22,18 +22,40 @@ public class AuthController {
     @Autowired
     private AuthService aService;
 
+    /**
+     * Autentica un usuario mediante sus credenciales (username o email y contraseña).
+     *
+     * @param credentials DTO con el username/email y la contraseña del usuario.
+     * @return {@link ResponseEntity} con el {@link AuthResponseDTO} que incluye
+     *         el usuario autenticado y el token JWT generado, con código HTTP 200 OK.
+     */
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO credentials) {
         AuthResponseDTO response = aService.login(credentials);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Registra un nuevo usuario en el sistema.
+     *
+     * @param userData DTO con los datos necesarios para el registro (nombre, apellido,
+     *                 username, email, contraseña y teléfono).
+     * @return {@link ResponseEntity} con el {@link AuthResponseDTO} que incluye
+     *         el usuario registrado y el token JWT generado, con código HTTP 200 OK.
+     */
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO userData) {
         AuthResponseDTO response = aService.register(userData);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    /**
+     * Cierra la sesión del usuario indicado, marcándolo como inactivo.
+     *
+     * @param data DTO que contiene el ID del usuario cuya sesión se desea cerrar.
+     * @return {@link ResponseEntity} con el {@link LogoutResponseDTO} que confirma
+     *         el cierre de sesión, con código HTTP 200 OK.
+     */
     @PostMapping("/logout")
     public ResponseEntity<LogoutResponseDTO> logout(@RequestBody LogoutRequestDTO data) {
         LogoutResponseDTO msg = aService.logout(data.getUserId());

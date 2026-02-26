@@ -24,24 +24,48 @@ public class AddressController {
     @Autowired
     private AddressService aService;
 
+    /**
+     * Obtiene todas las direcciones asociadas a un usuario.
+     *
+     * @param id El ID del usuario cuyas direcciones se desean obtener.
+     * @return {@link ResponseEntity} con la lista de {@link AddressResponseDTO} y código HTTP 200 OK.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<List<AddressResponseDTO>> getAllAddressByUser(@PathVariable Long id) {
         List<AddressResponseDTO> addresses = aService.getAllAddressesByUserId(id);
         return new ResponseEntity<>(addresses, HttpStatus.OK);
     }
 
+    /**
+     * Crea y persiste una nueva dirección asociada a un usuario.
+     *
+     * @param address La dirección a guardar. Debe incluir el ID del usuario al que pertenece.
+     * @return {@link ResponseEntity} con la {@link AddressResponseDTO} creada y código HTTP 200 OK.
+     */
     @PostMapping
     public ResponseEntity<AddressResponseDTO> saveAddress(@RequestBody Address address) {
         AddressResponseDTO savedAddress = aService.saveAddress(address);
         return new ResponseEntity<>(savedAddress, HttpStatus.OK);
     }
 
+    /**
+     * Actualiza los datos de una dirección existente.
+     *
+     * @param address La dirección con los nuevos datos. Debe incluir un ID válido.
+     * @return {@link ResponseEntity} con la {@link AddressResponseDTO} actualizada y código HTTP 200 OK.
+     */
     @PutMapping
     public ResponseEntity<AddressResponseDTO> updateAddress(@RequestBody Address address) {
         AddressResponseDTO updatedAddress = aService.updateAddress(address);
         return new ResponseEntity<>(updatedAddress, HttpStatus.OK);
     }
 
+    /**
+     * Elimina una dirección por su ID.
+     *
+     * @param id El ID de la dirección a eliminar.
+     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP 200 OK.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteAddress(@PathVariable long id) {
         String msg = aService.deleteAddress(id);

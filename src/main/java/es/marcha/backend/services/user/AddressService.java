@@ -25,6 +25,13 @@ public class AddressService {
 
     public static final String ADDRESS_DELETED = "ADDRESS WAS DELETED";
 
+    /**
+     * Obtiene todas las direcciones asociadas a un usuario por su ID.
+     *
+     * @param id El ID del usuario cuyas direcciones se desean obtener.
+     * @return Lista de {@link AddressResponseDTO} con las direcciones del usuario.
+     * @throws AddressException si el usuario no tiene direcciones registradas.
+     */
     public List<AddressResponseDTO> getAllAddressesByUserId(long id) {
         List<AddressResponseDTO> addresses = aRepository.findAllByUserId(id).stream()
                 .map(AddressMapper::toAddressdDTO)
@@ -37,12 +44,28 @@ public class AddressService {
         return addresses;
     }
 
+    /**
+     * Obtiene una dirección por su ID, mapeada a DTO.
+     *
+     * @param id El ID de la dirección a buscar.
+     * @return {@link AddressResponseDTO} con los datos de la dirección.
+     * @throws AddressException si la dirección no existe.
+     */
     public AddressResponseDTO getAddressById(long id) {
         return aRepository.findById(id)
                 .map(AddressMapper::toAddressdDTO)
                 .orElseThrow(() -> new AddressException());
     }
 
+    /**
+     * Crea y persiste una nueva dirección asociada a un usuario existente.
+     * Resuelve la entidad {@link User} a partir del ID contenido en la dirección recibida.
+     *
+     * @param address La dirección a guardar. Debe incluir el ID del usuario al que pertenece.
+     * @return {@link AddressResponseDTO} con los datos de la dirección guardada.
+     * @throws UserException si el usuario referenciado no existe.
+     * @throws AddressException si ocurre un error al persistir la dirección.
+     */
     public AddressResponseDTO saveAddress(Address address) {
         User user = uRepository.findById(address.getUser().getId())
                 .orElseThrow(() -> new UserException());

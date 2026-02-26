@@ -139,6 +139,17 @@ public class AuthService {
         return new AuthResponseDTO(savedUser, token);
     }
 
+    /**
+     * Cierra la sesión del usuario indicado marcándolo como inactivo y registrando
+     * el momento del último acceso.
+     * <p>
+     * Si el usuario ya está inactivo (sesión ya cerrada), lanza una excepción.
+     * </p>
+     *
+     * @param userId ID del usuario cuya sesión se desea cerrar.
+     * @return {@link LogoutResponseDTO} con el estado actualizado del usuario.
+     * @throws UserException si el usuario ya tiene la sesión cerrada ({@link UserException#USER_LOGGEDOUT}).
+     */
     public LogoutResponseDTO logout(long userId) {
         User user = uService.getUserByIdForHandler(userId);
         if (!user.isActive()) {
