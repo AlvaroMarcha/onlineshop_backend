@@ -87,5 +87,7 @@ Code Reviews and Collaboration
 - Always do Pull Request to the develop branch, never to main.
 - Language: The code always in Java, Spring Boot, and related technologies in English.
 
+IMPORTANT: The comments for documentation should be in Spanish, as the project is in Spanish. However, the code itself should be in English, following standard Java naming conventions and Spring Boot practices.
+
 Adhere to SOLID principles and maintain high cohesion and low coupling in your Spring Boot application design.
     
