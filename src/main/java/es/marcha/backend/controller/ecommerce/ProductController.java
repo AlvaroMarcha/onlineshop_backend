@@ -16,9 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.ProductResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseDTO;
 import es.marcha.backend.mapper.ProductMapper;
 import es.marcha.backend.model.ecommerce.Product;
+import es.marcha.backend.model.ecommerce.ProductReview;
 import es.marcha.backend.model.ecommerce.Subcategory;
+import es.marcha.backend.services.ecommerce.ProductReviewService;
 import es.marcha.backend.services.ecommerce.ProductService;
 import es.marcha.backend.services.ecommerce.SubcategoryService;
 
@@ -28,6 +31,9 @@ public class ProductController {
 
     @Autowired
     private ProductService prodService;
+
+    @Autowired
+    private ProductReviewService rService;
 
     @Autowired
     private SubcategoryService subcatService;
@@ -61,6 +67,33 @@ public class ProductController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable long id) {
         return new ResponseEntity<>(prodService.deleteProduct(id), HttpStatus.OK);
+    }
+
+    /**
+     * REVIEWS
+     */
+
+    @GetMapping("/reviews/{id}")
+    public ResponseEntity<List<ProductReviewResponseDTO>> getProductReviews(@PathVariable long id) {
+        List<ProductReviewResponseDTO> reviews = rService.getAllReviewsByProduct(id);
+        return new ResponseEntity<>(reviews, HttpStatus.OK);
+    }
+
+    @PostMapping("/reviews")
+    public ResponseEntity<ProductReviewResponseDTO> createProductReview(@RequestBody ProductReview review) {
+        ProductReviewResponseDTO createdReview = rService.addNewReview(review);
+        return new ResponseEntity<>(createdReview, HttpStatus.OK);
+    }
+
+    @PutMapping("/reviews")
+    public ResponseEntity<ProductReviewResponseDTO> updateProductReview(@RequestBody ProductReview review) {
+        ProductReviewResponseDTO updatedReview = rService.updateReview(review);
+        return new ResponseEntity<>(updatedReview, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/reviews/{id}")
+    public ResponseEntity<String> deleteProductReview(@PathVariable long id) {
+        return new ResponseEntity<>(rService.deleteReview(id), HttpStatus.OK);
     }
 
 }
