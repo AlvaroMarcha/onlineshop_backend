@@ -2,6 +2,8 @@ package es.marcha.backend.model.ecommerce;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 import es.marcha.backend.model.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,6 +37,7 @@ public class ProductReview {
     private long id;
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference
     private Product product;
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -51,6 +54,8 @@ public class ProductReview {
     private int dislikes;
     @Column(name = "is_active")
     private boolean isActive;
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
