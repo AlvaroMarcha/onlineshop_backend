@@ -15,6 +15,11 @@ public class ProductException extends NoHandlerException {
     public static final String FAILED_SAVE_CATEGORY = "FAILED_TO_SAVE_CATEGORY";
     public static final String FAILED_DELETE_CATEGORY = "FAILED_TO_DELETE_CATEGORY";
     public static final String FAILED_UPDATE_CATEGORY = "FAILED_TO_UPDATE_CATEGORY";
+    public static final String FAILED_FETCH_REVIEWS = "FAILED_TO_FETCH_REVIEWS";
+    public static final String FAILED_FETCH_REVIEW = "FAILED_TO_FETCH_REVIEW";
+    public static final String FAILED_CREATE_REVIEW = "FAILED_TO_CREATE_REVIEW";
+    public static final String FAILED_SAVE_REVIEW = "FAILED_TO_SAVE_REVIEW";
+    public static final String FAILED_UPDATE_REVIEW = "FAILED_TO_UPDATE_REVIEW";
 
     public ProductException() {
         this(DEFAULT);
