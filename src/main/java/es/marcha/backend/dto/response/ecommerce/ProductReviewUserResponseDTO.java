@@ -11,7 +11,7 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class ProductReviewUserReponseDTO {
+public class ProductReviewUserResponseDTO {
     // Attribs
     private long userId;
     private String name;

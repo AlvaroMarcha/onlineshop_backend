@@ -2,7 +2,7 @@ package es.marcha.backend.mapper;
 
 import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseProductDTO;
-import es.marcha.backend.dto.response.ecommerce.ProductReviewUserReponseDTO;
+import es.marcha.backend.dto.response.ecommerce.ProductReviewUserResponseDTO;
 import es.marcha.backend.model.ecommerce.ProductReview;
 import es.marcha.backend.model.user.User;
 
@@ -36,8 +36,8 @@ public class ProductReviewMapper {
                 .build();
     }
 
-    public static ProductReviewUserReponseDTO toReviewUser(User user) {
-        return ProductReviewUserReponseDTO.builder()
+    public static ProductReviewUserResponseDTO toReviewUser(User user) {
+        return ProductReviewUserResponseDTO.builder()
                 .userId(user.getId())
                 .name(user.getName())
                 .surname(user.getSurname())
