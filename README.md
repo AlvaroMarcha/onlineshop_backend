@@ -28,6 +28,23 @@ app.images.storage-path=${IMAGES_STORAGE_PATH}
 Asegúrate de definir estas variables antes de ejecutar la aplicación. 
 Recuerda definirlas en tu archivo .env, con los nombres correspondientes. Ejem: ${DB_URL}
 
+### Variables de Mail y Google OAuth2
+
+El sistema de envío de correos utiliza Gmail SMTP con autenticación OAuth2 (XOAUTH2), más seguro que las contraseñas de aplicación. Añade las siguientes variables a tu `.env`:
+
+```properties
+# Mail
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=465
+MAIL_USERNAME=tu_cuenta@gmail.com
+
+# Google OAuth2 (para Gmail SMTP via XOAUTH2)
+GOOGLE_CLIENT_ID=tu_client_id
+GOOGLE_CLIENT_SECRET=tu_client_secret
+GOOGLE_TOKEN_URI=https://oauth2.googleapis.com/token
+GOOGLE_REFRESH_TOKEN=tu_refresh_token
+```
+
 ## Ejecución
 
 ```bash
@@ -144,6 +161,60 @@ Estos son los endpoints más relevantes que expone la API:
   - `POST /categories`
   - `PUT /categories`
   - `DELETE /categories/{id}`
+- Mail:
+  - `POST /mails/testing/send`
+
+## Configuración Google OAuth2 — Obtener el Refresh Token
+
+El `GOOGLE_REFRESH_TOKEN` se genera **una sola vez** mediante el flujo Authorization Code de Google.
+
+### Opción 1 — OAuth 2.0 Playground (recomendado)
+
+1. Ve a [developers.google.com/oauthplayground](https://developers.google.com/oauthplayground)
+2. Haz clic en ⚙️ (Settings) → activa **"Use your own OAuth credentials"**
+3. Introduce tu `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`
+4. En el listado de scopes selecciona:
+   ```
+   https://mail.google.com/
+   ```
+   > ⚠️ Este scope exacto es obligatorio para SMTP XOAUTH2. `gmail.send` no es válido para SMTP.
+5. Haz clic en **"Authorize APIs"** y autoriza con tu cuenta de Gmail
+6. En el **Paso 2**, haz clic en **"Exchange authorization code for tokens"**
+7. Copia el `refresh_token` de la respuesta y añádelo al `.env`
+
+### Opción 2 — Curl manual
+
+Abre este enlace en el navegador (sustituye tu `CLIENT_ID`):
+
+```
+https://accounts.google.com/o/oauth2/v2/auth
+  ?client_id=TU_CLIENT_ID
+  &redirect_uri=http://localhost:8080/oauth2/callback
+  &response_type=code
+  &scope=https://mail.google.com/
+  &access_type=offline
+  &prompt=consent
+```
+
+Luego intercambia el `code` recibido:
+
+```bash
+curl -X POST https://oauth2.googleapis.com/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=TU_CLIENT_ID" \
+  -d "client_secret=TU_CLIENT_SECRET" \
+  -d "code=AUTHORIZATION_CODE" \
+  -d "grant_type=authorization_code" \
+  -d "redirect_uri=http://localhost:8080/oauth2/callback"
+```
+
+> `access_type=offline` y `prompt=consent` son obligatorios para que Google devuelva el `refresh_token`.
+
+### Nota sobre el entorno de la app en Google Cloud
+
+Si la OAuth consent screen está en modo **Testing**, los refresh tokens caducan a los **7 días**.
+Para que sean permanentes, cambia el estado a **In production** en:
+[Google Cloud Console → APIs & Services → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent)
 
 ## Pruebas
 
