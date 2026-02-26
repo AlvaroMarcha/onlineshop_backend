@@ -49,9 +49,6 @@ public class ProductService {
             throw new ProductException(ProductException.FAILED_FETCH);
         }
 
-        if (products.isEmpty()) {
-            throw new ProductException(ProductException.FAILED_FETCH);
-        }
         return products;
     }
 
