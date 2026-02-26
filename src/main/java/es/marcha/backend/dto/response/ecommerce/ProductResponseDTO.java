@@ -33,5 +33,6 @@ public class ProductResponseDTO {
     private String metaDescription;
     private double rating;
     private double ratingCount;
+    private List<ProductReviewResponseDTO> reviews;
 
 }
