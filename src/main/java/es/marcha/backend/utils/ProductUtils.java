@@ -1,5 +1,6 @@
 package es.marcha.backend.utils;
 
+import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.model.ecommerce.Product;
 
 /**
@@ -107,7 +108,7 @@ public class ProductUtils {
                 + ", diseñado con calidad y rendimiento. Disfruta de envío rápido, pago seguro y un valor excepcional en cada compra.";
     }
 
-    public void updateRating(Product product, double newPuntuation) {
+    public static void updateRating(Product product, double newPuntuation) {
         if (product.getRating() == null) {
             product.setRating(0.0);
         }
@@ -122,6 +123,12 @@ public class ProductUtils {
 
         product.setRating(newRating);
         product.setRatingCount(currentRatingCount + 1);
+    }
+
+    public static void validateRating(int rating) {
+        if (rating < 1 || rating > 5) {
+            throw new ProductException(ProductException.NOT_VALID_RATING);
+        }
     }
 
 }

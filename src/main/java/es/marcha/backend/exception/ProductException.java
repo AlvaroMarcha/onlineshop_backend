@@ -20,6 +20,7 @@ public class ProductException extends NoHandlerException {
     public static final String FAILED_CREATE_REVIEW = "FAILED_TO_CREATE_REVIEW";
     public static final String FAILED_SAVE_REVIEW = "FAILED_TO_SAVE_REVIEW";
     public static final String FAILED_UPDATE_REVIEW = "FAILED_TO_UPDATE_REVIEW";
+    public static final String NOT_VALID_RATING = "RATING_MUST_BE_BETWEEN_1_AND_5";
 
     public ProductException() {
         this(DEFAULT);
@@ -30,7 +31,7 @@ public class ProductException extends NoHandlerException {
     }
 
     public ProductException(String message, Throwable cause) {
-        super(message);
+        super(message, cause);
     }
 
 }

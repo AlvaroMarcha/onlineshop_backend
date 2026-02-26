@@ -10,5 +10,5 @@ import es.marcha.backend.model.ecommerce.ProductReview;
 @Repository
 public interface ProductReviewRepository extends JpaRepository<ProductReview, Long> {
 
-    List<ProductReview> findAllByProductId(long id);
+    List<ProductReview> findAllByProductId(long productId);
 }

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -98,5 +99,8 @@ public class Product {
     private Double rating;
     @Column(name = "rating_count")
     private Double ratingCount;
+    @OneToMany(mappedBy = "product")
+    @JsonManagedReference
+    private List<ProductReview> reviews;
 
 }

@@ -12,7 +12,10 @@ import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ProductReviewMapper;
 import es.marcha.backend.model.ecommerce.ProductReview;
+import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.ecommerce.ProductReviewRepository;
+import es.marcha.backend.services.user.UserService;
+import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -21,17 +24,29 @@ public class ProductReviewService {
     @Autowired
     private ProductReviewRepository pReviewRepository;
 
+    @Autowired
+    private UserService uService;
+
     public static final String REVIEW_DELETED = "REVIEW WAS DELETED";
 
     public List<ProductReviewResponseDTO> getAllReviewsByProduct(long productId) {
         List<ProductReviewResponseDTO> reviews = pReviewRepository.findAllByProductId(productId).stream()
-                .filter(ProductReview::isActive)
+                .filter(review -> review.isActive() && !review.isDeleted())
                 .map(ProductReviewMapper::toProductReviewDTO)
                 .toList();
 
         if (reviews == null || reviews.isEmpty()) {
             throw new ProductException(ProductException.FAILED_FETCH_REVIEWS);
         }
+
+        return reviews;
+    }
+
+    public List<ProductReviewResponseDTO> getAllReviewsByProductHandler(long productId) {
+        List<ProductReviewResponseDTO> reviews = pReviewRepository.findAllByProductId(productId).stream()
+                .filter(review -> review.isActive() && !review.isDeleted())
+                .map(ProductReviewMapper::toProductReviewDTO)
+                .toList();
 
         return reviews;
     }
@@ -44,7 +59,14 @@ public class ProductReviewService {
         review.setLikes(0);
         review.setDislikes(0);
         review.setActive(true);
+        review.setDeleted(false);
         review.setCreatedAt(LocalDateTime.now());
+
+        User user = uService.getUserByIdForHandler(review.getUser().getId());
+
+        ProductUtils.validateRating(review.getRating());
+
+        review.setUser(user);
 
         return ProductReviewMapper.toProductReviewDTO(pReviewRepository.save(review));
     }
@@ -64,7 +86,8 @@ public class ProductReviewService {
         ProductReview updatedReview = pReviewRepository.findById(review.getId())
                 .orElseThrow(() -> new ProductException(ProductException.FAILED_FETCH_REVIEW));
 
-        updatedReview.setRating(review.getRating());
+        // !! Pensar como se modificará para no romper rating
+        // updatedReview.setRating(review.getRating());
         updatedReview.setTitle(review.getTitle());
         updatedReview.setComment(review.getComment());
         updatedReview.setUpdatedAt(LocalDateTime.now());
@@ -78,6 +101,7 @@ public class ProductReviewService {
                 .orElseThrow(() -> new ProductException(ProductException.FAILED_FETCH_REVIEW));
 
         deletedReview.setActive(false);
+        deletedReview.setDeleted(true);
         deletedReview.setUpdatedAt(LocalDateTime.now());
         saveReview(deletedReview);
 

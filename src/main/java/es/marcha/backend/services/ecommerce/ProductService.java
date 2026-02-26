@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.ecommerce.ProductResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ProductMapper;
 import es.marcha.backend.model.ecommerce.Product;
@@ -19,6 +20,9 @@ public class ProductService {
 
     @Autowired
     private ProductRepository prodRepository;
+
+    @Autowired
+    private ProductReviewService prService;
 
     public static final String PRODUCT_DELETED = "PRODUCT WAS DELETED";
 
@@ -34,9 +38,17 @@ public class ProductService {
                 .filter(p -> p.isActive() && !p.isDeleted())
                 .map(ProductMapper::toProductDTO)
                 .toList();
-        if (products.isEmpty()) {
+
+        // Conseguir lista de reviews filtradas
+        products.forEach(product -> {
+            List<ProductReviewResponseDTO> reviews = prService.getAllReviewsByProductHandler(product.getId());
+            product.setReviews(reviews);
+        });
+
+        if (products == null || products.isEmpty()) {
             throw new ProductException(ProductException.FAILED_FETCH);
         }
+
         return products;
     }
 

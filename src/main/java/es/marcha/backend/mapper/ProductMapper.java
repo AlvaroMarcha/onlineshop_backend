@@ -15,6 +15,7 @@ public class ProductMapper {
                 .sku(product.getSku())
                 .categories(product.getCategories())
                 .description(product.getDescription())
+                .reviews(product.getReviews().stream().map(ProductReviewMapper::toProductReviewDTO).toList())
                 .price(product.getPrice())
                 .discountPrice(product.getDiscountPrice())
                 .taxRate(product.getTaxRate())

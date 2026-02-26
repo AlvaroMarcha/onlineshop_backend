@@ -29,7 +29,7 @@ import lombok.Setter;
 public class ProductReviewResponseDTO {
     private long id;
     private long productId;
-    private UserResponseDTO user;
+    private ProductReviewUserResponseDTO user;
     private int rating;
     private String title;
     private String comment;
