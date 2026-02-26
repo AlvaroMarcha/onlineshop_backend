@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-wrapper {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #f3f3f3;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #232f3e;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .content h2 {
+            color: #232f3e;
+            margin-top: 0;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .coupon-code {
+            display: block;
+            background-color: #f90;
+            color: #111 !important;
+            font-weight: bold;
+            font-size: 20px;
+            text-align: center;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            text-decoration: none;
+        }
+        .btn-use-coupon {
+            display: inline-block;
+            background-color: #232f3e;
+            color: white !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #f3f3f3;
+        }
+        .footer a {
+            color: #232f3e;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Tu Empresa" />
+                <h1>¡Un cupón exclusivo para ti!</h1>
+            </div>
+            <div class="content">
+                <p>Hola <span th:text="${userName}">Usuario</span>,</p>
+                <p>Hemos preparado un cupón especial para que aproveches en tu próxima compra:</p>
+
+                <span class="coupon-code" th:text="${couponCode}">DESCUENTO20</span>
+
+                <p th:text="'Válido hasta: ' + ${expiryDate}">Válido hasta: 31/12/2026</p>
+
+                <a th:href="${useCouponLink}" class="btn-use-coupon">Usar mi cupón</a>
+
+                <p>¡No dejes pasar esta oportunidad!</p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tu Empresa. Todos los derechos reservados.</p>
+            <p>
+                <a href="#">Términos</a> | 
+                <a href="#">Privacidad</a> | 
+                <a href="#">Ayuda</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
