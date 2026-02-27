@@ -16,7 +16,7 @@ public class UserMapper {
                 .roleName(user.getRole().getName())
                 .isActive(user.isActive())
                 .isVerified(user.isVerified())
-                // .profileImageUrl(user.getProfileImageUrl())
+                .profileImageUrl(user.getProfileImageUrl())
                 .createdAt(user.getCreatedAt())
                 .addresses(user.getAddresses())
                 .build();

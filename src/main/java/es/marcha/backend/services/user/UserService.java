@@ -15,6 +15,7 @@ import es.marcha.backend.mapper.UserMapper;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;
+import es.marcha.backend.services.media.MediaService;
 import es.marcha.backend.utils.Validations;
 import jakarta.transaction.Transactional;
 
@@ -25,6 +26,8 @@ public class UserService {
     private UserRepository uRepository;
     @Autowired
     private RoleService rService;
+    @Autowired
+    private MediaService mService;
 
     public static final String USER_DELETED = "USER WAS DELETED";
 
@@ -44,8 +47,10 @@ public class UserService {
     }
 
     /**
-     * Obtiene un usuario activo y no baneado por su ID como entidad, para uso interno de otros servicios.
-     * A diferencia de {@link #getUserById}, devuelve la entidad completa sin mapear a DTO.
+     * Obtiene un usuario activo y no baneado por su ID como entidad, para uso
+     * interno de otros servicios.
+     * A diferencia de {@link #getUserById}, devuelve la entidad completa sin mapear
+     * a DTO.
      *
      * @param id El ID del usuario a buscar.
      * @return La entidad {@link User} correspondiente.
@@ -59,10 +64,12 @@ public class UserService {
 
     /**
      * Busca un usuario por su username y lo devuelve como {@link Optional} de DTO.
-     * No lanza excepción si no existe, por lo que es seguro para comprobaciones de existencia.
+     * No lanza excepción si no existe, por lo que es seguro para comprobaciones de
+     * existencia.
      *
      * @param username El nombre de usuario a buscar.
-     * @return {@link Optional} con el {@link UserResponseDTO} si existe, o vacío si no.
+     * @return {@link Optional} con el {@link UserResponseDTO} si existe, o vacío si
+     *         no.
      */
     public Optional<UserResponseDTO> getUserByUsername(String username) {
         return uRepository.findByUsername(username)
@@ -127,7 +134,8 @@ public class UserService {
      * Guarda o actualiza un usuario en la base de datos, resolviendo su rol
      * e inicializando los campos de estado por defecto.
      *
-     * @param user El {@link User} a guardar. Debe incluir un {@link Role} con ID válido.
+     * @param user El {@link User} a guardar. Debe incluir un {@link Role} con ID
+     *             válido.
      * @return {@link UserResponseDTO} con los datos del usuario persistido.
      */
     public UserResponseDTO saveUser(User user) {
@@ -135,6 +143,12 @@ public class UserService {
 
         user.setRole(role);
         user.setAddresses(new ArrayList<>());
+
+        // Solo inicializar la URL si el usuario aún no tiene una asignada
+        if (user.getProfileImageUrl() == null || user.getProfileImageUrl().isBlank()) {
+            user.setProfileImageUrl(mService.getDefaultProfileImageUrl());
+        }
+
         user.setActive(true);
         user.setBanned(false);
         user.setDeleted(false);
@@ -144,8 +158,10 @@ public class UserService {
     }
 
     /**
-     * Guarda directamente un usuario en la base de datos sin inicializar campos por defecto.
-     * Destinado a uso interno de servicios que necesitan persistir cambios parciales sobre la entidad.
+     * Guarda directamente un usuario en la base de datos sin inicializar campos por
+     * defecto.
+     * Destinado a uso interno de servicios que necesitan persistir cambios
+     * parciales sobre la entidad.
      *
      * @param user El {@link User} a persistir.
      * @return La entidad {@link User} guardada.

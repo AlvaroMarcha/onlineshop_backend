@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
+import es.marcha.backend.services.media.MediaService;
 import es.marcha.backend.services.user.UserService;
 
 @RestController
@@ -26,6 +29,9 @@ public class UserController {
     // Attribs
     @Autowired
     private UserService uService;
+
+    @Autowired
+    private MediaService mService;
 
     /**
      * Obtiene todos los usuarios de la base de datos.
@@ -97,15 +103,34 @@ public class UserController {
     }
 
     /**
-     * Banea a un usuario por su ID, desactivando su cuenta e impidiendo futuros accesos.
+     * Banea a un usuario por su ID, desactivando su cuenta e impidiendo futuros
+     * accesos.
      *
      * @param id El ID del usuario a banear.
-     * @return {@link ResponseEntity} con el {@link BannedUserResponseDTO} que refleja
+     * @return {@link ResponseEntity} con el {@link BannedUserResponseDTO} que
+     *         refleja
      *         el nuevo estado del usuario, con código HTTP 200 OK.
      */
     @PostMapping("/ban/{id}")
     public ResponseEntity<BannedUserResponseDTO> banUser(@PathVariable long id) {
         BannedUserResponseDTO bannedUser = uService.banUserById(id);
         return new ResponseEntity<>(bannedUser, HttpStatus.OK);
+    }
+
+    /**
+     * Sube una nueva imagen de perfil para el usuario indicado y actualiza
+     * la URL almacenada en su registro.
+     *
+     * @param id   ID del usuario cuya foto de perfil se desea actualizar.
+     * @param file archivo de imagen recibido en el campo {@code file} del
+     *             formulario
+     *             (multipart/form-data). Solo se aceptan JPEG y PNG.
+     * @return {@link ResponseEntity} con la URL pública de la nueva imagen y código
+     *         HTTP 200 OK.
+     */
+    @PostMapping("/upload/{id}")
+    public ResponseEntity<String> uploadProfileImage(@PathVariable long id, @RequestParam("file") MultipartFile file) {
+        String imageUrl = mService.newPicProfile(file, id);
+        return new ResponseEntity<>(imageUrl, HttpStatus.OK);
     }
 }
