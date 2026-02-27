@@ -130,7 +130,6 @@ public class UserController {
      */
     @PostMapping("/upload/{id}")
     public ResponseEntity<String> uploadProfileImage(@PathVariable long id, @RequestParam("file") MultipartFile file) {
-        System.out.println(id + " user id");
         String imageUrl = mService.newPicProfile(file, id);
         return new ResponseEntity<>(imageUrl, HttpStatus.OK);
     }
