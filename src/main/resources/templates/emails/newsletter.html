@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .email-wrapper {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #f3f3f3;
+        }
+        .email-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #232f3e;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 25px 20px;
+        }
+        .intro {
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .main-block {
+            background-color: #fdf3e0;
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .main-block img {
+            max-width: 100%;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .main-block h2 {
+            color: #232f3e;
+            margin: 10px 0;
+        }
+        .main-block p {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .btn-main {
+            display: inline-block;
+            background-color: #f90;
+            color: #111 !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .card {
+            flex: 1 1 calc(50% - 15px);
+            background-color: #f9f9f9;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        .card img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+        .card h3 {
+            font-size: 16px;
+            margin: 10px 0 5px;
+            color: #232f3e;
+        }
+        .card p {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .badge {
+            display: inline-block;
+            background-color: #f90;
+            color: #111;
+            font-weight: bold;
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .btn-card {
+            display: inline-block;
+            background-color: #232f3e;
+            color: #fff !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #f3f3f3;
+        }
+        .footer a {
+            color: #232f3e;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        @media (max-width: 480px) {
+            .cards-container {
+                flex-direction: column;
+            }
+            .card {
+                flex: 1 1 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+
+            <!-- HEADER -->
+            <div class="header">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg" alt="Tu Empresa" />
+                <h1 th:text="${newsletterTitle}">Boletín de Noticias</h1>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content">
+                <p class="intro" th:text="${introText}">
+                    Hola Usuario, aquí tienes las últimas novedades y ofertas seleccionadas especialmente para ti.
+                </p>
+
+                <!-- BLOQUE PRINCIPAL -->
+                <div class="main-block" th:if="${mainItem != null}">
+                    <span class="badge" th:text="${mainItem.badge}">Nuevo</span>
+                    <h2 th:text="${mainItem.title}">Producto destacado</h2>
+                    <img th:src="${mainItem.imageUrl}" alt="Imagen principal" />
+                    <p th:text="${mainItem.summary}">Resumen del producto o noticia principal.</p>
+                    <a th:href="${mainItem.link}" class="btn-main">Ver más</a>
+                </div>
+
+                <!-- BLOQUES SECUNDARIOS -->
+                <div class="cards-container" th:each="item : ${secondaryItems}">
+                    <div class="card">
+                        <span class="badge" th:text="${item.badge}">Oferta</span>
+                        <h3 th:text="${item.title}">Título tarjeta</h3>
+                        <img th:src="${item.imageUrl}" alt="Imagen tarjeta" />
+                        <p th:text="${item.summary}">Resumen breve.</p>
+                        <a th:href="${item.link}" class="btn-card">Ver más</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="footer">
+                <p>© 2026 Tu Empresa. Todos los derechos reservados.</p>
+                <p>
+                    <a href="#">Términos</a> | 
+                    <a href="#">Privacidad</a> | 
+                    <a href="#">Darse de baja</a> | 
+                    <a href="#">Facebook</a> | 
+                    <a href="#">Instagram</a> | 
+                    <a href="#">Twitter</a>
+                </p>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
