@@ -13,7 +13,8 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // aplica a todas las rutas
-                        .allowedOrigins("http://localhost:4200") // tu Angular
+                        // .allowedOrigins("http://localhost:4200") // tu Angular
+                        .allowedOrigins("http://localhost:5500") // testing
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*").allowCredentials(true);
             }
@@ -21,5 +22,3 @@ public class CorsConfig {
     }
 
 }
-
-
