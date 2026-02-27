@@ -23,10 +23,18 @@ spring.jpa.show-sql=${DB_SHOW_SQL}
 spring.jpa.hibernate.ddl-auto=${DB_HBM2DDL}
 server.port=${SERVER_PORT:8080}
 app.images.storage-path=${IMAGES_STORAGE_PATH}
+app.base-url=${APP_BASE_URL}
+app.images.public-path=${APP_IMAGES_PUBLIC_PATH}
 ```
 
 Asegúrate de definir estas variables antes de ejecutar la aplicación. 
 Recuerda definirlas en tu archivo .env, con los nombres correspondientes. Ejem: ${DB_URL}
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `IMAGES_STORAGE_PATH` | Ruta absoluta del disco donde se guardan las imágenes | `C:/uploads/images` |
+| `APP_BASE_URL` | URL pública base del servidor | `http://localhost:8080` |
+| `APP_IMAGES_PUBLIC_PATH` | Ruta pública bajo la que se sirven las imágenes | `/images` |
 
 ### Variables de Mail y Google OAuth2
 
@@ -43,6 +51,30 @@ GOOGLE_CLIENT_ID=tu_client_id
 GOOGLE_CLIENT_SECRET=tu_client_secret
 GOOGLE_TOKEN_URI=https://oauth2.googleapis.com/token
 GOOGLE_REFRESH_TOKEN=tu_refresh_token
+```
+
+### Variables de almacenamiento de imágenes
+
+```properties
+# Ruta absoluta en disco donde se almacenan las imágenes
+IMAGES_STORAGE_PATH=C:/uploads/images
+
+# URL base pública del servidor
+APP_BASE_URL=http://localhost:8080
+
+# Prefijo de ruta pública bajo el que se sirven las imágenes
+APP_IMAGES_PUBLIC_PATH=/images
+```
+
+Estructura de carpetas generada automáticamente al arrancar:
+
+```
+C:/uploads/images/
+  default/
+    default_pic_profile.jpeg   ← copiada desde el classpath al arranque
+  {userId}/
+    pic-profile/
+      {username}_profile.jpg   ← subida por el usuario
 ```
 
 ## Ejecución
@@ -118,13 +150,24 @@ curl http://localhost:8080/health/status
 ## Entidades de ejemplo
 
 El proyecto incluye modelos JPA con relaciones entre usuarios, direcciones,
-órdenes y pagos:
+órdenes, pagos, productos y reseñas:
 
-- `User`
-- `Role`
+- `User` / `Role`
 - `Address`
-- `Order`
-- `Payment`
+- `Order` / `Payment`
+- `Product` / `Category` / `Subcategory`
+- `ProductReview`
+
+## Seguridad
+
+La seguridad está gestionada con **Spring Security + JWT**. Se aplica una estrategia de doble cadena de filtros según el origen de la petición:
+
+| Origen | Comportamiento |
+|---|---|
+| `localhost:5500` / `127.0.0.1:5500` (Live Server) | Sin restricciones — solo para pruebas locales |
+| `localhost:4200` y cualquier otro origen | JWT obligatorio en todos los endpoints excepto `/auth/**` e `/images/**` |
+
+> ⚠️ Para pasar a producción, eliminar la cadena `devFilterChain` o restringir los orígenes de prueba.
 
 ## Endpoints principales
 
@@ -143,6 +186,10 @@ Estos son los endpoints más relevantes que expone la API:
   - `PUT /users`
   - `DELETE /users/{id}`
   - `POST /users/ban/{id}`
+  - `POST /users/upload/{id}` — sube foto de perfil (`multipart/form-data`, campo `file`)
+- Imágenes (recursos estáticos públicos):
+  - `GET /images/default/default_pic_profile.jpeg`
+  - `GET /images/{userId}/pic-profile/{filename}`
 - Direcciones:
   - `GET /address/{id}`
   - `POST /address`
@@ -161,6 +208,22 @@ Estos son los endpoints más relevantes que expone la API:
   - `POST /categories`
   - `PUT /categories`
   - `DELETE /categories/{id}`
+- Subcategorías:
+  - `GET /subcategories`
+  - `GET /subcategories/{id}`
+  - `POST /subcategories`
+  - `PUT /subcategories`
+  - `DELETE /subcategories/{id}`
+- Productos:
+  - `GET /products`
+  - `GET /products/{id}`
+  - `POST /products`
+  - `PUT /products`
+  - `DELETE /products/{id}`
+- Reseñas de producto:
+  - `GET /reviews/product/{productId}`
+  - `POST /reviews`
+  - `DELETE /reviews/{id}`
 - Mail:
   - `POST /mails/testing/send`
 
