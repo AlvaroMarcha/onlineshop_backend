@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.config.StartupConfig;
 import es.marcha.backend.dto.request.security.LoginRequestDTO;
 import es.marcha.backend.dto.request.security.RegisterRequestDTO;
 import es.marcha.backend.dto.response.security.AuthResponseDTO;
@@ -27,8 +26,6 @@ public class AuthService {
     private UserService uService;
     @Autowired
     private RoleService rService;
-    @Autowired
-    private StartupConfig files;
 
     // Methods
     // !! REVISAR MAS ADELANTE, ESTO DEBE IR CON USERDETAILSSERVICE
@@ -126,7 +123,6 @@ public class AuthService {
                 .isActive(true)
                 .isVerified(false).isBanned(false)
                 .isDeleted(false)
-                .profileImageUrl(files.getDestinationPathURLImage().toString())
                 .lastLogin(null)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(null)
@@ -148,7 +144,8 @@ public class AuthService {
      *
      * @param userId ID del usuario cuya sesión se desea cerrar.
      * @return {@link LogoutResponseDTO} con el estado actualizado del usuario.
-     * @throws UserException si el usuario ya tiene la sesión cerrada ({@link UserException#USER_LOGGEDOUT}).
+     * @throws UserException si el usuario ya tiene la sesión cerrada
+     *                       ({@link UserException#USER_LOGGEDOUT}).
      */
     public LogoutResponseDTO logout(long userId) {
         User user = uService.getUserByIdForHandler(userId);
