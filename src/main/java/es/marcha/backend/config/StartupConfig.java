@@ -1,28 +1,41 @@
 package es.marcha.backend.config;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StartupConfig implements CommandLineRunner {
 
-    private final Path destination_dir;
+    private static final Logger log = LoggerFactory.getLogger(StartupConfig.class);
 
-    private final String default_pic_profile =
-            "default_pic_profile.jpeg";
+    private static final String DEFAULT_PIC_PROFILE = "default_pic_profile.jpeg";
 
-    private Path export_path;
+    /** Carpeta reservada para los recursos por defecto */
+    private static final String DEFAULT_FOLDER = "default";
 
+    private final Path destinationDir;
 
-    public StartupConfig(@Value("${IMAGES_STORAGE_PATH}") String path) {
-        // Solo convertimos String a Path
-        this.destination_dir = Paths.get(path);
+    private Path exportPath;
+
+    @Value("${app.base-url}")
+    private String baseUrl;
+
+    @Value("${app.images.public-path}")
+    private String imagesPublicPath;
+
+    public StartupConfig(@Value("${app.images.storage-path}") String path) {
+        // Convierte la ruta proporcionada en una ruta absoluta y normalizada
+        this.destinationDir = Paths.get(path).toAbsolutePath().normalize();
     }
 
     /**
@@ -32,54 +45,60 @@ public class StartupConfig implements CommandLineRunner {
      * Su responsabilidad es:
      * <ul>
      * <li>Crear el directorio de destino para imágenes de perfil si no existe.</li>
-     * <li>Localizar la imagen de perfil por defecto en la carpeta {@code Pictures}
-     * del usuario del sistema.</li>
+     * <li>Localizar la imagen de perfil por defecto dentro de los recursos
+     * estáticos
+     * del classpath ({@code static/default/}).</li>
      * <li>Copiar dicha imagen al directorio de destino configurado.</li>
      * </ul>
      *
      * <p>
-     * Si el archivo de origen no existe, el proceso se interrumpe sin lanzar excepción
-     * para evitar que la aplicación falle durante el arranque.
+     * Si el archivo de origen no existe en el classpath, el proceso se interrumpe
+     * sin lanzar excepción para evitar que la aplicación falle durante el arranque.
      *
      * @param args argumentos de línea de comandos proporcionados por Spring Boot
      */
     @Override
     public void run(String... args) {
         try {
-            if (Files.notExists(destination_dir)) {
-                Files.createDirectories(destination_dir);
+            Path defaultDir = destinationDir.resolve(DEFAULT_FOLDER);
+            if (Files.notExists(defaultDir)) {
+                Files.createDirectories(defaultDir);
             }
 
-            export_path = destination_dir.resolve(default_pic_profile);
+            exportPath = defaultDir.resolve(DEFAULT_PIC_PROFILE);
 
-            Path sourcePath = Paths.get(
-                    System.getProperty("user.home"),
-                    "Pictures",
-                    default_pic_profile);
+            ClassPathResource resource = new ClassPathResource("static/default/" + DEFAULT_PIC_PROFILE);
 
-            if (Files.notExists(sourcePath)) {
-                System.err.println("FILE_NOT_FOUND: " + sourcePath);
+            if (!resource.exists()) {
+                log.error("FILE_NOT_FOUND en classpath: static/default/{}", DEFAULT_PIC_PROFILE);
                 return;
             }
 
-            Files.copy(sourcePath, export_path, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream inputStream = resource.getInputStream()) {
+                Files.copy(inputStream, exportPath, StandardCopyOption.REPLACE_EXISTING);
+            }
 
         } catch (IOException e) {
-            System.out.println(e);
+            log.error("Error al copiar la imagen de perfil por defecto", e);
         }
     }
 
     /**
-     * Devuelve la ruta absoluta donde se almacena la imagen de perfil por defecto
-     * dentro del sistema de archivos.
+     * Construye y devuelve la URL pública de la imagen de perfil por defecto,
+     * compuesta por la base URL, la ruta pública de imágenes y el nombre del
+     * archivo.
      *
-     * <p>
-     * Este método es estático para permitir el acceso a la ruta desde otras partes
-     * de la aplicación sin necesidad de instanciar la clase.
-     *
-     * @return {@link Path} absoluto del archivo de imagen de perfil por defecto
+     * @return URL pública de la imagen de perfil por defecto
      */
-    public Path getDestinationPathURLImage() {
-        return export_path;
+    public String getDefaultProfileImageUrl() {
+        return buildImageUrl(DEFAULT_PIC_PROFILE, DEFAULT_FOLDER);
+    }
+
+    private String buildImageUrl(String filename, String folder) {
+        String base = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        String path = imagesPublicPath.startsWith("/") ? imagesPublicPath : "/" + imagesPublicPath;
+        if (path.endsWith("/"))
+            path = path.substring(0, path.length() - 1);
+        return base + path + "/" + folder + "/" + filename;
     }
 }
