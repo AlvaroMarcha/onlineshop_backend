@@ -1,4 +1,4 @@
-package es.marcha.backend.model.ecommerce;
+package es.marcha.backend.model.ecommerce.product;
 
 import java.time.LocalDateTime;
 

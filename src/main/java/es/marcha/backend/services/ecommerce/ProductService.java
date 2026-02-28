@@ -10,7 +10,7 @@ import es.marcha.backend.dto.response.ecommerce.ProductResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ProductMapper;
-import es.marcha.backend.model.ecommerce.Product;
+import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;

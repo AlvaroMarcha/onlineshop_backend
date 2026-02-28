@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.model.enums.MovementType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

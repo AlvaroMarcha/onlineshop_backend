@@ -1,7 +1,7 @@
 package es.marcha.backend.utils;
 
 import es.marcha.backend.exception.ProductException;
-import es.marcha.backend.model.ecommerce.Product;
+import es.marcha.backend.model.ecommerce.product.Product;
 
 /**
  * Clase de utilidad para la generación automática de información
