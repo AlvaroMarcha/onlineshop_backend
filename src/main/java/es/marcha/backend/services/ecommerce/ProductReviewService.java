@@ -8,7 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ProductReviewMapper;
 import es.marcha.backend.model.ecommerce.product.ProductReview;
