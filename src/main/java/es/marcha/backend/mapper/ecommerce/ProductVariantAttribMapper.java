@@ -39,6 +39,8 @@ public class ProductVariantAttribMapper {
      * @return lista de DTOs con los atributos asignados a la variante
      */
     public static List<ProductVariantAttribResponseDTO> toResponseDTOList(List<ProductVariantAttrib> variantAttribs) {
+        if (variantAttribs == null)
+            return new ArrayList<>();
         List<ProductVariantAttribResponseDTO> dtoList = new ArrayList<>();
         for (ProductVariantAttrib variantAttrib : variantAttribs) {
             dtoList.add(toResponseDTO(variantAttrib));

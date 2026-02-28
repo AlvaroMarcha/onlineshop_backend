@@ -38,6 +38,8 @@ public class ProductAttribValueMapper {
      * @return lista de DTOs con los datos de los valores del atributo
      */
     public static List<ProductAttribValueResponseDTO> toResponseDTOList(List<ProductAttribValue> values) {
+        if (values == null)
+            return new ArrayList<>();
         List<ProductAttribValueResponseDTO> dtoList = new ArrayList<>();
         for (ProductAttribValue value : values) {
             dtoList.add(toResponseDTO(value));
@@ -56,7 +58,7 @@ public class ProductAttribValueMapper {
     public static ProductAttribValue fromRequestDTO(ProductAttribValueRequestDTO dto, ProductAttrib attrib) {
         return ProductAttribValue.builder()
                 .attrib(attrib)
-                .value(dto.getValue())
+                .value(dto.getLabel().toLowerCase())
                 .label(dto.getLabel())
                 .colorHex(dto.getColorHex())
                 .sortOrder(dto.getSortOrder())

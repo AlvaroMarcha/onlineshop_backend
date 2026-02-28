@@ -42,6 +42,8 @@ public class ProductVariantMapper {
      * @return lista de DTOs con los datos de cada variante
      */
     public static List<ProductVariantResponseDTO> toResponseDTOList(List<ProductVariant> variants) {
+        if (variants == null)
+            return new ArrayList<>();
         List<ProductVariantResponseDTO> dtoList = new ArrayList<>();
         for (ProductVariant variant : variants) {
             dtoList.add(toResponseDTO(variant));
@@ -63,7 +65,6 @@ public class ProductVariantMapper {
     public static ProductVariant fromRequestDTO(ProductVariantRequestDTO dto, Product product) {
         return ProductVariant.builder()
                 .product(product)
-                .sku(dto.getSku())
                 .priceOverride(dto.getPriceOverride())
                 .discountPriceOverride(dto.getDiscountPriceOverride())
                 .stock(dto.getStock())

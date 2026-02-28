@@ -38,6 +38,7 @@ public class ProductAttribMapper {
      * @return lista de DTOs con los datos de cada atributo y sus valores
      */
     public static List<ProductAttribResponseDTO> toResponseDTOList(List<ProductAttrib> attribs) {
+        if (attribs == null) return new ArrayList<>();
         List<ProductAttribResponseDTO> dtoList = new ArrayList<>();
         for (ProductAttrib attrib : attribs) {
             dtoList.add(toResponseDTO(attrib));
@@ -57,7 +58,6 @@ public class ProductAttribMapper {
         return ProductAttrib.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .slug(dto.getSlug())
                 .type(dto.getType())
                 .isRequired(dto.isRequired())
                 .sortOrder(dto.getSortOrder())
