@@ -150,24 +150,65 @@ curl http://localhost:8080/health/status
 ## Entidades de ejemplo
 
 El proyecto incluye modelos JPA con relaciones entre usuarios, direcciones,
-órdenes, pagos, productos y reseñas:
+órdenes, pagos, productos, reseñas, atributos y variantes:
 
 - `User` / `Role`
 - `Address`
 - `Order` / `Payment`
 - `Product` / `Category` / `Subcategory`
 - `ProductReview`
+- `ProductAttrib` / `ProductAttribValue`
+- `ProductVariant` / `ProductVariantAttrib`
+
+## Sistema de atributos y variantes de producto
+
+El proyecto implementa un sistema escalable para definir atributos configurables (talla, color, material, etc.) y variantes de producto que combinan esos atributos.
+
+### Modelo de datos
+
+```
+ProductAttrib          → define el tipo de atributo (ej. "Color", "Talla")
+  └── ProductAttribValue  → valores posibles (ej. "Rojo", "Azul", "XL")
+
+Product
+  ├── ManyToMany → ProductAttrib   (tabla: product_attrib)
+  └── OneToMany  → ProductVariant  (cascada completa)
+        └── OneToMany → ProductVariantAttrib → ProductAttribValue
+```
+
+Una variante es la combinación concreta de valores de atributos de un producto (ej. "Camiseta · Color: Azul · Talla: M"), con su propio SKU, precio y stock.
+
+### Componentes implementados
+
+| Capa | Clases |
+|---|---|
+| **Entidades** | `ProductAttrib`, `ProductAttribValue`, `ProductVariant`, `ProductVariantAttrib` |
+| **Excepción** | `ProductAttribException` — 21 constantes agrupadas por dominio |
+| **Repositorios** | `ProductAttribRepository`, `ProductAttribValueRepository`, `ProductVariantRepository`, `ProductVariantAttribRepository` |
+| **Servicios** | `ProductAttribService` (10 métodos), `ProductVariantService` (9 métodos) |
+| **Request DTOs** | `ProductAttribRequestDTO`, `ProductAttribValueRequestDTO`, `ProductVariantRequestDTO` |
+| **Response DTOs** | `ProductAttribResponseDTO`, `ProductAttribValueResponseDTO`, `ProductVariantResponseDTO`, `ProductVariantAttribResponseDTO` |
+| **Mappers** | `ProductAttribMapper`, `ProductAttribValueMapper`, `ProductVariantMapper`, `ProductVariantAttribMapper` |
+| **Controller** | `ProductAttribController` — todos los endpoints bajo `/products` |
+
+### Comportamientos destacados
+
+- **Auto-slug**: si no se proporciona `slug` al crear un atributo, se genera automáticamente desde el `name` vía `ProductUtils.createSlug`.
+- **Variante por defecto**: al crear una variante con `isDefault: true`, el servicio retira el flag de la variante que lo tuviera previamente.
+- **Validaciones en variante**: el servicio comprueba que el SKU sea único, que los `attribValueIds` pertenezcan a atributos asignados al producto y que no haya dos valores del mismo tipo de atributo en la misma variante.
+- **Respuesta enriquecida**: `ProductResponseDTO` devuelve la lista completa de `attribs` y `variants` al consultar un producto.
 
 ## Seguridad
 
-La seguridad está gestionada con **Spring Security + JWT**. Se aplica una estrategia de doble cadena de filtros según el origen de la petición:
+La seguridad está gestionada con **Spring Security + JWT**. Se aplica una estrategia de triple cadena de filtros según el origen de la petición:
 
-| Origen | Comportamiento |
-|---|---|
-| `localhost:5500` / `127.0.0.1:5500` (Live Server) | Sin restricciones — solo para pruebas locales |
-| `localhost:4200` y cualquier otro origen | JWT obligatorio en todos los endpoints excepto `/auth/**` e `/images/**` |
+| Orden | Origen | Comportamiento |
+|---|---|---|
+| `@Order(1)` | `localhost:5500` / `127.0.0.1:5500` (Live Server) | Sin restricciones — solo para pruebas con frontend estático |
+| `@Order(2)` | Sin cabecera `Origin` (Postman, curl, backend) | Sin restricciones — solo para pruebas con herramientas de API |
+| `@Order(3)` | `localhost:4200` y cualquier otro origen | JWT obligatorio en todos los endpoints excepto `/auth/**` e `/images/**` |
 
-> ⚠️ Para pasar a producción, eliminar la cadena `devFilterChain` o restringir los orígenes de prueba.
+> ⚠️ Para pasar a producción, eliminar `devFilterChain` y `noTokenFilterChain`, o restringir los orígenes de prueba.
 
 ## Endpoints principales
 
@@ -220,6 +261,26 @@ Estos son los endpoints más relevantes que expone la API:
   - `POST /products`
   - `PUT /products`
   - `DELETE /products/{id}`
+- Atributos de producto:
+  - `GET /products/attribs` — lista todos los atributos
+  - `GET /products/attribs/{id}` — detalle de un atributo
+  - `POST /products/attribs` — crea un atributo (slug auto-generado si se omite)
+  - `PUT /products/attribs/{id}` — actualiza un atributo
+  - `DELETE /products/attribs/{id}` — elimina un atributo y sus valores en cascada
+- Valores de atributo:
+  - `GET /products/attribs/{attribId}/values` — valores de un atributo
+  - `POST /products/attribs/{attribId}/values` — crea un valor para un atributo
+  - `PUT /products/attribs/values/{id}` — actualiza un valor
+  - `DELETE /products/attribs/values/{id}` — elimina un valor
+- Variantes de producto:
+  - `GET /products/{productId}/variants` — variantes de un producto
+  - `GET /products/variants/{id}` — detalle de una variante
+  - `POST /products/{productId}/variants` — crea una variante con sus atributos
+  - `PUT /products/variants/{id}` — actualiza campos escalares de una variante
+  - `DELETE /products/variants/{id}` — elimina una variante y sus atributos en cascada
+- Atributos de variante:
+  - `POST /products/variants/{variantId}/attribs/{attribValueId}` — añade un valor de atributo a una variante
+  - `DELETE /products/variants/{variantId}/attribs/{variantAttribId}` — elimina un valor de atributo de una variante
 - Reseñas de producto:
   - `GET /reviews/product/{productId}`
   - `POST /reviews`
