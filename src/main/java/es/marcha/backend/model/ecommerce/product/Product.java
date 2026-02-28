@@ -1,4 +1,4 @@
-package es.marcha.backend.model.ecommerce;
+package es.marcha.backend.model.ecommerce.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -7,6 +7,11 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
+import es.marcha.backend.model.ecommerce.Category;
+import es.marcha.backend.model.ecommerce.Inventory;
+import es.marcha.backend.model.ecommerce.Movement;
+import es.marcha.backend.model.ecommerce.Subcategory;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -102,5 +107,11 @@ public class Product {
     @OneToMany(mappedBy = "product")
     @JsonManagedReference
     private List<ProductReview> reviews;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(name = "product_attrib", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "attrib_id"))
+    private List<ProductAttrib> attribs;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ProductVariant> variants;
 
 }

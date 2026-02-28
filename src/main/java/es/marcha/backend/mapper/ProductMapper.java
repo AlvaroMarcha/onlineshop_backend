@@ -4,8 +4,8 @@ import java.util.List;
 
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.ProductResponseDTO;
-import es.marcha.backend.model.ecommerce.Product;
 import es.marcha.backend.model.ecommerce.Subcategory;
+import es.marcha.backend.model.ecommerce.product.Product;
 
 public class ProductMapper {
     public static ProductResponseDTO toProductDTO(Product product) {
