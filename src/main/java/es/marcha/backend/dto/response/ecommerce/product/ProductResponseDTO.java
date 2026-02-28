@@ -3,6 +3,8 @@ package es.marcha.backend.dto.response.ecommerce.product;
 import java.math.BigDecimal;
 import java.util.List;
 
+import es.marcha.backend.dto.response.ecommerce.product.attrib.ProductAttribResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.product.variant.ProductVariantResponseDTO;
 import es.marcha.backend.model.ecommerce.Category;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,12 +29,12 @@ public class ProductResponseDTO {
     private double weight;
     private boolean isDigital;
     private boolean isFeatured;
-    // SEO && Marketing
     private String slug;
     private String metaTitle;
     private String metaDescription;
     private double rating;
     private double ratingCount;
     private List<ProductReviewResponseDTO> reviews;
-
+    private List<ProductAttribResponseDTO> attribs;
+    private List<ProductVariantResponseDTO> variants;
 }

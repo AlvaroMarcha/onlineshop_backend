@@ -15,7 +15,6 @@ import lombok.Setter;
 public class ProductAttribRequestDTO {
     private String name;
     private String description;
-    private String slug;
     private AttribType type;
     private boolean isRequired;
     private int sortOrder;
