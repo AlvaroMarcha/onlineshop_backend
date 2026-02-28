@@ -1,4 +1,4 @@
-package es.marcha.backend.mapper;
+package es.marcha.backend.mapper.product;
 
 import java.util.List;
 
