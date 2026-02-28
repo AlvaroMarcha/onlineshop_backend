@@ -1,4 +1,4 @@
-package es.marcha.backend.dto.response.ecommerce;
+package es.marcha.backend.dto.response.ecommerce.product;
 
 import java.math.BigDecimal;
 import java.util.List;
