@@ -71,14 +71,37 @@ public class SecurityConfig {
     }
 
     /**
+     * Cadena de seguridad para herramientas de testing sin origen (Postman, curl,
+     * etc.).
+     * Permite todas las peticiones sin autenticación cuando no se envía cabecera
+     * {@code Origin}.
+     * Se evalúa en segundo lugar gracias a {@code @Order(2)}.
+     *
+     * <p>
+     * ⚠️ Eliminar o deshabilitar en producción.
+     * </p>
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain noTokenFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(request -> request.getHeader("Origin") == null)
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .build();
+    }
+
+    /**
      * Cadena de seguridad para el front real (Angular :4200) y cualquier otro
      * origen.
      * Requiere JWT para todos los endpoints excepto {@code /auth/**} e
      * {@code /images/**}.
-     * Se evalúa en segundo lugar gracias a {@code @Order(2)}.
+     * Se evalúa en tercer lugar gracias a {@code @Order(3)}.
      */
     @Bean
-    @Order(2)
+    @Order(3)
     public SecurityFilterChain prodFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
