@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.ecommerce.CategoryResponseDTO;
 import es.marcha.backend.exception.ProductException;
-import es.marcha.backend.mapper.product.CategoryMapper;
+import es.marcha.backend.mapper.ecommerce.CategoryMapper;
 import es.marcha.backend.model.ecommerce.Category;
 import es.marcha.backend.repository.ecommerce.CategoryRepository;
 import es.marcha.backend.utils.ProductUtils;
