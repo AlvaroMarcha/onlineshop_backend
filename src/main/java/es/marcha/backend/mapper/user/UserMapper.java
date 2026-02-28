@@ -1,4 +1,4 @@
-package es.marcha.backend.mapper;
+package es.marcha.backend.mapper.user;
 
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.model.user.User;
