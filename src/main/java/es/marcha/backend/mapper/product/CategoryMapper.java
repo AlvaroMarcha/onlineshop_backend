@@ -1,4 +1,4 @@
-package es.marcha.backend.mapper;
+package es.marcha.backend.mapper.product;
 
 import es.marcha.backend.dto.response.ecommerce.CategoryResponseDTO;
 import es.marcha.backend.model.ecommerce.Category;

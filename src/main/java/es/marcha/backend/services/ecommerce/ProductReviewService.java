@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
-import es.marcha.backend.mapper.ProductReviewMapper;
+import es.marcha.backend.mapper.product.ProductReviewMapper;
 import es.marcha.backend.model.ecommerce.product.ProductReview;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.ecommerce.ProductReviewRepository;

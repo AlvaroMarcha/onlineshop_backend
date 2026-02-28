@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.order.PaymentResponseDTO;
 import es.marcha.backend.exception.OrderException;
-import es.marcha.backend.mapper.PaymentMapper;
+import es.marcha.backend.mapper.order.PaymentMapper;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.enums.PaymentStatus;
 import es.marcha.backend.model.order.Order;

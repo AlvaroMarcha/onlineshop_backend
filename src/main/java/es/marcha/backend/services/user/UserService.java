@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
-import es.marcha.backend.mapper.UserMapper;
+import es.marcha.backend.mapper.user.UserMapper;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;

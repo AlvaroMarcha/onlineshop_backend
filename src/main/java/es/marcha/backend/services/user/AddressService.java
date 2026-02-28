@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.dto.response.user.AddressResponseDTO;
 import es.marcha.backend.exception.AddressException;
 import es.marcha.backend.exception.UserException;
-import es.marcha.backend.mapper.AddressMapper;
+import es.marcha.backend.mapper.user.AddressMapper;
 import es.marcha.backend.model.user.Address;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.AddressRepository;
