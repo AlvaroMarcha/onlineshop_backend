@@ -6,8 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.dto.response.ecommerce.ProductResponseDTO;
-import es.marcha.backend.dto.response.ecommerce.ProductReviewResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
+import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ProductMapper;
 import es.marcha.backend.model.ecommerce.product.Product;
