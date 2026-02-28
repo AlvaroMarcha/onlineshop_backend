@@ -36,7 +36,7 @@ public class ProductService {
     public ProductResponseDTO getProductById(long id) {
         return prodRepository.findById(id)
                 .filter(p -> p.isActive() && !p.isDeleted())
-                .map(ProductMapper::toProductDTO)
+                .map(ProductMapper::toProductDetailDTO)
                 .orElseThrow(() -> new ProductException());
     }
 

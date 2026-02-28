@@ -15,7 +15,6 @@ import lombok.Setter;
 @Setter
 @Getter
 public class ProductVariantRequestDTO {
-    private String sku;
     private BigDecimal priceOverride;
     private BigDecimal discountPriceOverride;
     private int stock;

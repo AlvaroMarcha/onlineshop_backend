@@ -13,7 +13,6 @@ import lombok.Setter;
 @Getter
 public class ProductAttribValueRequestDTO {
     private long attribId;
-    private String value;
     private String label;
     private String colorHex;
     private int sortOrder;
