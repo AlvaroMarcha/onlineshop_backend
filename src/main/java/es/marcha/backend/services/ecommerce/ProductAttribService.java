@@ -17,6 +17,7 @@ import es.marcha.backend.model.ecommerce.product.ProductAttrib;
 import es.marcha.backend.model.ecommerce.product.ProductAttribValue;
 import es.marcha.backend.repository.ecommerce.ProductAttribRepository;
 import es.marcha.backend.repository.ecommerce.ProductAttribValueRepository;
+import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -67,7 +68,8 @@ public class ProductAttribService {
 
     /**
      * Crea un nuevo atributo de producto.
-     * Valida que el slug proporcionado no esté ya en uso.
+     * El slug se genera siempre automáticamente a partir del nombre.
+     * Valida que el slug generado no esté ya en uso.
      *
      * @param dto datos del atributo a crear
      * @return DTO con los datos del atributo creado
@@ -78,17 +80,20 @@ public class ProductAttribService {
             throw new ProductAttribException(ProductAttribException.FAILED_CREATE_ATTRIB);
         }
 
-        if (attribRepository.existsBySlug(dto.getSlug())) {
+        String slug = ProductUtils.createSlug(dto.getName());
+        if (attribRepository.existsBySlug(slug)) {
             throw new ProductAttribException(ProductAttribException.SLUG_ALREADY_EXISTS);
         }
 
         ProductAttrib attrib = ProductAttribMapper.fromRequestDTO(dto);
+        attrib.setSlug(slug);
         return ProductAttribMapper.toResponseDTO(attribRepository.save(attrib));
     }
 
     /**
      * Actualiza los campos de un atributo existente.
-     * Si se cambia el slug, valida que el nuevo no esté en uso por otro atributo.
+     * El slug se regenera automáticamente a partir del nuevo nombre.
+     * Valida que el slug generado no esté ya en uso por otro atributo.
      *
      * @param id  identificador del atributo a actualizar
      * @param dto datos actualizados del atributo
@@ -101,13 +106,14 @@ public class ProductAttribService {
         ProductAttrib attrib = attribRepository.findById(id)
                 .orElseThrow(() -> new ProductAttribException(ProductAttribException.ATTRIB_NOT_FOUND));
 
-        if (!attrib.getSlug().equals(dto.getSlug()) && attribRepository.existsBySlug(dto.getSlug())) {
+        String slug = ProductUtils.createSlug(dto.getName());
+        if (!attrib.getSlug().equals(slug) && attribRepository.existsBySlug(slug)) {
             throw new ProductAttribException(ProductAttribException.SLUG_ALREADY_EXISTS);
         }
 
         attrib.setName(dto.getName());
         attrib.setDescription(dto.getDescription());
-        attrib.setSlug(dto.getSlug());
+        attrib.setSlug(slug);
         attrib.setType(dto.getType());
         attrib.setRequired(dto.isRequired());
         attrib.setSortOrder(dto.getSortOrder());
@@ -123,6 +129,7 @@ public class ProductAttribService {
      * @return mensaje de confirmación de eliminación
      * @throws ProductAttribException si el atributo no existe
      */
+    @Transactional
     public String deleteAttrib(long id) {
         if (!attribRepository.existsById(id)) {
             throw new ProductAttribException(ProductAttribException.ATTRIB_NOT_FOUND);
@@ -191,7 +198,7 @@ public class ProductAttribService {
         ProductAttribValue value = attribValueRepository.findById(id)
                 .orElseThrow(() -> new ProductAttribException(ProductAttribException.ATTRIB_VALUE_NOT_FOUND));
 
-        value.setValue(dto.getValue());
+        value.setValue(dto.getLabel().toLowerCase());
         value.setLabel(dto.getLabel());
         value.setColorHex(dto.getColorHex());
         value.setSortOrder(dto.getSortOrder());
@@ -208,11 +215,14 @@ public class ProductAttribService {
      * @return mensaje de confirmación de eliminación
      * @throws ProductAttribException si el valor no existe
      */
+    @Transactional
     public String deleteAttribValue(long id) {
-        if (!attribValueRepository.existsById(id)) {
-            throw new ProductAttribException(ProductAttribException.ATTRIB_VALUE_NOT_FOUND);
-        }
-        attribValueRepository.deleteById(id);
+        ProductAttribValue value = attribValueRepository.findById(id)
+                .orElseThrow(() -> new ProductAttribException(ProductAttribException.ATTRIB_VALUE_NOT_FOUND));
+
+        ProductAttrib attrib = value.getAttrib();
+        attrib.getValues().remove(value);
+        attribRepository.save(attrib);
         return ATTRIB_VALUE_DELETED;
     }
 }

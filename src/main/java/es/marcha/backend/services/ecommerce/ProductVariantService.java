@@ -12,6 +12,7 @@ import es.marcha.backend.exception.ProductAttribException;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ecommerce.ProductVariantMapper;
 import es.marcha.backend.model.ecommerce.product.Product;
+import es.marcha.backend.model.ecommerce.product.ProductAttrib;
 import es.marcha.backend.model.ecommerce.product.ProductAttribValue;
 import es.marcha.backend.model.ecommerce.product.ProductVariant;
 import es.marcha.backend.model.ecommerce.product.ProductVariantAttrib;
@@ -19,6 +20,7 @@ import es.marcha.backend.repository.ecommerce.ProductAttribValueRepository;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.ecommerce.ProductVariantAttribRepository;
 import es.marcha.backend.repository.ecommerce.ProductVariantRepository;
+import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -110,16 +112,8 @@ public class ProductVariantService {
             throw new ProductAttribException(ProductAttribException.FAILED_CREATE_VARIANT);
         }
 
-        if (dto.getSku() != null && variantRepository.existsBySku(dto.getSku())) {
-            throw new ProductAttribException(ProductAttribException.SKU_ALREADY_EXISTS);
-        }
-
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductException(ProductException.DEFAULT));
-
-        List<Long> productAttribIds = product.getAttribs().stream()
-                .map(a -> a.getId())
-                .toList();
 
         if (dto.isDefault()) {
             variantRepository.findByProductIdAndIsDefaultTrue(productId)
@@ -130,6 +124,7 @@ public class ProductVariantService {
         }
 
         ProductVariant variant = ProductVariantMapper.fromRequestDTO(dto, product);
+        variant.setSku(ProductUtils.generateSKU(product.getName()));
         variant.setCreatedAt(LocalDateTime.now());
         ProductVariant saved = variantRepository.save(variant);
 
@@ -138,10 +133,14 @@ public class ProductVariantService {
                 ProductAttribValue attribValue = attribValueRepository.findById(attribValueId)
                         .orElseThrow(() -> new ProductAttribException(ProductAttribException.ATTRIB_VALUE_NOT_FOUND));
 
-                long attribId = attribValue.getAttrib().getId();
+                ProductAttrib attrib = attribValue.getAttrib();
+                long attribId = attrib.getId();
 
-                if (!productAttribIds.contains(attribId)) {
-                    throw new ProductAttribException(ProductAttribException.ATTRIB_VALUE_NOT_BELONGS_TO_PRODUCT);
+                boolean attribLinked = product.getAttribs() != null &&
+                        product.getAttribs().stream().anyMatch(a -> a.getId() == attribId);
+                if (!attribLinked) {
+                    product.getAttribs().add(attrib);
+                    productRepository.save(product);
                 }
 
                 if (variantAttribRepository.existsByVariantIdAndAttribValueAttribId(saved.getId(), attribId)) {
@@ -160,8 +159,8 @@ public class ProductVariantService {
     }
 
     /**
-     * Actualiza los campos escalares de una variante existente (SKU, precios,
-     * stock, estado).
+     * Actualiza los campos escalares de una variante existente (precios,
+     * stock, estado). El SKU no se modifica; fue asignado automáticamente al crear.
      * No modifica los atributos asignados; para ello usar
      * {@link #addAttribValueToVariant}
      * o {@link #removeAttribValueFromVariant}.
@@ -177,11 +176,6 @@ public class ProductVariantService {
         ProductVariant variant = variantRepository.findById(id)
                 .orElseThrow(() -> new ProductAttribException(ProductAttribException.VARIANT_NOT_FOUND));
 
-        if (dto.getSku() != null && !dto.getSku().equals(variant.getSku())
-                && variantRepository.existsBySku(dto.getSku())) {
-            throw new ProductAttribException(ProductAttribException.SKU_ALREADY_EXISTS);
-        }
-
         if (dto.isDefault() && !variant.isDefault()) {
             variantRepository.findByProductIdAndIsDefaultTrue(variant.getProduct().getId())
                     .ifPresent(current -> {
@@ -190,7 +184,6 @@ public class ProductVariantService {
                     });
         }
 
-        variant.setSku(dto.getSku());
         variant.setPriceOverride(dto.getPriceOverride());
         variant.setDiscountPriceOverride(dto.getDiscountPriceOverride());
         variant.setStock(dto.getStock());
@@ -208,11 +201,14 @@ public class ProductVariantService {
      * @return mensaje de confirmación de eliminación
      * @throws ProductAttribException si la variante no existe
      */
+    @Transactional
     public String deleteVariant(long id) {
-        if (!variantRepository.existsById(id)) {
-            throw new ProductAttribException(ProductAttribException.VARIANT_NOT_FOUND);
-        }
-        variantRepository.deleteById(id);
+        ProductVariant variant = variantRepository.findById(id)
+                .orElseThrow(() -> new ProductAttribException(ProductAttribException.VARIANT_NOT_FOUND));
+
+        Product product = variant.getProduct();
+        product.getVariants().remove(variant);
+        productRepository.save(product);
         return VARIANT_DELETED;
     }
 
