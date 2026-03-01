@@ -6,18 +6,21 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import es.marcha.backend.dto.request.security.LoginRequestDTO;
 import es.marcha.backend.dto.request.security.RegisterRequestDTO;
 import es.marcha.backend.dto.response.security.AuthResponseDTO;
 import es.marcha.backend.dto.response.user.LogoutResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
+import es.marcha.backend.model.enums.RoleName;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.security.JwtUtil;
 import es.marcha.backend.services.user.RoleService;
 import es.marcha.backend.services.user.UserService;
-import es.marcha.backend.utils.Validations;
+import es.marcha.backend.utils.Validations; // solo para validateEmail
 
 @Service
 public class AuthService {
@@ -26,21 +29,8 @@ public class AuthService {
     private UserService uService;
     @Autowired
     private RoleService rService;
-
-    // Methods
-    // !! REVISAR MAS ADELANTE, ESTO DEBE IR CON USERDETAILSSERVICE
-    // public AuthResponseDTO login(LoginRequestDTO credentials) {
-    // Authentication authentication =
-    // authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-    // credentials.getUsernameOrEmail(), credentials.getPassword()));
-
-    // UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-    // User user =
-    // uService.getUserByUsernameOrEmail(credentials.getUsernameOrEmail());
-    // String token = JwtUtil.generateToken(userDetails.getUsername());
-
-    // return new AuthResponseDTO(user, token);
-    // }
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     /**
      * Realiza la autenticación de un usuario mediante username o email y
@@ -64,11 +54,11 @@ public class AuthService {
         user.setActive(true);
         user.setSessionCount(user.getSessionCount() + 1);
 
-        if (!Validations.comparePasswords(credentials.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(credentials.getPassword(), user.getPassword())) {
             throw new UserException(UserException.FAILED_LOGIN);
         }
 
-        String token = JwtUtil.generateToken(user.getUsername());
+        String token = JwtUtil.generateToken(user.getUsername(), user.getRole().getName());
         return new AuthResponseDTO(uService.saveUser(user), token);
     }
 
@@ -103,7 +93,7 @@ public class AuthService {
      */
     public AuthResponseDTO register(RegisterRequestDTO userData) {
         Optional<UserResponseDTO> existUser = uService.getUserByUsername(userData.getUsername());
-        Role role = rService.getRoleById(2);
+        Role role = rService.getRoleByName(RoleName.ROLE_USER.name());
         boolean isValidEmail = Validations.validateEmail(userData.getEmail());
         if (existUser.isPresent()) {
             throw new UserException(UserException.FAILED_CREATE_USER);
@@ -117,7 +107,7 @@ public class AuthService {
                 .surname(userData.getSurname())
                 .username(userData.getUsername())
                 .email(userData.getEmail())
-                .password(userData.getPassword())
+                .password(passwordEncoder.encode(userData.getPassword()))
                 .phone(userData.getPhone())
                 .role(role)
                 .isActive(true)
@@ -131,7 +121,7 @@ public class AuthService {
                 .build();
 
         UserResponseDTO savedUser = uService.saveUser(user);
-        String token = JwtUtil.generateToken(savedUser.getUsername());
+        String token = JwtUtil.generateToken(savedUser.getUsername(), savedUser.getRoleName());
         return new AuthResponseDTO(savedUser, token);
     }
 
