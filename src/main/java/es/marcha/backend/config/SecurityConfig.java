@@ -143,6 +143,9 @@ public class SecurityConfig {
                         // === Rutas públicas ===
                         .requestMatchers("/auth/**", "/images/**", "/health/**").permitAll()
 
+                        // === Stripe webhook: público — Stripe no puede enviar JWT ===
+                        .requestMatchers(HttpMethod.POST, "/stripe/webhook").permitAll()
+
                         // === Gestión de roles: solo SUPER_ADMIN ===
                         .requestMatchers("/roles/**").hasRole("SUPER_ADMIN")
 
@@ -166,6 +169,10 @@ public class SecurityConfig {
 
                         // === Pedidos ===
                         .requestMatchers("/orders/**")
+                        .hasAnyRole("SUPER_ADMIN", "ADMIN", "ORDERS", "USER")
+
+                        // === Stripe pagos: crear PaymentIntent ===
+                        .requestMatchers("/stripe/**")
                         .hasAnyRole("SUPER_ADMIN", "ADMIN", "ORDERS", "USER")
 
                         // === Facturas ===
