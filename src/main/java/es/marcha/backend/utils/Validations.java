@@ -14,8 +14,14 @@ public class Validations {
         return username;
     }
 
+    /**
+     * @deprecated Las contraseñas se verifican con
+     *             {@code PasswordEncoder.matches()} (BCrypt).
+     *             Este método solo se mantiene por compatibilidad; no debe usarse
+     *             directamente.
+     */
+    @Deprecated
     public static boolean comparePasswords(String fromCredentials, String fromUser) {
-        // Comprobar hashs mas adelante...
         return fromCredentials.equals(fromUser);
     }
 }
