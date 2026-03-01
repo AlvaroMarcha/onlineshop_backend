@@ -128,33 +128,29 @@ public class PaymentService {
         PaymentStatus currentStatus = payment.getStatus();
 
         switch (currentStatus) {
+            // Error 4: lanzar excepción si la transición no es válida
             case CREATED -> {
-                if (targetStatus == PaymentStatus.PENDING)
-                    currentStatus = PaymentStatus.PENDING;
+                if (targetStatus != PaymentStatus.PENDING)
+                    throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
+                currentStatus = PaymentStatus.PENDING;
             }
             case PENDING -> {
-                if (targetStatus == PaymentStatus.AUTHORIZED || targetStatus == PaymentStatus.FAILED)
-                    currentStatus = targetStatus;
+                if (targetStatus != PaymentStatus.AUTHORIZED && targetStatus != PaymentStatus.FAILED)
+                    throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
+                currentStatus = targetStatus;
             }
             case AUTHORIZED -> {
-                if (targetStatus == PaymentStatus.SUCCESS || targetStatus == PaymentStatus.FAILED)
-                    currentStatus = targetStatus;
+                if (targetStatus != PaymentStatus.SUCCESS && targetStatus != PaymentStatus.FAILED)
+                    throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
+                currentStatus = targetStatus;
             }
             case SUCCESS -> {
-                if (targetStatus == PaymentStatus.REFUNDED)
-                    currentStatus = PaymentStatus.REFUNDED;
+                if (targetStatus != PaymentStatus.REFUNDED)
+                    throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
+                currentStatus = PaymentStatus.REFUNDED;
             }
-            case FAILED, EXPIRED -> {
-                throw new OrderException(
-                        OrderException.TERMINAL_STATUS_PAYMENT + ": " + currentStatus);
-            }
-            case CANCELLED -> {
-                cancelPayment(paymentId);
-                throw new OrderException(
-                        OrderException.TERMINAL_STATUS_PAYMENT + ": " + currentStatus);
-            }
-            case REFUNDED -> {
-                refundPayment(paymentId);
+            // Error 5: eliminar llamadas inútiles a cancelPayment/refundPayment
+            case FAILED, EXPIRED, CANCELLED, REFUNDED -> {
                 throw new OrderException(
                         OrderException.TERMINAL_STATUS_PAYMENT + ": " + currentStatus);
             }
@@ -270,8 +266,18 @@ public class PaymentService {
     @Transactional
     public PaymentResponseDTO cancelPayment(long paymentId) {
         Payment payment = pRepository.findById(paymentId).orElseThrow(() -> new OrderException());
+
         if (payment.getStatus() == PaymentStatus.CANCELLED) {
             return PaymentMapper.toPaymentDTO(payment);
+        }
+
+        EnumSet<PaymentStatus> cancellableStatuses = EnumSet.of(
+                PaymentStatus.CREATED,
+                PaymentStatus.PENDING,
+                PaymentStatus.AUTHORIZED);
+
+        if (!cancellableStatuses.contains(payment.getStatus())) {
+            throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
         }
 
         payment.setStatus(PaymentStatus.CANCELLED);
@@ -319,6 +325,10 @@ public class PaymentService {
 
         if (payment.getStatus() == PaymentStatus.REFUNDED) {
             return PaymentMapper.toPaymentDTO(payment);
+        }
+
+        if (payment.getStatus() != PaymentStatus.SUCCESS) {
+            throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
         }
 
         payment.setStatus(PaymentStatus.REFUNDED);
