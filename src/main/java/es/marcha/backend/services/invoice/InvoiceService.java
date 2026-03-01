@@ -297,7 +297,8 @@ public class InvoiceService {
                 String base64 = Base64.getEncoder().encodeToString(bytes);
                 String filename = logoResource.get().getFilename();
                 String mime = filename != null && filename.toLowerCase().endsWith(".png")
-                        ? "image/png" : "image/jpeg";
+                        ? "image/png"
+                        : "image/jpeg";
                 return new String[] { base64, mime };
             } catch (IOException e) {
                 log.warn("[InvoiceService] No se pudo leer el logo dinámico: {}", e.getMessage());
@@ -312,7 +313,8 @@ public class InvoiceService {
                 String mime = logoPath.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
                 return new String[] { base64, mime };
             } catch (IOException e) {
-                log.warn("[InvoiceService] No se pudo leer el logo de COMPANY_LOGO_PATH '{}': {}", logoPath, e.getMessage());
+                log.warn("[InvoiceService] No se pudo leer el logo de COMPANY_LOGO_PATH '{}': {}", logoPath,
+                        e.getMessage());
             }
         }
         return null;
@@ -442,7 +444,6 @@ public class InvoiceService {
     private byte[] renderPdf(String html) {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             PdfRendererBuilder builder = new PdfRendererBuilder();
-            builder.useFastMode();
             registerFonts(builder);
             // Usar Jsoup + W3CDom para parsear el HTML como String Java puro,
             // evitando cualquier conversi&#243;n de bytes que pueda corromper caracteres
