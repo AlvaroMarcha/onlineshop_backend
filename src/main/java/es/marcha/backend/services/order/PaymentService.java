@@ -65,10 +65,6 @@ public class PaymentService {
         payment.setCreatedAt(LocalDateTime.now());
         payment.setOrder(order);
 
-        // Actualizar el total de la Order
-        order.setTotalAmount(order.getTotalAmount() + payment.getAmount());
-        oService.saveOrder(order);
-
         return PaymentMapper.toPaymentDTO(pRepository.save(payment));
     }
 
@@ -275,16 +271,11 @@ public class PaymentService {
     public PaymentResponseDTO cancelPayment(long paymentId) {
         Payment payment = pRepository.findById(paymentId).orElseThrow(() -> new OrderException());
         if (payment.getStatus() == PaymentStatus.CANCELLED) {
-            // Si el pago es cancelled, no resta el amount, solo devuelve el objeto como
-            // esta.
             return PaymentMapper.toPaymentDTO(payment);
         }
 
-        Order order = payment.getOrder();
-        order.setTotalAmount(order.getTotalAmount() - payment.getAmount());
-        oService.saveOrder(order);
-
         payment.setStatus(PaymentStatus.CANCELLED);
+        updateOrderStatusFromPayments(payment.getOrder());
         return PaymentMapper.toPaymentDTO(pRepository.save(payment));
     }
 
@@ -330,11 +321,8 @@ public class PaymentService {
             return PaymentMapper.toPaymentDTO(payment);
         }
 
-        Order order = payment.getOrder();
-        order.setTotalAmount(order.getTotalAmount() - payment.getAmount());
-        oService.saveOrder(order);
-
         payment.setStatus(PaymentStatus.REFUNDED);
+        updateOrderStatusFromPayments(payment.getOrder());
         return PaymentMapper.toPaymentDTO(pRepository.save(payment));
     }
 

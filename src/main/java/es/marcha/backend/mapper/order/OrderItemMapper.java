@@ -7,7 +7,7 @@ public class OrderItemMapper {
     public static OrderItemsResponseDTO toOrderItemDTO(OrderItems orderItems) {
         return OrderItemsResponseDTO.builder()
                 .id(orderItems.getId())
-                .product(orderItems.getProduct())
+                .productId(orderItems.getProduct() != null ? orderItems.getProduct().getId() : 0)
                 .name(orderItems.getName())
                 .description(orderItems.getDescription())
                 .sku(orderItems.getSku())
@@ -15,6 +15,7 @@ public class OrderItemMapper {
                 .discountPrice(orderItems.getDiscountPrice())
                 .quantity(orderItems.getQuantity())
                 .taxRate(orderItems.getTaxRate())
+                .weight(orderItems.getWeight())
                 .isDigital(orderItems.isDigital())
                 .isFeatured(orderItems.isFeatured())
                 .build();
