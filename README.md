@@ -35,6 +35,18 @@ Recuerda definirlas en tu archivo .env, con los nombres correspondientes. Ejem: 
 | `IMAGES_STORAGE_PATH` | Ruta absoluta del disco donde se guardan las imágenes | `C:/uploads/images` |
 | `APP_BASE_URL` | URL pública base del servidor | `http://localhost:8080` |
 | `APP_IMAGES_PUBLIC_PATH` | Ruta pública bajo la que se sirven las imágenes | `/images` |
+| `INVOICES_STORAGE_PATH` | Ruta absoluta donde se guardan los PDF de facturas (por defecto usa `IMAGES_STORAGE_PATH`) | `C:/uploads/invoices` |
+| `COMPANY_NAME` | Nombre legal de la empresa emisora | `Mi Tienda S.L.` |
+| `COMPANY_NIF` | NIF/CIF de la empresa | `B12345678` |
+| `COMPANY_ADDRESS` | Dirección fiscal (escapar `ñ` como `\u00f1`) | `Calle Ejemplo 1, 46900 Valencia, Espa\u00f1a` |
+| `COMPANY_EMAIL` | Email de contacto que aparece en la factura | `info@mitienda.com` |
+| `COMPANY_PHONE` | Teléfono de contacto | `+34 600 000 000` |
+| `COMPANY_IBAN` | IBAN para datos de pago en la factura | `ES91 2100 0418 4502 0005 1332` |
+| `COMPANY_PRIMARY_COLOR` | Color principal del PDF (`#RRGGBB`) | `#1a1a2e` |
+| `COMPANY_SECONDARY_COLOR` | Color secundario del PDF | `#16213e` |
+| `COMPANY_ACCENT_COLOR` | Color de acento (botones, bordes) | `#e94560` |
+| `COMPANY_TEXT_COLOR` | Color del texto principal | `#333333` |
+| `COMPANY_LOGO_PATH` | Ruta absoluta a la imagen del logo | `C:/uploads/logo.png` |
 
 ### Variables de Mail y Google OAuth2
 
@@ -198,6 +210,74 @@ Una variante es la combinación concreta de valores de atributos de un producto 
 - **Validaciones en variante**: el servicio comprueba que el SKU sea único, que los `attribValueIds` pertenezcan a atributos asignados al producto y que no haya dos valores del mismo tipo de atributo en la misma variante.
 - **Respuesta enriquecida**: `ProductResponseDTO` devuelve la lista completa de `attribs` y `variants` al consultar un producto.
 
+## Sistema de Facturas PDF
+
+El proyecto incluye un subsistema completo de generación de facturas en formato PDF, conforme al RD 1619/2012 (Reglamento de facturación español).
+
+### Modelo de datos
+
+```
+Order ──── Invoice  (relación 1:1, unique constraint en order_id)
+             ├── invoiceNumber  INV-YYYY-NNNNNN  (correlativo anual)
+             ├── pdfPath        ruta absoluta en disco
+             ├── status         GENERATED | ERROR
+             ├── issueDate      LocalDate
+             ├── totalAmount    BigDecimal
+             └── createdAt      LocalDateTime
+```
+
+### Componentes implementados
+
+| Capa | Clases |
+|---|---|
+| **Entidad** | `Invoice` |
+| **Enumerado** | `InvoiceStatus` — `GENERATED`, `ERROR` |
+| **Excepción** | `InvoiceException` |
+| **Repositorio** | `InvoiceRepository` — consulta con `@Lock(PESSIMISTIC_WRITE)` para numeración correlativa segura |
+| **Servicio** | `InvoiceService` — generación, numeración, renderizado PDF, recuperación de bytes |
+| **DTOs** | `InvoiceDataDTO`, `InvoiceLineDTO`, `InvoiceCustomerDTO`, `CompanyDTO`, `TaxSummaryDTO` |
+| **Configuración** | `CompanyPropertiesConfig` — mapea todas las variables `COMPANY_*` |
+| **Template** | `src/main/resources/templates/emails/orders/invoice-default.html` — plantilla Thymeleaf A4 |
+| **Controlador** | `InvoiceController` — 4 endpoints bajo `/invoices` |
+
+### Numeración correlativa (RD 1619/2012)
+
+El método `buildInvoiceNumber()` está declarado `synchronized` y usa `@Lock(PESSIMISTIC_WRITE)` en el repositorio para garantizar que no se emitan dos facturas con el mismo número, incluso bajo carga concurrente. El contador se reinicia automáticamente cada año: `INV-2025-000001`, `INV-2025-000002`, …, `INV-2026-000001`.
+
+### Generación PDF (OpenHTMLtoPDF + Jsoup)
+
+1. Thymeleaf renderiza `invoice-default.html` → String HTML
+2. Jsoup parsea el HTML y establece charset UTF-8
+3. `W3CDom` convierte a `org.w3c.dom.Document`
+4. `PdfRendererBuilder.withW3cDocument()` genera el PDF (**necesario para codificar caracteres especiales como `ñ` correctamente**)
+5. El PDF se guarda en `INVOICES_STORAGE_PATH/{year}/{invoiceNumber}.pdf`
+
+### Fuentes y caracteres especiales
+
+OpenHTMLtoPDF requiere una fuente con soporte Latin Extended para renderizar `ñ`, tildes, etc. El servicio detecta automáticamente:
+- **Windows**: `C:/Windows/Fonts/arial.ttf` + `arialbd.ttf`
+- **Linux/Docker**: DejaVu Sans o Liberation Sans (Alpine: `apk add ttf-dejavu`)
+
+La variable `COMPANY_ADDRESS` en `.env` debe escapar la `ñ` como `\u00f1`:
+```properties
+COMPANY_ADDRESS=Calle Ejemplo 1, 46900 Valencia, Espa\u00f1a
+```
+
+### Comportamiento idempotente
+
+`POST /invoices/orders/{orderId}` es idempotente:
+- Si ya existe una factura para ese pedido **y el PDF existe en disco**, devuelve la factura existente.
+- Si la entidad existe pero el PDF se perdió (reinicio, migración), regenera el PDF automáticamente.
+- Solo crea una nueva factura si no existe ningún registro previo.
+
+### Dockerfile — fuente DejaVu (Alpine)
+
+```dockerfile
+RUN apk add --no-cache ttf-dejavu
+```
+
+---
+
 ## Seguridad
 
 La seguridad está gestionada con **Spring Security + JWT**. Se aplica una estrategia de triple cadena de filtros según el origen de la petición:
@@ -286,9 +366,10 @@ Estos son los endpoints más relevantes que expone la API:
   - `POST /reviews`
   - `DELETE /reviews/{id}`
 - Facturas (PDF):
-  - `POST /invoices/orders/{orderId}` — genera (o recupera) la factura PDF de un pedido (idempotente)
-  - `GET /invoices/users/{userId}` — lista todas las facturas de un usuario
-  - `GET /invoices/{invoiceNumber}` — recupera una factura por su número (ej. `INV-2026-000042`)
+  - `POST /invoices/orders/{orderId}` — genera (o recupera) la factura PDF de un pedido · `201 Created` · idempotente
+  - `GET /invoices/users/{userId}` — lista todas las facturas de un usuario · `200 OK`
+  - `GET /invoices/{invoiceNumber}` — metadatos de una factura por su número (ej. `INV-2026-000001`) · `200 OK`
+  - `GET /invoices/{invoiceNumber}/pdf` — descarga el archivo PDF · `200 OK` · `Content-Type: application/pdf`
 - Mail:
   - `POST /mails/testing/send`
 
