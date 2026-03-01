@@ -44,6 +44,7 @@ import es.marcha.backend.model.order.OrderItems;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.order.InvoiceRepository;
 import es.marcha.backend.repository.order.OrderAddrRepository;
+import es.marcha.backend.services.media.MediaService;
 import es.marcha.backend.services.order.OrderService;
 import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
@@ -62,6 +63,7 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final SpringTemplateEngine templateEngine;
     private final CompanyProperties companyProps;
+    private final MediaService mediaService;
 
     @Value("${app.invoices.storage-path}")
     private String storagePath;
@@ -70,12 +72,14 @@ public class InvoiceService {
             OrderAddrRepository orderAddrRepository,
             InvoiceRepository invoiceRepository,
             SpringTemplateEngine templateEngine,
-            CompanyProperties companyProps) {
+            CompanyProperties companyProps,
+            MediaService mediaService) {
         this.orderService = orderService;
         this.orderAddrRepository = orderAddrRepository;
         this.invoiceRepository = invoiceRepository;
         this.templateEngine = templateEngine;
         this.companyProps = companyProps;
+        this.mediaService = mediaService;
     }
 
     @PostConstruct
@@ -260,6 +264,7 @@ public class InvoiceService {
     // ---- company DTO ----------------------------------------------------
 
     private CompanyDTO buildCompanyDTO() {
+        String[] logoData = loadLogoBase64();
         return CompanyDTO.builder()
                 .name(companyProps.getName())
                 .nif(companyProps.getNif())
@@ -271,21 +276,48 @@ public class InvoiceService {
                 .secondaryColor(companyProps.getSecondaryColor())
                 .accentColor(companyProps.getAccentColor())
                 .textColor(companyProps.getTextColor())
-                .logoBase64(loadLogoBase64(companyProps.getLogoPath()))
+                .logoBase64(logoData != null ? logoData[0] : null)
+                .logoMime(logoData != null ? logoData[1] : null)
                 .build();
     }
 
-    private String loadLogoBase64(String logoPath) {
-        if (logoPath == null || logoPath.isBlank()) {
-            return null;
+    /**
+     * Carga el logo de la empresa como Base64, buscando primero entre los logos
+     * subidos dinámicamente (PNG/JPG/JPEG) via MediaService y cayendo en el
+     * path estático de CompanyProperties como fallback.
+     *
+     * @return array [base64, mimeType] o {@code null} si no hay logo disponible
+     */
+    private String[] loadLogoBase64() {
+        // 1. Logo subido via POST /company/logo (búsqueda dinámica multi-extensión)
+        var logoResource = mediaService.getCompanyLogoResource();
+        if (logoResource.isPresent()) {
+            try {
+                byte[] bytes = Files.readAllBytes(logoResource.get().getFile().toPath());
+                String base64 = Base64.getEncoder().encodeToString(bytes);
+                String filename = logoResource.get().getFilename();
+                String mime = filename != null && filename.toLowerCase().endsWith(".png")
+                        ? "image/png"
+                        : "image/jpeg";
+                return new String[] { base64, mime };
+            } catch (IOException e) {
+                log.warn("[InvoiceService] No se pudo leer el logo dinámico: {}", e.getMessage());
+            }
         }
-        try {
-            byte[] bytes = Files.readAllBytes(Path.of(logoPath));
-            return Base64.getEncoder().encodeToString(bytes);
-        } catch (IOException e) {
-            log.warn("Could not read company logo at '{}': {}", logoPath, e.getMessage());
-            return null;
+        // 2. Fallback: COMPANY_LOGO_PATH env var
+        String logoPath = companyProps.getLogoPath();
+        if (logoPath != null && !logoPath.isBlank()) {
+            try {
+                byte[] bytes = Files.readAllBytes(Path.of(logoPath));
+                String base64 = Base64.getEncoder().encodeToString(bytes);
+                String mime = logoPath.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+                return new String[] { base64, mime };
+            } catch (IOException e) {
+                log.warn("[InvoiceService] No se pudo leer el logo de COMPANY_LOGO_PATH '{}': {}", logoPath,
+                        e.getMessage());
+            }
         }
+        return null;
     }
 
     // ---- invoice data DTO -----------------------------------------------
@@ -412,7 +444,6 @@ public class InvoiceService {
     private byte[] renderPdf(String html) {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             PdfRendererBuilder builder = new PdfRendererBuilder();
-            builder.useFastMode();
             registerFonts(builder);
             // Usar Jsoup + W3CDom para parsear el HTML como String Java puro,
             // evitando cualquier conversi&#243;n de bytes que pueda corromper caracteres

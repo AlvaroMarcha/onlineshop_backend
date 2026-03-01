@@ -3,540 +3,303 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
     <meta charset="UTF-8"/>
-    <style th:inline="css">
+    <!--
+        OPENHTMLTOPDF COMPATIBILITY RULES APPLIED:
+        - NO background-color on <div> elements (not rendered reliably)
+        - ALL background colors applied via inline style="" or th:style=""
+        - Dynamic colors use th:style with string concat + Elvis fallback
+        - CSS contains ONLY static layout (padding, border, font-size, text-align, width)
+        - NO border-radius, letter-spacing, or other unsupported properties
+        - NO descendant CSS selectors (.parent .child) for color rules
+        - Alternating rows use th:style on <tr> directly
+    -->
+    <style>
         @page {
             size: A4;
-            margin: 12mm 14mm 16mm 14mm;
+            margin: 18mm 14mm 18mm 14mm;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; font-size: 9pt; color: #000000; background: #ffffff; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        /* Layout helpers */
+        table { border-collapse: collapse; }
+        .w100 { width: 100%; }
 
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 9pt;
-            color: /*[[${company.textColor}]]*/ #202124;
-            background: #ffffff;
-        }
+        /* Header */
+        .h-logo  { max-width: 180px; max-height: 100px; display: block; }
+        .h-cname { font-size: 12pt; font-weight: bold; }
+        .h-cdet  { font-size: 7.5pt; color: #444444; }
+        .h-title { font-size: 22pt; font-weight: bold; text-align: right; }
+        .h-num   { font-size: 10pt; font-weight: bold; text-align: right; color: #333333; }
 
-        /* ── HEADER ─────────────────────────────────────────────── */
-        .header {
-            width: 100%;
-            border-bottom: 2px solid /*[[${company.accentColor}]]*/ #FBBC04;
-            padding-bottom: 8px;
-            margin-bottom: 14px;
-        }
+        /* Meta boxes */
+        .mb-outer { width: 32%; vertical-align: top; border: 1px solid #000000; padding: 0; }
+        .mb-title { font-size: 7.5pt; font-weight: bold; color: #ffffff; padding: 3px 6px; }
+        .mb-body  { padding: 5px 6px; }
+        .mb-inner { width: 100%; }
+        .mb-inner td { padding: 1px 2px; font-size: 7.5pt; }
+        .ml { color: #666666; width: 80px; }
+        .mv { font-weight: bold; color: #000000; }
 
-        .header-table {
-            width: 100%;
-        }
+        /* Items table */
+        .it { width: 100%; font-size: 8pt; }
+        .it th { padding: 5px 6px; text-align: left; font-size: 7.5pt; border: 1px solid #000000; color: #ffffff; }
+        .it td { padding: 4px 6px; border: 1px solid #000000; vertical-align: middle; font-size: 8pt; }
+        .it tfoot td { font-weight: bold; border-top: 2px solid #000000; background-color: #e0e0e0; }
+        .r  { text-align: right; }
+        .sm { font-size: 7.5pt; color: #555555; }
 
-        .header-logo {
-            width: 120px;
-            vertical-align: middle;
-        }
+        /* Tax table */
+        .tt { width: 100%; font-size: 8pt; }
+        .tt th { padding: 4px 6px; font-size: 7.5pt; color: #ffffff; border: 1px solid #000000; text-align: left; }
+        .tt td { padding: 4px 6px; border: 1px solid #000000; text-align: right; font-size: 8pt; }
+        .tl { text-align: left; }
 
-        .header-logo img {
-            max-width: 120px;
-            max-height: 55px;
-        }
+        /* Totals table */
+        .tot { width: 100%; }
+        .tot td { padding: 5px 8px; border: 1px solid #000000; font-size: 8.5pt; }
+        .tot .lbl { width: 60%; color: #333333; }
+        .tot .amt { text-align: right; font-weight: bold; width: 40%; }
 
-        .header-company {
-            vertical-align: middle;
-            text-align: left;
-            padding-left: 12px;
-        }
+        /* Payment table */
+        .pt { width: 100%; font-size: 8pt; }
+        .pt td { padding: 4px 6px; border: 1px solid #000000; }
+        .pl { color: #666666; font-size: 7pt; width: 90px; }
+        .pv { font-weight: bold; color: #000000; }
 
-        .header-company .company-name {
-            font-size: 14pt;
-            font-weight: bold;
-            color: /*[[${company.primaryColor}]]*/ #1A73E8;
-        }
+        /* Footer */
+        .ft { width: 100%; border-top: 2px solid #1e3a5f; }
+        .ft td { padding: 4px 0; font-size: 7pt; color: #666666; text-align: center; }
 
-        .header-company .company-detail {
-            font-size: 7.5pt;
-            color: #666666;
-            margin-top: 1px;
-        }
-
-        .header-invoice {
-            vertical-align: top;
-            text-align: right;
-            width: 38%;
-        }
-
-        .invoice-label {
-            font-size: 18pt;
-            font-weight: bold;
-            color: /*[[${company.primaryColor}]]*/ #1A73E8;
-            letter-spacing: 1px;
-        }
-
-        .invoice-number {
-            font-size: 9.5pt;
-            font-weight: bold;
-            color: /*[[${company.textColor}]]*/ #202124;
-            margin-top: 2px;
-        }
-
-        /* ── META INFO (dates + customer) ───────────────────────── */
-        .meta-section {
-            width: 100%;
-            margin-bottom: 14px;
-        }
-
-        .meta-table {
-            width: 100%;
-        }
-
-        .meta-dates {
-            width: 48%;
-            vertical-align: top;
-        }
-
-        .meta-customer {
-            width: 48%;
-            vertical-align: top;
-            padding-left: 16px;
-        }
-
-        .box {
-            border: 1px solid #e0e0e0;
-            border-radius: 3px;
-            padding: 8px 10px;
-        }
-
-        .box-title {
-            font-size: 7pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #ffffff;
-            background-color: /*[[${company.primaryColor}]]*/ #1A73E8;
-            padding: 3px 8px;
-            margin: -8px -10px 7px -10px;
-        }
-
-        .box-row {
-            width: 100%;
-            margin-bottom: 2px;
-        }
-
-        .box-label {
-            font-size: 7.5pt;
-            color: #888888;
-            width: 90px;
-            vertical-align: top;
-        }
-
-        .box-value {
-            font-size: 8pt;
-            font-weight: bold;
-            vertical-align: top;
-        }
-
-        /* ── LINE ITEMS TABLE ───────────────────────────────────── */
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            font-size: 8pt;
-        }
-
-        .items-table thead tr {
-            background-color: /*[[${company.primaryColor}]]*/ #1A73E8;
-            color: #ffffff;
-        }
-
-        .items-table thead th {
-            padding: 5px 7px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 7.5pt;
-            letter-spacing: 0.3px;
-        }
-
-        .items-table thead th.num {
-            text-align: right;
-        }
-
-        .items-table tbody tr.row-even {
-            background-color: #E8F0FE;
-        }
-
-        .items-table tbody tr.row-odd {
-            background-color: #ffffff;
-        }
-
-        .items-table tbody td {
-            padding: 5px 7px;
-            border-bottom: 1px solid #e8e8e8;
-            vertical-align: middle;
-        }
-
-        .items-table tbody td.num {
-            text-align: right;
-        }
-
-        .items-table tbody td.sku {
-            color: #888888;
-            font-size: 7.5pt;
-        }
-
-        /* ── TOTALS + TAX SUMMARY ───────────────────────────────── */
-        .bottom-section {
-            width: 100%;
-            margin-top: 6px;
-        }
-
-        .tax-table-wrap {
-            width: 52%;
-            vertical-align: top;
-        }
-
-        .totals-wrap {
-            width: 44%;
-            vertical-align: top;
-            padding-left: 16px;
-        }
-
-        .section-title {
-            font-size: 7pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: /*[[${company.primaryColor}]]*/ #1A73E8;
-            border-bottom: 1px solid /*[[${company.primaryColor}]]*/ #1A73E8;
-            padding-bottom: 3px;
-            margin-bottom: 5px;
-        }
-
-        .tax-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 8pt;
-        }
-
-        .tax-table th {
-            background-color: /*[[${company.secondaryColor}]]*/ #E8F0FE;
-            color: /*[[${company.primaryColor}]]*/ #1A73E8;
-            font-size: 7.5pt;
-            padding: 4px 7px;
-            text-align: right;
-            border: 1px solid #e0e0e0;
-        }
-
-        .tax-table th:first-child {
-            text-align: left;
-        }
-
-        .tax-table td {
-            padding: 4px 7px;
-            text-align: right;
-            border: 1px solid #e0e0e0;
-            font-size: 8pt;
-        }
-
-        .tax-table td:first-child {
-            text-align: left;
-        }
-
-        .totals-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 8.5pt;
-        }
-
-        .totals-table td {
-            padding: 4px 8px;
-            border-bottom: 1px solid #e8e8e8;
-        }
-
-        .totals-table td.label {
-            color: #555555;
-        }
-
-        .totals-table td.amount {
-            text-align: right;
-            font-weight: bold;
-        }
-
-        .totals-row-grand {
-            background-color: /*[[${company.primaryColor}]]*/ #1A73E8;
-        }
-
-        .totals-row-grand td {
-            color: #ffffff !important;
-            font-size: 10pt;
-            font-weight: bold;
-            padding: 6px 8px;
-            border-bottom: none;
-        }
-
-        /* ── PAYMENT INFO ───────────────────────────────────────── */
-        .payment-section {
-            margin-top: 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 3px;
-            padding: 8px 10px;
-        }
-
-        .payment-title {
-            font-size: 7pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #ffffff;
-            background-color: /*[[${company.accentColor}]]*/ #FBBC04;
-            padding: 3px 8px;
-            margin: -8px -10px 7px -10px;
-        }
-
-        .payment-row {
-            margin-bottom: 2px;
-        }
-
-        .payment-label {
-            font-size: 7.5pt;
-            color: #888888;
-            width: 100px;
-            vertical-align: top;
-        }
-
-        .payment-value {
-            font-size: 8pt;
-            font-weight: bold;
-            vertical-align: top;
-        }
-
-        /* ── NOTES ──────────────────────────────────────────────── */
-        .notes-section {
-            margin-top: 10px;
-            border-left: 3px solid /*[[${company.accentColor}]]*/ #FBBC04;
-            padding: 5px 10px;
-            background-color: #fffde7;
-            font-size: 8pt;
-            color: #555555;
-        }
-
-        /* ── FOOTER ─────────────────────────────────────────────── */
-        .footer {
-            position: running(footer);
-            text-align: center;
-            font-size: 7pt;
-            color: #aaaaaa;
-            border-top: 1px solid /*[[${company.accentColor}]]*/ #FBBC04;
-            padding-top: 4px;
-        }
-
-        @page {
-            @bottom-center {
-                content: element(footer);
-            }
-        }
-
-        .page-number:after {
-            content: counter(page) " / " counter(pages);
-        }
+        /* Fixed bottom block */
+        .page-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; }
     </style>
 </head>
 <body>
 
-    <!-- FOOTER (declared before content for running element) -->
-    <div class="footer">
-        <span th:text="${company.name}">Mi Empresa S.L.</span> &#8226;
-        NIF: <span th:text="${company.nif}">B12345678</span> &#8226;
-        <span th:text="${company.address}">Calle Ejemplo 1, Madrid</span> &#8226;
-        <span th:text="${company.email}">info@miempresa.com</span> &#8226;
-        <span th:text="${company.phone}">+34 900 000 000</span>
-        &#160;&#160;&#8212;&#160;&#160; P&#225;gina <span class="page-number"></span>
-    </div>
+<!-- ═══ HEADER ══════════════════════════════════════════════════ -->
+<table class="w100" style="margin-bottom:10px;">
+    <tr>
+        <td style="vertical-align:middle; width:60%;">
+            <img th:if="${company.logoBase64 != null}"
+                 th:src="'data:' + ${company.logoMime} + ';base64,' + ${company.logoBase64}"
+                 class="h-logo" alt="Logo"/>
+            <p class="h-cname"
+               th:style="'color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'"
+               th:text="${company.name}">Empresa S.L.</p>
+            <p class="h-cdet" th:text="'NIF: ' + ${company.nif}">NIF: B12345678</p>
+            <p class="h-cdet" th:text="${company.address}">C/ Ejemplo 1, Madrid</p>
+            <p class="h-cdet" th:text="${company.email} + '  |  ' + ${company.phone}">info@empresa.com</p>
+        </td>
+        <td style="vertical-align:middle; width:40%;">
+            <p class="h-title"
+               th:style="'color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'">FACTURA</p>
+            <p class="h-num" th:text="${invoice.invoiceNumber}">INV-2026-000001</p>
+        </td>
+    </tr>
+</table>
 
-    <!-- ── HEADER ─────────────────────────────────────────────────── -->
-    <div class="header">
-        <table class="header-table">
-            <tr>
-                <!-- Logo -->
-                <td class="header-logo" th:if="${company.logoBase64 != null}">
-                    <img th:src="'data:image/png;base64,' + ${company.logoBase64}" alt="Logo"/>
-                </td>
-                <!-- Company data -->
-                <td class="header-company">
-                    <div class="company-name" th:text="${company.name}">Mi Empresa S.L.</div>
-                    <div class="company-detail" th:text="'NIF: ' + ${company.nif}">NIF: B12345678</div>
-                    <div class="company-detail" th:text="${company.address}">Dirección</div>
-                    <div class="company-detail" th:text="${company.email} + '  |  ' + ${company.phone}">email | teléfono</div>
-                </td>
-                <!-- Invoice title -->
-                <td class="header-invoice">
-                    <div class="invoice-label">FACTURA</div>
-                    <div class="invoice-number" th:text="${invoice.invoiceNumber}">INV-2026-000001</div>
-                </td>
-            </tr>
-        </table>
-    </div>
+<!-- ═══ DIVIDER (via table row — background on td is reliable) ══ -->
+<table class="w100" style="margin-bottom:10px;">
+    <tr>
+        <td style="height:3px; font-size:1px; line-height:1px;"
+            th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + '; height:3px; font-size:1px; line-height:1px;'">&#160;</td>
+    </tr>
+</table>
 
-    <!-- ── META: DATES + CUSTOMER ─────────────────────────────────── -->
-    <div class="meta-section">
-        <table class="meta-table">
-            <tr>
-                <!-- Dates -->
-                <td class="meta-dates">
-                    <div class="box">
-                        <div class="box-title">Datos de la factura</div>
-                        <table class="box-row">
-                            <tr>
-                                <td class="box-label">Fecha emisi&#243;n:</td>
-                                <td class="box-value" th:text="${invoice.issueDate}">01/03/2026</td>
-                            </tr>
-                            <tr>
-                                <td class="box-label">Fecha operaci&#243;n:</td>
-                                <td class="box-value" th:text="${invoice.operationDate}">28/02/2026</td>
-                            </tr>
-                            <tr>
-                                <td class="box-label">Vencimiento:</td>
-                                <td class="box-value" th:text="${invoice.dueDate}">31/03/2026</td>
-                            </tr>
+<!-- ═══ META: EMISOR | DATOS FACTURA | CLIENTE ══════════════════ -->
+<table class="w100" style="margin-bottom:14px;">
+    <tr>
+        <!-- Emisor -->
+        <td class="mb-outer">
+            <table class="w100">
+                <tr>
+                    <td class="mb-title"
+                        th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'">
+                        EMISOR
+                    </td>
+                </tr>
+                <tr>
+                    <td class="mb-body">
+                        <table class="mb-inner">
+                            <tr><td class="ml">Nombre:</td><td class="mv" th:text="${company.name}">Empresa</td></tr>
+                            <tr><td class="ml">NIF:</td><td class="mv" th:text="${company.nif}">B12345678</td></tr>
+                            <tr><td class="ml">IBAN:</td><td class="mv" th:text="${company.iban}">ES00 0000</td></tr>
                         </table>
-                    </div>
-                </td>
-                <!-- Spacer -->
-                <td style="width:4%;"></td>
-                <!-- Customer -->
-                <td class="meta-customer">
-                    <div class="box">
-                        <div class="box-title">Facturado a</div>
-                        <table class="box-row">
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td style="width:2%;"></td>
+        <!-- Datos de la factura -->
+        <td class="mb-outer">
+            <table class="w100">
+                <tr>
+                    <td class="mb-title"
+                        th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'">
+                        DATOS DE LA FACTURA
+                    </td>
+                </tr>
+                <tr>
+                    <td class="mb-body">
+                        <table class="mb-inner">
+                            <tr><td class="ml">N.&#186; factura:</td><td class="mv" th:text="${invoice.invoiceNumber}">INV-2026-000001</td></tr>
+                            <tr><td class="ml">Emisi&#243;n:</td><td class="mv" th:text="${invoice.issueDate}">01/03/2026</td></tr>
+                            <tr><td class="ml">Operaci&#243;n:</td><td class="mv" th:text="${invoice.operationDate}">28/02/2026</td></tr>
+                            <tr><td class="ml">Vencimiento:</td><td class="mv" th:text="${invoice.dueDate}">31/03/2026</td></tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+        <td style="width:2%;"></td>
+        <!-- Cliente -->
+        <td class="mb-outer">
+            <table class="w100">
+                <tr>
+                    <td class="mb-title"
+                        th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'">
+                        FACTURADO A
+                    </td>
+                </tr>
+                <tr>
+                    <td class="mb-body">
+                        <table class="mb-inner">
+                            <tr><td class="ml">Cliente:</td><td class="mv" th:text="${invoice.customer.name}">Cliente</td></tr>
+                            <tr><td class="ml">NIF / DNI:</td><td class="mv" th:text="${invoice.customer.nif}">-</td></tr>
+                            <tr><td class="ml">Direcci&#243;n:</td><td class="mv" th:text="${invoice.customer.address}">C/ Calle 1</td></tr>
                             <tr>
-                                <td class="box-label">Nombre:</td>
-                                <td class="box-value" th:text="${invoice.customer.name}">Cliente</td>
-                            </tr>
-                            <tr>
-                                <td class="box-label">NIF:</td>
-                                <td class="box-value" th:text="${invoice.customer.nif}">-</td>
-                            </tr>
-                            <tr>
-                                <td class="box-label">Direcci&#243;n:</td>
-                                <td class="box-value" th:text="${invoice.customer.address}">Calle</td>
-                            </tr>
-                            <tr>
-                                <td class="box-label">Localidad:</td>
-                                <td class="box-value"
-                                    th:text="${invoice.customer.postalCode} + ' ' + ${invoice.customer.city} + ', ' + ${invoice.customer.country}">
-                                    28001 Madrid, España
+                                <td class="ml">Localidad:</td>
+                                <td class="mv"
+                                    th:text="${invoice.customer.postalCode} + ' ' + ${invoice.customer.city} + ' (' + ${invoice.customer.country} + ')'">
+                                    Madrid
                                 </td>
                             </tr>
                         </table>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
-    <!-- ── LINE ITEMS ─────────────────────────────────────────────── -->
-    <table class="items-table">
-        <thead>
-            <tr>
-                <th style="width:30%;">Descripci&#243;n</th>
-                <th style="width:12%;">Referencia</th>
-                <th class="num" style="width:6%;">Cant.</th>
-                <th class="num" style="width:10%;">P. Unit.</th>
-                <th class="num" style="width:10%;">Base imp.</th>
-                <th class="num" style="width:8%;">IVA %</th>
-                <th class="num" style="width:10%;">Cuota IVA</th>
-                <th class="num" style="width:10%;">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="line, iterStat : ${invoice.lines}"
-                th:class="${iterStat.even} ? 'row-even' : 'row-odd'">
-                <td th:text="${line.productName}">Producto</td>
-                <td class="sku" th:text="${line.sku}">SKU-001</td>
-                <td class="num" th:text="${line.quantity}">1</td>
-                <td class="num" th:text="${#numbers.formatDecimal(line.unitPrice, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                <td class="num" th:text="${#numbers.formatDecimal(line.baseAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                <td class="num" th:text="${#numbers.formatDecimal(line.taxPercent, 1, 2)} + ' %'">21,00 %</td>
-                <td class="num" th:text="${#numbers.formatDecimal(line.taxAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                <td class="num" th:text="${#numbers.formatDecimal(line.totalAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <!-- ── BOTTOM: TAX SUMMARY + TOTALS ───────────────────────────── -->
-    <table class="bottom-section">
-        <tr>
-            <!-- Tax summary -->
-            <td class="tax-table-wrap">
-                <div class="section-title">Desglose de impuestos</div>
-                <table class="tax-table">
-                    <thead>
-                        <tr>
-                            <th>Tipo IVA</th>
-                            <th>Base imponible</th>
-                            <th>Cuota IVA</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="tax : ${invoice.taxSummary}">
-                            <td th:text="${#numbers.formatDecimal(tax.percent, 1, 2)} + ' %'">21,00 %</td>
-                            <td th:text="${#numbers.formatDecimal(tax.base, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                            <td th:text="${#numbers.formatDecimal(tax.amount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </td>
-            <!-- Totals -->
-            <td style="width:4%;"></td>
-            <td class="totals-wrap">
-                <div class="section-title">Resumen</div>
-                <table class="totals-table">
-                    <tr>
-                        <td class="label">Base imponible (sin IVA)</td>
-                        <td class="amount" th:text="${#numbers.formatDecimal(invoice.totalBase, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Total IVA</td>
-                        <td class="amount" th:text="${#numbers.formatDecimal(invoice.totalTax, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                    </tr>
-                    <tr class="totals-row-grand">
-                        <td class="label">TOTAL A PAGAR</td>
-                        <td class="amount" th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
-                    </tr>
-                </table>
-            </td>
+<!-- ═══ L&#205;NEAS DE LA FACTURA ═════════════════════════════════════ -->
+<table class="it" style="margin-bottom:70mm;">
+    <thead>
+        <tr th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'">
+            <th style="width:36%; text-align:left;">Descripci&#243;n del producto</th>
+            <th style="width:7%;  text-align:left;">Cant.</th>
+            <th style="width:13%; text-align:left;">Precio unit. (&#8364;)</th>
+            <th style="width:13%; text-align:left;">Base imponible (&#8364;)</th>
+            <th style="width:7%;  text-align:left;">% IVA</th>
+            <th style="width:12%; text-align:left;">Cuota IVA (&#8364;)</th>
+            <th style="width:12%; text-align:left;">Total l&#237;nea (&#8364;)</th>
         </tr>
-    </table>
+    </thead>
+    <tbody>
+        <tr th:each="line, i : ${invoice.lines}"
+            th:style="${i.even} ? 'background-color:#f5f5f5;' : 'background-color:#ffffff;'">
+            <td th:text="${line.productName}">Producto</td>
+            <td class="r" th:text="${line.quantity}">1</td>
+            <td class="r" th:text="${#numbers.formatDecimal(line.unitPrice,   1, 'POINT', 2, 'COMMA')}">0,00</td>
+            <td class="r" th:text="${#numbers.formatDecimal(line.baseAmount,  1, 'POINT', 2, 'COMMA')}">0,00</td>
+            <td class="r" th:text="${#numbers.formatDecimal(line.taxPercent,  1, 'POINT', 2, 'COMMA')} + '%'">21%</td>
+            <td class="r" th:text="${#numbers.formatDecimal(line.taxAmount,   1, 'POINT', 2, 'COMMA')}">0,00</td>
+            <td class="r" th:text="${#numbers.formatDecimal(line.totalAmount, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+        </tr>
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" style="text-align:right;">Subtotales</td>
+            <td class="r" th:text="${#numbers.formatDecimal(invoice.totalBase,   1, 'POINT', 2, 'COMMA')}">0,00</td>
+            <td></td>
+            <td class="r" th:text="${#numbers.formatDecimal(invoice.totalTax,    1, 'POINT', 2, 'COMMA')}">0,00</td>
+            <td class="r" th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+        </tr>
+    </tfoot>
+</table>
 
-    <!-- ── PAYMENT INFO ───────────────────────────────────────────── -->
-    <div class="payment-section">
-        <div class="payment-title">Informaci&#243;n de pago</div>
-        <table>
-            <tr>
-                <td class="payment-label">M&#233;todo de pago:</td>
-                <td class="payment-value" th:text="${invoice.paymentMethod}">Transferencia</td>
-            </tr>
-            <tr>
-                <td class="payment-label">IBAN:</td>
-                <td class="payment-value" th:text="${company.iban}">ES00 0000 0000 0000 0000 0000</td>
-            </tr>
-            <tr>
-                <td class="payment-label">Concepto:</td>
-                <td class="payment-value" th:text="${invoice.invoiceNumber}">INV-2026-000001</td>
-            </tr>
-            <tr>
-                <td class="payment-label">Vencimiento:</td>
-                <td class="payment-value" th:text="${invoice.dueDate}">31/03/2026</td>
-            </tr>
-        </table>
-    </div>
+<div class="page-bottom">
+<!-- ═══ DESGLOSE IVA + TOTALES ══════════════════════════════════ -->
+<table class="w100" style="margin-bottom:14px;">
+    <tr>
+        <!-- Desglose IVA -->
+        <td style="vertical-align:top; width:50%;">
+            <table class="tt">
+                <thead>
+                    <tr th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'">
+                        <th style="width:33%;">Tipo IVA</th>
+                        <th style="width:33%;">Base imponible (&#8364;)</th>
+                        <th style="width:34%;">Cuota IVA (&#8364;)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="tax : ${invoice.taxSummary}">
+                        <td class="tl" th:text="${#numbers.formatDecimal(tax.percent, 1, 'POINT', 2, 'COMMA')} + '%'">21%</td>
+                        <td th:text="${#numbers.formatDecimal(tax.base,   1, 'POINT', 2, 'COMMA')}">0,00</td>
+                        <td th:text="${#numbers.formatDecimal(tax.amount, 1, 'POINT', 2, 'COMMA')}">0,00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
+        <td style="width:4%;"></td>
+        <!-- Totales -->
+        <td style="vertical-align:top; width:46%;">
+            <table class="tot">
+                <tr>
+                    <td class="lbl">Base imponible</td>
+                    <td class="amt" th:text="${#numbers.formatDecimal(invoice.totalBase, 1, 'POINT', 2, 'COMMA')} + ' &#8364;'">0,00 &#8364;</td>
+                </tr>
+                <tr>
+                    <td class="lbl">Total IVA</td>
+                    <td class="amt" th:text="${#numbers.formatDecimal(invoice.totalTax, 1, 'POINT', 2, 'COMMA')} + ' &#8364;'">0,00 &#8364;</td>
+                </tr>
+                <tr th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + '; color:#ffffff;'">
+                    <td class="lbl" style="font-size:10pt; font-weight:bold; color:#ffffff;">TOTAL A PAGAR</td>
+                    <td class="amt"
+                        th:style="'text-align:right; font-weight:bold; font-size:10pt; color:' + (${company.accentColor} ?: '#f59e0b') + ';'"
+                        th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 'POINT', 2, 'COMMA')} + ' &#8364;'">0,00 &#8364;</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
-    <!-- ── NOTES (optional) ───────────────────────────────────────── -->
-    <div class="notes-section" th:if="${invoice.notes != null and !invoice.notes.isBlank()}">
-        <strong>Notas:</strong> <span th:text="${invoice.notes}"></span>
-    </div>
+<!-- ═══ FORMA DE PAGO ════════════════════════════════════════════ -->
+<table class="pt" style="margin-bottom:14px;">
+    <tr>
+        <td class="pl">M&#233;todo de pago:</td>
+        <td class="pv" th:text="${invoice.paymentMethod}">Tarjeta</td>
+        <td class="pl">IBAN:</td>
+        <td class="pv" th:text="${company.iban}">ES00 0000</td>
+        <td class="pl">Vencimiento:</td>
+        <td class="pv" th:text="${invoice.dueDate}">31/03/2026</td>
+    </tr>
+</table>
+
+<!-- ═══ NOTAS ════════════════════════════════════════════════════ -->
+<table class="w100" style="margin-bottom:14px;"
+       th:if="${invoice.notes != null and !invoice.notes.isEmpty()}">
+    <tr>
+        <td th:style="'border-left:4px solid ' + (${company.accentColor} ?: '#f59e0b') + '; background-color:#fffbeb; padding:6px 8px; font-size:8pt; color:#555555;'">
+            <strong>Notas:</strong> <span th:text="${invoice.notes}">Notas adicionales.</span>
+        </td>
+    </tr>
+</table>
+
+<!-- ═══ FOOTER ═══════════════════════════════════════════════════ -->
+<table class="ft">
+    <tr>
+        <td>
+            <span th:text="${company.name}">Empresa S.L.</span> &#8226;
+            NIF: <span th:text="${company.nif}">B12345678</span> &#8226;
+            <span th:text="${company.address}">C/ Ejemplo, Madrid</span> &#8226;
+            <span th:text="${company.email}">info@empresa.com</span> &#8226;
+            <span th:text="${company.phone}">+34 900 000 000</span>
+        </td>
+    </tr>
+</table>
+</div><!-- end page-bottom -->
 
 </body>
 </html>
