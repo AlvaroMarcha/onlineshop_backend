@@ -48,6 +48,25 @@ Recuerda definirlas en tu archivo .env, con los nombres correspondientes. Ejem: 
 | `COMPANY_TEXT_COLOR` | Color del texto principal | `#333333` |
 | `COMPANY_LOGO_PATH` | Ruta absoluta a la imagen del logo | `C:/uploads/logo.png` |
 
+### Variables de Stripe
+
+El sistema de pagos utiliza [Stripe](https://stripe.com) como pasarela. Añade las siguientes variables a tu `.env`:
+
+```properties
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_CURRENCY=eur
+```
+
+| Variable | Descripción | Ejemplo |
+|---|---|---|
+| `STRIPE_SECRET_KEY` | Clave secreta de Stripe (test o producción) | `sk_test_4eC39Hq...` |
+| `STRIPE_WEBHOOK_SECRET` | Secreto para verificar la firma de los webhooks de Stripe | `whsec_abc123...` |
+| `STRIPE_CURRENCY` | Moneda por defecto para los PaymentIntents | `eur` |
+
+> Para obtener estas claves, accede a [dashboard.stripe.com/apikeys](https://dashboard.stripe.com/apikeys). Para el webhook secret, crea un endpoint en [dashboard.stripe.com/webhooks](https://dashboard.stripe.com/webhooks) apuntando a `POST /stripe/webhook`.
+
 ### Variables de Mail y Google OAuth2
 
 El sistema de envío de correos utiliza Gmail SMTP con autenticación OAuth2 (XOAUTH2), más seguro que las contraseñas de aplicación. Añade las siguientes variables a tu `.env`:
@@ -158,6 +177,94 @@ curl http://localhost:8080/health/status
 | `./dev.sh all`      | Levanta DB y Spring Boot (por defecto)         |
 | `./dev.sh help`     | Muestra el menú de ayuda   
 
+
+## Sistema de Pagos con Stripe
+
+El proyecto integra [Stripe](https://stripe.com) como pasarela de pagos usando el flujo **PaymentIntent**. La integración sigue el patrón recomendado por Stripe: el backend crea el `PaymentIntent` y devuelve el `clientSecret` al frontend, que lo usa con Stripe.js para confirmar el pago. El resultado se recibe de forma asíncrona mediante **webhooks**.
+
+### Flujo de pago
+
+```
+1. Frontend → POST /stripe/payment-intent  { orderId }
+2. Backend  → Stripe: crea PaymentIntent por el importe de la Order
+3. Backend  → Frontend: devuelve { clientSecret, paymentIntentId, ... }
+4. Frontend → Stripe.js: confirmCardPayment(clientSecret)
+5. Stripe   → POST /stripe/webhook  (payment_intent.succeeded / failed / ...)
+6. Backend  → actualiza Payment + Order en base de datos
+```
+
+### Componentes implementados
+
+| Capa | Clase |
+|---|---|
+| **Configuración** | `StripeConfig` — lee `stripe.*` del `application.properties` y llama a `Stripe.apiKey` al arrancar |
+| **Excepción** | `StripePaymentException` — `STRIPE_CANCEL_FAILED`, `STRIPE_REFUND_FAILED`, etc. |
+| **Servicio** | `StripeService` — `createPaymentIntent`, `handleWebhookEvent` |
+| **Controlador** | `StripeController` — 2 endpoints bajo `/stripe` |
+| **Request DTO** | `CreatePaymentIntentRequestDTO` — `orderId` + `currency` opcional |
+| **Response DTO** | `StripePaymentIntentResponseDTO` — `paymentIntentId`, `clientSecret`, `localPaymentId`, `orderId`, `amount`, `currency` |
+
+### Eventos de webhook gestionados
+
+| Evento Stripe | Acción en backend |
+|---|---|
+| `payment_intent.succeeded` | Avanza el Payment a `SUCCESS` → Order a `PAID` |
+| `payment_intent.payment_failed` | Avanza el Payment a `FAILED` |
+| `payment_intent.canceled` | Cancela el Payment → Order a `CANCELLED` |
+| `charge.refunded` | Reembolsa el Payment → Order a `RETURNED` |
+
+### Seguridad del webhook
+
+`POST /stripe/webhook` es el **único endpoint público sin JWT**. La autenticidad de cada llamada se verifica mediante la firma `Stripe-Signature` con el `STRIPE_WEBHOOK_SECRET`. Si la firma no es válida, se rechaza con `400 Bad Request`.
+
+---
+
+## Ciclo de vida de Órdenes y Pagos
+
+### `totalAmount` calculado en el backend
+
+El importe total de una orden **siempre se calcula en el servidor** a partir de los precios reales de cada producto en base de datos. El frontend solo envía `productId` y `quantity`; el backend aplica el precio efectivo:
+
+```
+effectivePrice = discountPrice > 0 ? discountPrice : price
+totalAmount    = Σ (effectivePrice × quantity)
+```
+
+Los `OrderItems` son un **snapshot inmutable** — se copian todos los campos del producto en el momento de creación de la orden, de forma que cambios futuros en el catálogo no afectan a pedidos históricos.
+
+### Transiciones de estado de un Payment
+
+```
+CREATED → PENDING → AUTHORIZED → SUCCESS → REFUNDED
+                 ↘           ↘
+                  FAILED       FAILED
+CREATED/PENDING/AUTHORIZED → CANCELLED  (cancelación manual)
+```
+
+Los estados `FAILED`, `EXPIRED`, `CANCELLED` y `REFUNDED` son **terminales**: intentar avanzar desde ellos lanza `HTTP 409 PAYMENT_INVALID_STATUS_TRANSITION`.
+
+### Transiciones de estado de una Order
+
+```
+CREATED → PAID → PROCESSING → SHIPPED → DELIVERED → RETURNED
+       ↘ (cualquier estado no terminal)
+        CANCELLED
+```
+
+El estado de la orden se recalcula **automáticamente** a partir del estado agregado de sus pagos. No se puede cancelar una orden ya en estado `DELIVERED`, `RETURNED` o `CANCELLED`.
+
+### Componentes del ciclo de vida
+
+| Capa | Clase | Responsabilidad |
+|---|---|---|
+| **Request DTOs** | `OrderRequestDTO`, `OrderItemRequestDTO` | Reciben `userId` + lista de `{ productId, quantity }` |
+| **Servicio** | `OrderService.saveNewOrder` | Calcula `totalAmount`, crea `OrderItems` como snapshot |
+| **Servicio** | `OrderService.nextStatus` | Avanza el estado de la orden con guardas de transición |
+| **Servicio** | `PaymentService.cancelPayment` | Cancela el pago si está en `CREATED/PENDING/AUTHORIZED` |
+| **Servicio** | `PaymentService.refundPayment` | Reembolsa el pago si está en `SUCCESS` |
+| **Servicio** | `PaymentService.updateOrderStatusFromPayments` | Sincroniza el estado de la orden con sus pagos |
+
+---
 
 ## Entidades de ejemplo
 
@@ -317,12 +424,18 @@ Estos son los endpoints más relevantes que expone la API:
   - `PUT /address`
   - `DELETE /address/{id}`
 - Órdenes y pagos:
-  - `GET /orders/users/{id}`
-  - `GET /orders/{id}`
-  - `POST /orders/nextStatus`
-  - `POST /orders/{orderId}/payments`
-  - `GET /orders/{orderId}/payments/last`
-  - `POST /orders/payments/{paymentId}/nextStatus`
+  - `GET /orders/users/{id}` — lista órdenes de un usuario
+  - `GET /orders/{id}` — detalle de una orden
+  - `POST /orders` — crea una orden (calcula `totalAmount` en backend) · `201 Created`
+  - `POST /orders/next-status?orderId=&cancelled=&returned=` — avanza el estado de una orden
+  - `POST /orders/{orderId}/payments` — registra un nuevo pago
+  - `GET /orders/{orderId}/payments/last` — último pago válido de una orden
+  - `POST /orders/payments/{paymentId}/nextStatus?targetStatus=` — avanza el estado de un pago
+  - `POST /orders/payments/{paymentId}/cancel` — cancela un pago (`CREATED/PENDING/AUTHORIZED`) · idempotente
+  - `POST /orders/payments/{paymentId}/refund` — reembolsa un pago (`SUCCESS`) · idempotente
+- Stripe:
+  - `POST /stripe/payment-intent` — crea un `PaymentIntent` en Stripe y devuelve el `clientSecret` · JWT requerido
+  - `POST /stripe/webhook` — recibe eventos de Stripe (firma verificada) · **público**
 - Categorías:
   - `GET /categories`
   - `GET /categories/{id}`
