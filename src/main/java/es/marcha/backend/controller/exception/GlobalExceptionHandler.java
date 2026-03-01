@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import es.marcha.backend.exception.AddressException;
+import es.marcha.backend.exception.InvoiceException;
 import es.marcha.backend.exception.NoHandlerException;
 import es.marcha.backend.exception.UserException;
 
@@ -63,6 +64,15 @@ public class GlobalExceptionHandler {
             case UserException.FAILED_CREATE_USER -> HttpStatus.CONFLICT;
             case UserException.TOKEN_FAILED -> HttpStatus.UNAUTHORIZED;
             case UserException.USER_LOGGEDOUT -> HttpStatus.FORBIDDEN;
+            // Invoice
+            case InvoiceException.DEFAULT,
+                    InvoiceException.ADDRESS_NOT_FOUND ->
+                HttpStatus.NOT_FOUND;
+            case InvoiceException.ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case InvoiceException.PDF_FAILED,
+                    InvoiceException.STORAGE_ERROR ->
+                HttpStatus.INTERNAL_SERVER_ERROR;
+            case InvoiceException.FAILED_FETCH -> HttpStatus.NOT_FOUND;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
 

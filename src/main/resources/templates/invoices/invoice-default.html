@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <style th:inline="css">
+        @page {
+            size: A4;
+            margin: 12mm 14mm 16mm 14mm;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9pt;
+            color: /*[[${company.textColor}]]*/ #202124;
+            background: #ffffff;
+        }
+
+        /* ── HEADER ─────────────────────────────────────────────── */
+        .header {
+            width: 100%;
+            border-bottom: 2px solid /*[[${company.accentColor}]]*/ #FBBC04;
+            padding-bottom: 8px;
+            margin-bottom: 14px;
+        }
+
+        .header-table {
+            width: 100%;
+        }
+
+        .header-logo {
+            width: 120px;
+            vertical-align: middle;
+        }
+
+        .header-logo img {
+            max-width: 120px;
+            max-height: 55px;
+        }
+
+        .header-company {
+            vertical-align: middle;
+            text-align: left;
+            padding-left: 12px;
+        }
+
+        .header-company .company-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: /*[[${company.primaryColor}]]*/ #1A73E8;
+        }
+
+        .header-company .company-detail {
+            font-size: 7.5pt;
+            color: #666666;
+            margin-top: 1px;
+        }
+
+        .header-invoice {
+            vertical-align: top;
+            text-align: right;
+            width: 38%;
+        }
+
+        .invoice-label {
+            font-size: 18pt;
+            font-weight: bold;
+            color: /*[[${company.primaryColor}]]*/ #1A73E8;
+            letter-spacing: 1px;
+        }
+
+        .invoice-number {
+            font-size: 9.5pt;
+            font-weight: bold;
+            color: /*[[${company.textColor}]]*/ #202124;
+            margin-top: 2px;
+        }
+
+        /* ── META INFO (dates + customer) ───────────────────────── */
+        .meta-section {
+            width: 100%;
+            margin-bottom: 14px;
+        }
+
+        .meta-table {
+            width: 100%;
+        }
+
+        .meta-dates {
+            width: 48%;
+            vertical-align: top;
+        }
+
+        .meta-customer {
+            width: 48%;
+            vertical-align: top;
+            padding-left: 16px;
+        }
+
+        .box {
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            padding: 8px 10px;
+        }
+
+        .box-title {
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            background-color: /*[[${company.primaryColor}]]*/ #1A73E8;
+            padding: 3px 8px;
+            margin: -8px -10px 7px -10px;
+        }
+
+        .box-row {
+            width: 100%;
+            margin-bottom: 2px;
+        }
+
+        .box-label {
+            font-size: 7.5pt;
+            color: #888888;
+            width: 90px;
+            vertical-align: top;
+        }
+
+        .box-value {
+            font-size: 8pt;
+            font-weight: bold;
+            vertical-align: top;
+        }
+
+        /* ── LINE ITEMS TABLE ───────────────────────────────────── */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+            font-size: 8pt;
+        }
+
+        .items-table thead tr {
+            background-color: /*[[${company.primaryColor}]]*/ #1A73E8;
+            color: #ffffff;
+        }
+
+        .items-table thead th {
+            padding: 5px 7px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 7.5pt;
+            letter-spacing: 0.3px;
+        }
+
+        .items-table thead th.num {
+            text-align: right;
+        }
+
+        .items-table tbody tr.row-even {
+            background-color: #E8F0FE;
+        }
+
+        .items-table tbody tr.row-odd {
+            background-color: #ffffff;
+        }
+
+        .items-table tbody td {
+            padding: 5px 7px;
+            border-bottom: 1px solid #e8e8e8;
+            vertical-align: middle;
+        }
+
+        .items-table tbody td.num {
+            text-align: right;
+        }
+
+        .items-table tbody td.sku {
+            color: #888888;
+            font-size: 7.5pt;
+        }
+
+        /* ── TOTALS + TAX SUMMARY ───────────────────────────────── */
+        .bottom-section {
+            width: 100%;
+            margin-top: 6px;
+        }
+
+        .tax-table-wrap {
+            width: 52%;
+            vertical-align: top;
+        }
+
+        .totals-wrap {
+            width: 44%;
+            vertical-align: top;
+            padding-left: 16px;
+        }
+
+        .section-title {
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: /*[[${company.primaryColor}]]*/ #1A73E8;
+            border-bottom: 1px solid /*[[${company.primaryColor}]]*/ #1A73E8;
+            padding-bottom: 3px;
+            margin-bottom: 5px;
+        }
+
+        .tax-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+        }
+
+        .tax-table th {
+            background-color: /*[[${company.secondaryColor}]]*/ #E8F0FE;
+            color: /*[[${company.primaryColor}]]*/ #1A73E8;
+            font-size: 7.5pt;
+            padding: 4px 7px;
+            text-align: right;
+            border: 1px solid #e0e0e0;
+        }
+
+        .tax-table th:first-child {
+            text-align: left;
+        }
+
+        .tax-table td {
+            padding: 4px 7px;
+            text-align: right;
+            border: 1px solid #e0e0e0;
+            font-size: 8pt;
+        }
+
+        .tax-table td:first-child {
+            text-align: left;
+        }
+
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5pt;
+        }
+
+        .totals-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .totals-table td.label {
+            color: #555555;
+        }
+
+        .totals-table td.amount {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .totals-row-grand {
+            background-color: /*[[${company.primaryColor}]]*/ #1A73E8;
+        }
+
+        .totals-row-grand td {
+            color: #ffffff !important;
+            font-size: 10pt;
+            font-weight: bold;
+            padding: 6px 8px;
+            border-bottom: none;
+        }
+
+        /* ── PAYMENT INFO ───────────────────────────────────────── */
+        .payment-section {
+            margin-top: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            padding: 8px 10px;
+        }
+
+        .payment-title {
+            font-size: 7pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+            background-color: /*[[${company.accentColor}]]*/ #FBBC04;
+            padding: 3px 8px;
+            margin: -8px -10px 7px -10px;
+        }
+
+        .payment-row {
+            margin-bottom: 2px;
+        }
+
+        .payment-label {
+            font-size: 7.5pt;
+            color: #888888;
+            width: 100px;
+            vertical-align: top;
+        }
+
+        .payment-value {
+            font-size: 8pt;
+            font-weight: bold;
+            vertical-align: top;
+        }
+
+        /* ── NOTES ──────────────────────────────────────────────── */
+        .notes-section {
+            margin-top: 10px;
+            border-left: 3px solid /*[[${company.accentColor}]]*/ #FBBC04;
+            padding: 5px 10px;
+            background-color: #fffde7;
+            font-size: 8pt;
+            color: #555555;
+        }
+
+        /* ── FOOTER ─────────────────────────────────────────────── */
+        .footer {
+            position: running(footer);
+            text-align: center;
+            font-size: 7pt;
+            color: #aaaaaa;
+            border-top: 1px solid /*[[${company.accentColor}]]*/ #FBBC04;
+            padding-top: 4px;
+        }
+
+        @page {
+            @bottom-center {
+                content: element(footer);
+            }
+        }
+
+        .page-number:after {
+            content: counter(page) " / " counter(pages);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- FOOTER (declared before content for running element) -->
+    <div class="footer">
+        <span th:text="${company.name}">Mi Empresa S.L.</span> &#8226;
+        NIF: <span th:text="${company.nif}">B12345678</span> &#8226;
+        <span th:text="${company.address}">Calle Ejemplo 1, Madrid</span> &#8226;
+        <span th:text="${company.email}">info@miempresa.com</span> &#8226;
+        <span th:text="${company.phone}">+34 900 000 000</span>
+        &#160;&#160;&#8212;&#160;&#160; P&#225;gina <span class="page-number"></span>
+    </div>
+
+    <!-- ── HEADER ─────────────────────────────────────────────────── -->
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <!-- Logo -->
+                <td class="header-logo" th:if="${company.logoBase64 != null}">
+                    <img th:src="'data:image/png;base64,' + ${company.logoBase64}" alt="Logo"/>
+                </td>
+                <!-- Company data -->
+                <td class="header-company">
+                    <div class="company-name" th:text="${company.name}">Mi Empresa S.L.</div>
+                    <div class="company-detail" th:text="'NIF: ' + ${company.nif}">NIF: B12345678</div>
+                    <div class="company-detail" th:text="${company.address}">Dirección</div>
+                    <div class="company-detail" th:text="${company.email} + '  |  ' + ${company.phone}">email | teléfono</div>
+                </td>
+                <!-- Invoice title -->
+                <td class="header-invoice">
+                    <div class="invoice-label">FACTURA</div>
+                    <div class="invoice-number" th:text="${invoice.invoiceNumber}">INV-2026-000001</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ── META: DATES + CUSTOMER ─────────────────────────────────── -->
+    <div class="meta-section">
+        <table class="meta-table">
+            <tr>
+                <!-- Dates -->
+                <td class="meta-dates">
+                    <div class="box">
+                        <div class="box-title">Datos de la factura</div>
+                        <table class="box-row">
+                            <tr>
+                                <td class="box-label">Fecha emisi&#243;n:</td>
+                                <td class="box-value" th:text="${invoice.issueDate}">01/03/2026</td>
+                            </tr>
+                            <tr>
+                                <td class="box-label">Fecha operaci&#243;n:</td>
+                                <td class="box-value" th:text="${invoice.operationDate}">28/02/2026</td>
+                            </tr>
+                            <tr>
+                                <td class="box-label">Vencimiento:</td>
+                                <td class="box-value" th:text="${invoice.dueDate}">31/03/2026</td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+                <!-- Spacer -->
+                <td style="width:4%;"></td>
+                <!-- Customer -->
+                <td class="meta-customer">
+                    <div class="box">
+                        <div class="box-title">Facturado a</div>
+                        <table class="box-row">
+                            <tr>
+                                <td class="box-label">Nombre:</td>
+                                <td class="box-value" th:text="${invoice.customer.name}">Cliente</td>
+                            </tr>
+                            <tr>
+                                <td class="box-label">NIF:</td>
+                                <td class="box-value" th:text="${invoice.customer.nif}">-</td>
+                            </tr>
+                            <tr>
+                                <td class="box-label">Direcci&#243;n:</td>
+                                <td class="box-value" th:text="${invoice.customer.address}">Calle</td>
+                            </tr>
+                            <tr>
+                                <td class="box-label">Localidad:</td>
+                                <td class="box-value"
+                                    th:text="${invoice.customer.postalCode} + ' ' + ${invoice.customer.city} + ', ' + ${invoice.customer.country}">
+                                    28001 Madrid, España
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ── LINE ITEMS ─────────────────────────────────────────────── -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th style="width:30%;">Descripci&#243;n</th>
+                <th style="width:12%;">Referencia</th>
+                <th class="num" style="width:6%;">Cant.</th>
+                <th class="num" style="width:10%;">P. Unit.</th>
+                <th class="num" style="width:10%;">Base imp.</th>
+                <th class="num" style="width:8%;">IVA %</th>
+                <th class="num" style="width:10%;">Cuota IVA</th>
+                <th class="num" style="width:10%;">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="line, iterStat : ${invoice.lines}"
+                th:class="${iterStat.even} ? 'row-even' : 'row-odd'">
+                <td th:text="${line.productName}">Producto</td>
+                <td class="sku" th:text="${line.sku}">SKU-001</td>
+                <td class="num" th:text="${line.quantity}">1</td>
+                <td class="num" th:text="${#numbers.formatDecimal(line.unitPrice, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                <td class="num" th:text="${#numbers.formatDecimal(line.baseAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                <td class="num" th:text="${#numbers.formatDecimal(line.taxPercent, 1, 2)} + ' %'">21,00 %</td>
+                <td class="num" th:text="${#numbers.formatDecimal(line.taxAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                <td class="num" th:text="${#numbers.formatDecimal(line.totalAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- ── BOTTOM: TAX SUMMARY + TOTALS ───────────────────────────── -->
+    <table class="bottom-section">
+        <tr>
+            <!-- Tax summary -->
+            <td class="tax-table-wrap">
+                <div class="section-title">Desglose de impuestos</div>
+                <table class="tax-table">
+                    <thead>
+                        <tr>
+                            <th>Tipo IVA</th>
+                            <th>Base imponible</th>
+                            <th>Cuota IVA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="tax : ${invoice.taxSummary}">
+                            <td th:text="${#numbers.formatDecimal(tax.percent, 1, 2)} + ' %'">21,00 %</td>
+                            <td th:text="${#numbers.formatDecimal(tax.base, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                            <td th:text="${#numbers.formatDecimal(tax.amount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+            <!-- Totals -->
+            <td style="width:4%;"></td>
+            <td class="totals-wrap">
+                <div class="section-title">Resumen</div>
+                <table class="totals-table">
+                    <tr>
+                        <td class="label">Base imponible (sin IVA)</td>
+                        <td class="amount" th:text="${#numbers.formatDecimal(invoice.totalBase, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Total IVA</td>
+                        <td class="amount" th:text="${#numbers.formatDecimal(invoice.totalTax, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                    </tr>
+                    <tr class="totals-row-grand">
+                        <td class="label">TOTAL A PAGAR</td>
+                        <td class="amount" th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 2)} + ' &#8364;'">0,00 &#8364;</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- ── PAYMENT INFO ───────────────────────────────────────────── -->
+    <div class="payment-section">
+        <div class="payment-title">Informaci&#243;n de pago</div>
+        <table>
+            <tr>
+                <td class="payment-label">M&#233;todo de pago:</td>
+                <td class="payment-value" th:text="${invoice.paymentMethod}">Transferencia</td>
+            </tr>
+            <tr>
+                <td class="payment-label">IBAN:</td>
+                <td class="payment-value" th:text="${company.iban}">ES00 0000 0000 0000 0000 0000</td>
+            </tr>
+            <tr>
+                <td class="payment-label">Concepto:</td>
+                <td class="payment-value" th:text="${invoice.invoiceNumber}">INV-2026-000001</td>
+            </tr>
+            <tr>
+                <td class="payment-label">Vencimiento:</td>
+                <td class="payment-value" th:text="${invoice.dueDate}">31/03/2026</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- ── NOTES (optional) ───────────────────────────────────────── -->
+    <div class="notes-section" th:if="${invoice.notes != null and !invoice.notes.isBlank()}">
+        <strong>Notas:</strong> <span th:text="${invoice.notes}"></span>
+    </div>
+
+</body>
+</html>
