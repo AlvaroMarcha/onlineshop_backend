@@ -21,6 +21,18 @@ public class RoleService {
 
     // Methods
     /**
+     * Obtiene un rol por su nombre exacto (p. ej. {@code ROLE_USER}).
+     *
+     * @param name Nombre del rol a buscar.
+     * @return La entidad {@link Role} correspondiente.
+     * @throws RolePermissionsException si el rol no existe.
+     */
+    public Role getRoleByName(String name) {
+        return rRepository.findByName(name)
+                .orElseThrow(() -> new RolePermissionsException(RolePermissionsException.NOT_EXIST));
+    }
+
+    /**
      * Obtiene un rol por su ID.
      *
      * @param id El ID del rol a buscar.
@@ -75,7 +87,6 @@ public class RoleService {
         Role existRole = getRoleById(role.getId());
 
         existRole.setName(role.getName());
-        System.out.println(role.getDescription());
         existRole.setDescription(role.getDescription());
         existRole.setUpdatedAt(LocalDateTime.now());
 
