@@ -6,12 +6,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
+
+import es.marcha.backend.model.enums.RoleName;
+import es.marcha.backend.model.user.Role;
+import es.marcha.backend.repository.user.RoleRepository;
 
 @Component
 public class StartupConfig implements CommandLineRunner {
@@ -24,6 +32,7 @@ public class StartupConfig implements CommandLineRunner {
     private static final String DEFAULT_FOLDER = "default";
 
     private final Path destinationDir;
+    private final RoleRepository roleRepository;
 
     private Path exportPath;
 
@@ -33,9 +42,11 @@ public class StartupConfig implements CommandLineRunner {
     @Value("${app.images.public-path}")
     private String imagesPublicPath;
 
-    public StartupConfig(@Value("${app.images.storage-path}") String path) {
-        // Convierte la ruta proporcionada en una ruta absoluta y normalizada
+    public StartupConfig(
+            @Value("${app.images.storage-path}") String path,
+            RoleRepository roleRepository) {
         this.destinationDir = Paths.get(path).toAbsolutePath().normalize();
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -59,6 +70,7 @@ public class StartupConfig implements CommandLineRunner {
      */
     @Override
     public void run(String... args) {
+        seedRoles();
         try {
             Path defaultDir = destinationDir.resolve(DEFAULT_FOLDER);
             if (Files.notExists(defaultDir)) {
@@ -81,6 +93,33 @@ public class StartupConfig implements CommandLineRunner {
         } catch (IOException e) {
             log.error("Error al copiar la imagen de perfil por defecto", e);
         }
+    }
+
+    /**
+     * Siembra los roles del sistema en base de datos si no existen.
+     * Se ejecuta en cada arranque de la aplicación, de modo que es seguro
+     * en entornos sin migraciones automáticas.
+     */
+    private void seedRoles() {
+        Map<String, String> roles = new LinkedHashMap<>();
+        roles.put(RoleName.ROLE_SUPER_ADMIN.name(), "Control total del sistema");
+        roles.put(RoleName.ROLE_ADMIN.name(), "Administración general");
+        roles.put(RoleName.ROLE_ORDERS.name(), "Gestión de pedidos");
+        roles.put(RoleName.ROLE_CUSTOMERS_INVOICES.name(), "Gestión de clientes y facturas");
+        roles.put(RoleName.ROLE_SUPPORT.name(), "Atención al cliente");
+        roles.put(RoleName.ROLE_STORE.name(), "Gestión de productos y tienda");
+        roles.put(RoleName.ROLE_USER.name(), "Cliente registrado");
+
+        roles.forEach((name, description) -> {
+            if (!roleRepository.existsByName(name)) {
+                roleRepository.save(Role.builder()
+                        .name(name)
+                        .description(description)
+                        .createdAt(LocalDateTime.now())
+                        .build());
+                log.info("Rol creado: {}", name);
+            }
+        });
     }
 
     /**
