@@ -46,7 +46,8 @@ Recuerda definirlas en tu archivo .env, con los nombres correspondientes. Ejem: 
 | `COMPANY_SECONDARY_COLOR` | Color secundario del PDF | `#16213e` |
 | `COMPANY_ACCENT_COLOR` | Color de acento (botones, bordes) | `#e94560` |
 | `COMPANY_TEXT_COLOR` | Color del texto principal | `#333333` |
-| `COMPANY_LOGO_PATH` | Ruta absoluta a la imagen del logo | `C:/uploads/logo.png` |
+| `COMPANY_LOGO_PATH` | Ruta absoluta a la imagen del logo | `C:/uploads/images/company/logo.png` |
+| `APP_FRONTEND_URL` | URL base del frontend (usada en los enlaces de los emails) | `http://localhost:4200` |
 
 ### Variables de Stripe
 
@@ -385,7 +386,79 @@ RUN apk add --no-cache ttf-dejavu
 
 ---
 
-## Seguridad
+## Restablecimiento de contraseña
+
+El sistema implementa el flujo estándar de recuperación de cuenta mediante email.
+
+### Flujo
+
+```
+1. POST /auth/password-reset/request  { email }
+   → genera token UUID con validez de 1 hora
+   → guarda resetToken + resetTokenExpiry en el usuario
+   → envía email con enlace usando la plantilla password-reset.html
+
+2. El usuario hace clic en el enlace del email
+   → el frontend redirige a la pantalla de nueva contraseña con el token en la URL
+
+3. POST /auth/password-reset/confirm  { token, newPassword }
+   → valida el token y su expiración
+   → guarda la contraseña codificada con BCrypt
+   → limpia resetToken y resetTokenExpiry
+   → envía email de notificación usando password-change-notification.html
+```
+
+### Variables de entorno necesarias
+
+```properties
+APP_FRONTEND_URL=http://localhost:4200
+```
+
+El enlace del email se construye como `{APP_FRONTEND_URL}/reset-password?token={token}`.
+
+### Seguridad
+
+- Ambos endpoints son **públicos** (bajo `/auth/**`, ya excluido del filtro JWT).
+- Si el email no existe, `/request` responde **200 OK igualmente** — no revela qué cuentas están registradas.
+- El token expira a la hora. Intentar usarlo caducado devuelve **410 Gone** (`RESET_TOKEN_EXPIRED`).
+- Token inválido devuelve **400 Bad Request** (`INVALID_RESET_TOKEN`).
+- Tras un uso exitoso el token se anula inmediatamente, por lo que **no se puede reutilizar**.
+
+### Columnas añadidas a `users`
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `reset_token` | `VARCHAR` nullable | Token UUID generado al solicitar el reseteo |
+| `reset_token_expiry` | `DATETIME` nullable | Fecha/hora de expiración del token |
+
+---
+
+## Logo de empresa
+
+`POST /company/logo` permite subir o reemplazar el logotipo que aparece en las facturas PDF y los emails. El archivo se guarda en `{IMAGES_STORAGE_PATH}/company/logo.{ext}` y la ruta devuelta en la respuesta es la que debe configurarse en `COMPANY_LOGO_PATH`.
+
+### Uso
+
+```
+POST /company/logo
+Content-Type: multipart/form-data
+Authorization: Bearer <token SUPER_ADMIN>
+
+field: file = <imagen .jpg o .png>
+```
+
+Respuesta `200 OK`:
+```
+C:/uploads/images/company/logo.png
+```
+
+Actualiza `COMPANY_LOGO_PATH` en `.env` con la ruta recibida y reinicia la aplicación para que las facturas usen el nuevo logo.
+
+### Validaciones
+
+- MIME type: solo `image/jpeg` o `image/png`
+- Extensión: `.jpg`, `.jpeg` o `.png`
+- Magic bytes: verifica la firma real del archivo para prevenir spoofing de MIME
 
 La seguridad está gestionada con **Spring Security + JWT**. Se aplica una estrategia de triple cadena de filtros según el origen de la petición:
 
@@ -407,6 +480,10 @@ Estos son los endpoints más relevantes que expone la API:
   - `POST /auth/login`
   - `POST /auth/register`
   - `POST /auth/logout`
+  - `POST /auth/password-reset/request` — solicita restablecimiento (envía email) · **público**
+  - `POST /auth/password-reset/confirm` — confirma con token y nueva contraseña · **público**
+- Empresa:
+  - `POST /company/logo` — sube o reemplaza el logo (`multipart/form-data`, campo `file`) · solo `SUPER_ADMIN`
 - Usuarios:
   - `GET /users`
   - `GET /users/{id}`
