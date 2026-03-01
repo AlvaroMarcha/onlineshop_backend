@@ -70,6 +70,10 @@ public class User {
     private LocalDateTime deletedAt;
     @Column(name = "session_count")
     private long sessionCount;
+    @Column(name = "reset_token")
+    private String resetToken;
+    @Column(name = "reset_token_expiry")
+    private LocalDateTime resetTokenExpiry;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Address> addresses;
