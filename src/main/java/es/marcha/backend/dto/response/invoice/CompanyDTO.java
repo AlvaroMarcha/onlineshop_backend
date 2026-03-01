@@ -14,6 +14,7 @@ import lombok.Setter;
 public class CompanyDTO {
 
     private String logoBase64;
+    private String logoMime;
     private String name;
     private String nif;
     private String address;
