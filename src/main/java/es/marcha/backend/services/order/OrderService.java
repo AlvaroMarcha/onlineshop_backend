@@ -221,12 +221,20 @@ public class OrderService {
     @Transactional
     public OrderStatus nextStatus(long orderId, boolean isCancelled, boolean isReturned) {
         Order order = getOrderByIdHandler(orderId);
+        OrderStatus currentStatus = order.getStatus();
+
+        // Error 2: no cancelar órdenes ya en estado terminal
         if (isCancelled) {
+            if (currentStatus == OrderStatus.CANCELLED
+                    || currentStatus == OrderStatus.RETURNED
+                    || currentStatus == OrderStatus.DELIVERED) {
+                throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
+            }
+            // Error 1: persistir el cambio antes de retornar
             order.setStatus(OrderStatus.CANCELLED);
+            saveOrder(order);
             return order.getStatus();
         }
-
-        OrderStatus currentStatus = order.getStatus();
 
         if (currentStatus != null) {
             switch (currentStatus) {
@@ -236,13 +244,16 @@ public class OrderService {
                 case SHIPPED -> currentStatus = OrderStatus.DELIVERED;
                 case DELIVERED -> {
                     if (isReturned) {
+                        // Error 1: persistir el cambio antes de retornar
                         order.setStatus(OrderStatus.RETURNED);
+                        saveOrder(order);
                         return order.getStatus();
                     }
+                    // Error 3: lanzar excepción si DELIVERED sin isReturned
+                    throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
                 }
-                default -> {
-                    System.err.println("Wrong status: " + currentStatus);
-                }
+                // Error 3: estados terminales lanzan excepción en lugar de log silencioso
+                default -> throw new OrderException(OrderException.INVALID_STATUS_TRANSITION);
             }
         }
         order.setStatus(currentStatus);
