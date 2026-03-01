@@ -2,7 +2,10 @@ package es.marcha.backend.controller.user;
 
 import java.util.List;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -50,7 +53,27 @@ public class InvoiceController {
     }
 
     /**
-     * Recupera una factura por su número legible (p. ej. {@code INV-2026-000042}).
+     * * Descarga el PDF de la factura indicada.
+     *
+     * @param invoiceNumber n&#250;mero de referencia de la factura.
+     * @return el archivo PDF con HTTP 200 OK.
+     */
+    @GetMapping("/{invoiceNumber}/pdf")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable String invoiceNumber) {
+        byte[] pdfBytes = invoiceService.getPdfBytes(invoiceNumber);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(
+                ContentDisposition.attachment()
+                        .filename(invoiceNumber + ".pdf")
+                        .build());
+        headers.setContentLength(pdfBytes.length);
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+    }
+
+    /**
+     * * Recupera una factura por su número legible (p. ej.
+     * {@code INV-2026-000042}).
      *
      * @param invoiceNumber número de referencia de la factura.
      * @return la entidad {@link Invoice} con HTTP 200 OK.

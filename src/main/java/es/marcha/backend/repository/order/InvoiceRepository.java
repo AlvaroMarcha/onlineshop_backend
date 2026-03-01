@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import es.marcha.backend.model.order.Invoice;
+import jakarta.persistence.LockModeType;
 
 @Repository
 public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
@@ -19,4 +23,13 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
 
     /** Busca una factura por su número legible. */
     Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
+
+    /**
+     * Devuelve la última factura emitida en el año indicado bloqueando la fila
+     * para evitar números duplicados ante peticiones concurrentes.
+     * El prefijo debe tener el formato {@code INV-YYYY-}.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT i FROM Invoice i WHERE i.invoiceNumber LIKE CONCAT(:prefix, '%') ORDER BY i.invoiceNumber DESC")
+    List<Invoice> findLastByYearPrefix(@Param("prefix") String prefix);
 }

@@ -23,7 +23,11 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+
+import org.jsoup.Jsoup;
+import org.jsoup.helper.W3CDom;
 
 import es.marcha.backend.config.CompanyProperties;
 import es.marcha.backend.dto.response.invoice.CompanyDTO;
@@ -41,6 +45,7 @@ import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.order.InvoiceRepository;
 import es.marcha.backend.repository.order.OrderAddrRepository;
 import es.marcha.backend.services.order.OrderService;
+import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -73,6 +78,12 @@ public class InvoiceService {
         this.companyProps = companyProps;
     }
 
+    @PostConstruct
+    private void logStoragePath() {
+        log.info("[InvoiceService] PDF storage path resolved to: {}", storagePath);
+        log.info("[InvoiceService] Company address loaded: '{}'", companyProps.getAddress());
+    }
+
     // =========================================================================
     // Public API
     // =========================================================================
@@ -90,8 +101,25 @@ public class InvoiceService {
      */
     @Transactional
     public Invoice generateInvoice(long orderId) {
-        // Guard: return existing invoice if one was already generated
         return invoiceRepository.findByOrderId(orderId)
+                .map(existing -> {
+                    // Si la entidad existe pero el PDF no está en disco, regenerar solo el archivo
+                    boolean pdfMissing = existing.getPdfPath() == null
+                            || Files.notExists(Path.of(existing.getPdfPath()));
+                    if (pdfMissing) {
+                        log.warn(
+                                "[InvoiceService] Factura {} existe en BD pero el PDF no está en disco ({}). Regenerando archivo.",
+                                existing.getInvoiceNumber(), existing.getPdfPath());
+                        Order order = orderService.getOrderByIdHandler(orderId);
+                        OrderAddresses addr = orderAddrRepository.findByOrderId(orderId)
+                                .orElseThrow(() -> new InvoiceException(InvoiceException.ADDRESS_NOT_FOUND));
+                        String newPath = regeneratePdfFile(existing.getInvoiceNumber(), order, addr,
+                                existing.getUser().getId());
+                        existing.setPdfPath(newPath);
+                        return invoiceRepository.save(existing);
+                    }
+                    return existing;
+                })
                 .orElseGet(() -> createInvoice(orderId));
     }
 
@@ -120,9 +148,43 @@ public class InvoiceService {
                 .orElseThrow(() -> new InvoiceException(InvoiceException.DEFAULT));
     }
 
+    /**
+     * Lee el PDF de la factura indicada desde disco y devuelve sus bytes.
+     *
+     * @param invoiceNumber n&#250;mero de la factura (p. ej.
+     *                      {@code INV-2026-000042}).
+     * @return array de bytes del PDF generado.
+     * @throws InvoiceException si la factura no existe o el archivo no se puede
+     *                          leer.
+     */
+    public byte[] getPdfBytes(String invoiceNumber) {
+        Invoice invoice = invoiceRepository.findByInvoiceNumber(invoiceNumber)
+                .orElseThrow(() -> new InvoiceException(InvoiceException.DEFAULT));
+        Path pdfPath = Path.of(invoice.getPdfPath());
+        if (Files.notExists(pdfPath)) {
+            throw new InvoiceException(InvoiceException.STORAGE_ERROR);
+        }
+        try {
+            return Files.readAllBytes(pdfPath);
+        } catch (IOException e) {
+            throw new InvoiceException(InvoiceException.STORAGE_ERROR, e);
+        }
+    }
+
     // =========================================================================
     // Private helpers
     // =========================================================================
+
+    private String regeneratePdfFile(String invoiceNumber, Order order, OrderAddresses addr, long userId) {
+        CompanyDTO companyDTO = buildCompanyDTO();
+        InvoiceDataDTO invoiceDTO = buildInvoiceDataDTO(order, addr, invoiceNumber);
+        Context ctx = new Context();
+        ctx.setVariable("company", companyDTO);
+        ctx.setVariable("invoice", invoiceDTO);
+        String html = templateEngine.process(TEMPLATE_NAME, ctx);
+        byte[] pdfBytes = renderPdf(html);
+        return savePdf(pdfBytes, userId, invoiceNumber);
+    }
 
     private Invoice createInvoice(long orderId) {
         Order order = orderService.getOrderByIdHandler(orderId);
@@ -131,7 +193,7 @@ public class InvoiceService {
         OrderAddresses orderAddr = orderAddrRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new InvoiceException(InvoiceException.ADDRESS_NOT_FOUND));
 
-        String invoiceNumber = buildInvoiceNumber(orderId);
+        String invoiceNumber = buildInvoiceNumber();
 
         // --- Build Thymeleaf context ---
         CompanyDTO companyDTO = buildCompanyDTO();
@@ -169,8 +231,30 @@ public class InvoiceService {
 
     // ---- invoice number -------------------------------------------------
 
-    private String buildInvoiceNumber(long orderId) {
-        return String.format("INV-%d-%06d", LocalDate.now().getYear(), orderId);
+    /**
+     * Genera el siguiente número de factura correlativo para el año en curso.
+     * Consulta la última factura del año con bloqueo pesimista para garantizar
+     * que no se producen huecos ni duplicados, cumpliendo el art. 6 del
+     * RD 1619/2012 (reglamento de facturación español).
+     * El formato resultante es {@code INV-YYYY-NNNNNN} (p. ej.
+     * {@code INV-2026-000001}).
+     */
+    private synchronized String buildInvoiceNumber() {
+        int year = LocalDate.now().getYear();
+        String prefix = "INV-" + year + "-";
+        List<Invoice> last = invoiceRepository.findLastByYearPrefix(prefix);
+        int nextSeq = 1;
+        if (!last.isEmpty()) {
+            String lastNumber = last.get(0).getInvoiceNumber();
+            try {
+                nextSeq = Integer.parseInt(lastNumber.substring(prefix.length())) + 1;
+            } catch (NumberFormatException e) {
+                log.warn("[InvoiceService] No se pudo parsear el secuencial de '{}', usando siguiente disponible.",
+                        lastNumber);
+                nextSeq = last.size() + 1;
+            }
+        }
+        return String.format("%s%06d", prefix, nextSeq);
     }
 
     // ---- company DTO ----------------------------------------------------
@@ -319,17 +403,65 @@ public class InvoiceService {
 
     // ---- PDF rendering --------------------------------------------------
 
+    /**
+     * Renderiza el HTML a PDF registrando fuentes del sistema con soporte
+     * completo de caracteres latinos (&#241;, acentos, etc.).
+     * Detecta autom&#225;ticamente las rutas seg&#250;n el sistema operativo
+     * (Windows o Linux/Alpine).
+     */
     private byte[] renderPdf(String html) {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             PdfRendererBuilder builder = new PdfRendererBuilder();
             builder.useFastMode();
-            builder.withHtmlContent(html, null);
+            registerFonts(builder);
+            // Usar Jsoup + W3CDom para parsear el HTML como String Java puro,
+            // evitando cualquier conversi&#243;n de bytes que pueda corromper caracteres
+            // latinos (&#241;, acentos, etc.) durante el procesado XHTML interno.
+            org.jsoup.nodes.Document jsoupDoc = Jsoup.parse(html);
+            jsoupDoc.outputSettings().charset(java.nio.charset.StandardCharsets.UTF_8);
+            org.w3c.dom.Document w3cDoc = new W3CDom().fromJsoup(jsoupDoc);
+            builder.withW3cDocument(w3cDoc, null);
             builder.toStream(output);
             builder.run();
             return output.toByteArray();
         } catch (Exception e) {
+            log.error("[InvoiceService] Fallo al generar el PDF: {}", e.getMessage(), e);
             throw new InvoiceException(InvoiceException.PDF_FAILED, e);
         }
+    }
+
+    private void registerFonts(PdfRendererBuilder builder) {
+        // Rutas candidatas: Windows (Arial) y Linux/Alpine (DejaVu)
+        String[][] candidates = {
+                { "C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/arialbd.ttf" },
+                { "/usr/share/fonts/dejavu/DejaVuSans.ttf",
+                        "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf" },
+                { "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" },
+                { "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+                        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf" }
+        };
+
+        for (String[] entry : candidates) {
+            java.io.File regular = new java.io.File(entry[0]);
+            if (!regular.exists())
+                continue;
+
+            // Peso 400 = normal, peso 700 = bold — sin esto openhtmltopdf
+            // sintetiza la negrita artificialmente (resultado borroso)
+            builder.useFont(regular, "Arial", 400,
+                    BaseRendererBuilder.FontStyle.NORMAL, true);
+
+            java.io.File bold = new java.io.File(entry[1]);
+            if (bold.exists()) {
+                builder.useFont(bold, "Arial", 700,
+                        BaseRendererBuilder.FontStyle.NORMAL, true);
+            }
+            log.info("[InvoiceService] Fuente registrada: {}", entry[0]);
+            return;
+        }
+        log.warn(
+                "[InvoiceService] No se encontro fuente del sistema. Los caracteres especiales pueden no renderizarse correctamente.");
     }
 
     // ---- file storage ---------------------------------------------------
