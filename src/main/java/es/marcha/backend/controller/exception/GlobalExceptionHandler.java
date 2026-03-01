@@ -65,6 +65,8 @@ public class GlobalExceptionHandler {
             case UserException.FAILED_CREATE_USER -> HttpStatus.CONFLICT;
             case UserException.TOKEN_FAILED -> HttpStatus.UNAUTHORIZED;
             case UserException.USER_LOGGEDOUT -> HttpStatus.FORBIDDEN;
+            case UserException.INVALID_RESET_TOKEN -> HttpStatus.BAD_REQUEST;
+            case UserException.RESET_TOKEN_EXPIRED -> HttpStatus.GONE;
             // Invoice
             case InvoiceException.DEFAULT,
                     InvoiceException.ADDRESS_NOT_FOUND ->
