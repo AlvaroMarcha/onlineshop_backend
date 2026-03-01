@@ -170,4 +170,40 @@ public class OrderController {
         PaymentStatus newStatus = pService.nextPaymentStatus(paymentId, targetStatus);
         return new ResponseEntity<>(newStatus, HttpStatus.ACCEPTED);
     }
+
+    /**
+     * Cancela un pago existente y actualiza el estado de la orden asociada.
+     *
+     * Solo es posible cancelar pagos que no hayan sido cobrados (estado CREATED,
+     * PENDING o AUTHORIZED). Si el pago ya estaba cancelado, el método es
+     * idempotente y devuelve el estado actual sin modificaciones.
+     *
+     * @param paymentId ID del pago a cancelar.
+     * @return ResponseEntity con el {@link PaymentResponseDTO} actualizado
+     *         y estado HTTP 200 OK.
+     * @throws OrderException si el pago no existe o no se puede cancelar.
+     */
+    @PostMapping("/payments/{paymentId}/cancel")
+    public ResponseEntity<PaymentResponseDTO> cancelPayment(@PathVariable long paymentId) {
+        PaymentResponseDTO cancelled = pService.cancelPayment(paymentId);
+        return new ResponseEntity<>(cancelled, HttpStatus.OK);
+    }
+
+    /**
+     * Reembolsa un pago ya cobrado y actualiza el estado de la orden asociada.
+     *
+     * Solo es posible reembolsar pagos en estado SUCCESS. Si el pago ya estaba
+     * reembolsado, el método es idempotente y devuelve el estado actual sin
+     * modificaciones.
+     *
+     * @param paymentId ID del pago a reembolsar.
+     * @return ResponseEntity con el {@link PaymentResponseDTO} actualizado
+     *         y estado HTTP 200 OK.
+     * @throws OrderException si el pago no existe o no está en estado SUCCESS.
+     */
+    @PostMapping("/payments/{paymentId}/refund")
+    public ResponseEntity<PaymentResponseDTO> refundPayment(@PathVariable long paymentId) {
+        PaymentResponseDTO refunded = pService.refundPayment(paymentId);
+        return new ResponseEntity<>(refunded, HttpStatus.OK);
+    }
 }
