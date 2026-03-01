@@ -13,12 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import es.marcha.backend.dto.request.order.OrderRequestDTO;
 import es.marcha.backend.dto.response.order.OrderResponseDTO;
 import es.marcha.backend.dto.response.order.PaymentResponseDTO;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.enums.PaymentStatus;
-import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.Payment;
 import es.marcha.backend.services.order.OrderService;
 import es.marcha.backend.services.order.PaymentService;
@@ -45,18 +45,17 @@ public class OrderController {
 
     /**
      * Crea una nueva orden para un usuario.
-     * <p>
-     * Genera un snapshot de la dirección por defecto del usuario en el momento del pedido
-     * y persiste los ítems asociados.
-     * </p>
+     * Calcula el totalAmount en el backend a partir de los precios reales de cada
+     * producto.
      *
-     * @param order La entidad {@link Order} a crear. Debe incluir el ID del usuario y la lista de ítems.
-     * @return {@link ResponseEntity} con el {@link OrderResponseDTO} creado y código HTTP 200 OK.
+     * @param request DTO con userId y lista de items (productId + quantity).
+     * @return {@link ResponseEntity} con el {@link OrderResponseDTO} creado y
+     *         código HTTP 201 CREATED.
      */
     @PostMapping
-    public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody Order order) {
-        OrderResponseDTO newOrder = oService.saveNewOrder(order);
-        return new ResponseEntity<>(newOrder, HttpStatus.OK);
+    public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody OrderRequestDTO request) {
+        OrderResponseDTO newOrder = oService.saveNewOrder(request);
+        return new ResponseEntity<>(newOrder, HttpStatus.CREATED);
     }
 
     /**

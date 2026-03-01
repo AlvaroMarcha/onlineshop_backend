@@ -2,7 +2,6 @@ package es.marcha.backend.dto.response.order;
 
 import java.math.BigDecimal;
 
-import es.marcha.backend.model.ecommerce.product.Product;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,9 +14,8 @@ import lombok.Setter;
 @Setter
 @Getter
 public class OrderItemsResponseDTO {
-    // Attribs
     private long id;
-    private Product product;
+    private long productId;
     private String name;
     private String sku;
     private String description;
@@ -28,5 +26,4 @@ public class OrderItemsResponseDTO {
     private double weight;
     private boolean isDigital;
     private boolean isFeatured;
-
 }

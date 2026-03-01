@@ -1,20 +1,28 @@
 package es.marcha.backend.services.order;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.request.order.OrderItemRequestDTO;
+import es.marcha.backend.dto.request.order.OrderRequestDTO;
 import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.dto.response.order.OrderResponseDTO;
 import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.order.OrderAddrMapper;
 import es.marcha.backend.mapper.order.OrderMapper;
+import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.model.enums.OrderStatus;
 import es.marcha.backend.model.order.Order;
+import es.marcha.backend.model.order.OrderItems;
 import es.marcha.backend.model.user.Address;
 import es.marcha.backend.model.user.User;
+import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.order.OrderRepository;
 import es.marcha.backend.services.user.UserService;
 import jakarta.transaction.Transactional;
@@ -34,6 +42,9 @@ public class OrderService {
     @Autowired
     private UserService uService;
 
+    @Autowired
+    private ProductRepository productRepository;
+
     // Methods
     /**
      * Obtiene una orden por su ID para uso interno de otros servicios.
@@ -50,7 +61,8 @@ public class OrderService {
     }
 
     /**
-     * Obtiene todas las órdenes de un usuario, incluyendo el snapshot de dirección de cada una.
+     * Obtiene todas las órdenes de un usuario, incluyendo el snapshot de dirección
+     * de cada una.
      *
      * @param userId El ID del usuario cuyas órdenes se desean obtener.
      * @return Lista de {@link OrderResponseDTO} con las órdenes del usuario.
@@ -73,14 +85,24 @@ public class OrderService {
         return orders;
     }
 
-    // CREAR SNAPSHOT!!!
+    /**
+     * Crea una nueva orden calculando el totalAmount desde los precios reales de la
+     * BD.
+     * El precio unitario se snapshot-ea en cada OrderItem en el momento de la
+     * compra.
+     *
+     * @param request DTO con userId y lista de items (productId + quantity).
+     * @return {@link OrderResponseDTO} con la orden creada y el total calculado.
+     * @throws OrderException   si el usuario no existe o no tiene dirección por
+     *                          defecto.
+     * @throws ProductException si algún producto no existe o no está activo.
+     */
     @Transactional
-    public OrderResponseDTO saveNewOrder(Order order) {
-        User user = uService.getUserByIdForHandler(order.getUser().getId());
+    public OrderResponseDTO saveNewOrder(OrderRequestDTO request) {
+        User user = uService.getUserByIdForHandler(request.getUserId());
 
         List<Address> addresses = user.getAddresses();
-
-        if (addresses.size() == 0 || addresses == null)
+        if (addresses == null || addresses.isEmpty())
             throw new OrderException(OrderException.USER_ADDRESS_LENGHT_0);
 
         Address addressDefault = addresses.stream()
@@ -88,18 +110,57 @@ public class OrderService {
                 .findFirst()
                 .orElseThrow(() -> new OrderException(OrderException.USER_ADDRESS_LENGHT_0));
 
-        // SNAPSHOTS
-        order.setStatus(OrderStatus.CREATED);
-        order.setCreatedAt(LocalDateTime.now());
+        // Construir snapshot de items + calcular total en un único paso
+        List<OrderItems> items = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+
+        for (OrderItemRequestDTO itemDto : request.getItems()) {
+            Product product = productRepository.findById(itemDto.getProductId())
+                    .orElseThrow(() -> new ProductException(ProductException.DEFAULT));
+
+            if (!product.isActive())
+                throw new ProductException(ProductException.DEFAULT);
+
+            BigDecimal effectivePrice = (product.getDiscountPrice() != null
+                    && product.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0)
+                            ? product.getDiscountPrice()
+                            : product.getPrice();
+
+            total = total.add(effectivePrice.multiply(BigDecimal.valueOf(itemDto.getQuantity())));
+
+            items.add(OrderItems.builder()
+                    .product(product)
+                    .name(product.getName())
+                    .description(product.getDescription())
+                    .sku(product.getSku())
+                    .price(product.getPrice())
+                    .discountPrice(product.getDiscountPrice())
+                    .quantity(itemDto.getQuantity())
+                    .weight(product.getWeight())
+                    .isDigital(product.isDigital())
+                    .isFeatured(product.isFeatured())
+                    .taxRate(product.getTaxRate())
+                    .isActive(product.isActive())
+                    .isDeleted(product.isDeleted())
+                    .soldCount(product.getSoldCount())
+                    .build());
+        }
+
+        Order order = Order.builder()
+                .user(user)
+                .status(OrderStatus.CREATED)
+                .totalAmount(total.doubleValue())
+                .createdAt(LocalDateTime.now())
+                .build();
+
         Order savedOrder = oRepository.save(order);
 
-        order.getOrderItems().forEach(item -> item.setOrder(savedOrder));
-        oItemsService.saveOrderItems(order.getOrderItems());
+        items.forEach(item -> item.setOrder(savedOrder));
+        oItemsService.saveOrderItems(items);
+        savedOrder.setOrderItems(items);
 
         OrderAddrResponseDTO snapOrderAddress = oAddrService.saveOrderAddr(
-                OrderAddrMapper.fromAddresstoOrderAddr(
-                        addressDefault,
-                        savedOrder));
+                OrderAddrMapper.fromAddresstoOrderAddr(addressDefault, savedOrder));
 
         OrderResponseDTO finalOrder = OrderMapper.toOrderDTO(savedOrder);
         finalOrder.setAddress(snapOrderAddress);
@@ -108,8 +169,10 @@ public class OrderService {
     }
 
     /**
-     * Persiste una orden directamente en la base de datos sin inicialización adicional.
-     * Destinado a uso interno de otros servicios que necesiten actualizar el estado de una orden.
+     * Persiste una orden directamente en la base de datos sin inicialización
+     * adicional.
+     * Destinado a uso interno de otros servicios que necesiten actualizar el estado
+     * de una orden.
      *
      * @param order La entidad {@link Order} a guardar.
      * @return La entidad {@link Order} persistida.
