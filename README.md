@@ -285,6 +285,10 @@ Estos son los endpoints más relevantes que expone la API:
   - `GET /reviews/product/{productId}`
   - `POST /reviews`
   - `DELETE /reviews/{id}`
+- Facturas (PDF):
+  - `POST /invoices/orders/{orderId}` — genera (o recupera) la factura PDF de un pedido (idempotente)
+  - `GET /invoices/users/{userId}` — lista todas las facturas de un usuario
+  - `GET /invoices/{invoiceNumber}` — recupera una factura por su número (ej. `INV-2026-000042`)
 - Mail:
   - `POST /mails/testing/send`
 
