@@ -149,6 +149,9 @@ public class SecurityConfig {
                         // === Gestión de roles: solo SUPER_ADMIN ===
                         .requestMatchers("/roles/**").hasRole("SUPER_ADMIN")
 
+                        // === Configuración de empresa (logo, etc.) ===
+                        .requestMatchers("/company/**").hasRole("SUPER_ADMIN")
+
                         // === Escritura en tienda (productos, categorías, subcategorías, atributos,
                         // variantes) ===
                         .requestMatchers(HttpMethod.POST,

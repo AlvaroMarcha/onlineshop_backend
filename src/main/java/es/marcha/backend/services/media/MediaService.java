@@ -5,10 +5,13 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +24,8 @@ public class MediaService {
 
     private static final String DEFAULT_PIC_PROFILE = "default_pic_profile.jpeg";
 
-    private static final Set<String> ALLOWED_MIME_TYPES = Set.of("image/jpeg", "image/png");
+    private static final Set<String> ALLOWED_MIME_TYPES = Set.of(
+            "image/jpeg", "image/jpg", "image/png", "image/x-png");
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png");
 
     // Magic bytes: JPEG = FF D8 FF | PNG = 89 50 4E 47
@@ -53,7 +57,8 @@ public class MediaService {
 
         // 1. Validar MIME type declarado
         String contentType = file.getContentType();
-        if (contentType == null || !ALLOWED_MIME_TYPES.contains(contentType)) {
+        String normalizedType = contentType != null ? contentType.split(";")[0].trim().toLowerCase() : null;
+        if (normalizedType == null || !ALLOWED_MIME_TYPES.contains(normalizedType)) {
             throw new MediaException(MediaException.INVALID_FILE_TYPE);
         }
 
@@ -118,11 +123,13 @@ public class MediaService {
      *                        válida
      */
     public void validateMagicBytes(MultipartFile file) {
-        byte[] header = new byte[8];
-        try (InputStream is = file.getInputStream()) {
-            if (is.read(header) < 4) {
+        byte[] header;
+        try {
+            byte[] allBytes = file.getBytes();
+            if (allBytes.length < 4) {
                 throw new MediaException(MediaException.INVALID_FILE_CONTENT);
             }
+            header = allBytes;
         } catch (MediaException e) {
             throw e;
         } catch (IOException e) {
@@ -152,6 +159,95 @@ public class MediaService {
         if (path.endsWith("/"))
             path = path.substring(0, path.length() - 1);
         return base + path + "/" + userId + "/pic-profile/" + filename;
+    }
+
+    /**
+     * Devuelve el archivo del logotipo de la empresa como
+     * {@link FileSystemResource},
+     * buscando {@code company/logo} con extensiones .png, .jpg y .jpeg.
+     *
+     * @return {@code Optional} con el recurso si existe, vacío si no se ha subido
+     *         logo
+     */
+    public Optional<FileSystemResource> getCompanyLogoResource() {
+        for (String ext : List.of(".png", ".jpg", ".jpeg")) {
+            Path logoPath = Path.of(storagePath).resolve("company").resolve("logo" + ext);
+            if (Files.exists(logoPath)) {
+                return Optional.of(new FileSystemResource(logoPath));
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Devuelve la URL pública del logotipo de la empresa actualmente almacenado.
+     * Busca el archivo {@code company/logo} con extensiones .png, .jpg o .jpeg
+     * y devuelve la URL pública correspondiente cuando lo encuentra.
+     *
+     * @return URL pública del logo, o cadena vacía si no se ha subido ningún logo
+     */
+    public String getCompanyLogoUrl() {
+        for (String ext : List.of(".png", ".jpg", ".jpeg")) {
+            Path logoPath = Path.of(storagePath).resolve("company").resolve("logo" + ext);
+            if (Files.exists(logoPath)) {
+                String base = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+                String path = imagesPublicPath.startsWith("/") ? imagesPublicPath : "/" + imagesPublicPath;
+                if (path.endsWith("/"))
+                    path = path.substring(0, path.length() - 1);
+                return base + path + "/company/logo" + ext;
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Guarda o reemplaza el logotipo de la empresa en disco.
+     *
+     * El archivo se almacena en {@code {storagePath}/company/logo.{ext}}.
+     * Si ya existía un logo previo con distinta extensión, convive en disco;
+     * el nombre fijo {@code logo.{ext}} garantiza que la ruta es predecible.
+     *
+     * @param file imagen del logo (JPEG o PNG)
+     * @return ruta absoluta en disco donde quedó guardado el archivo
+     * @throws MediaException si el archivo está vacío, tiene un tipo no permitido
+     *                        o no supera la validación de magic bytes
+     */
+    public String saveCompanyLogo(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new MediaException();
+        }
+
+        String contentType = file.getContentType();
+        String normalizedType = contentType != null ? contentType.split(";")[0].trim().toLowerCase() : null;
+        if (normalizedType == null || !ALLOWED_MIME_TYPES.contains(normalizedType)) {
+            throw new MediaException(MediaException.INVALID_FILE_TYPE);
+        }
+
+        String extension = getExtension(file.getOriginalFilename());
+        if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+            throw new MediaException(MediaException.INVALID_FILE_TYPE);
+        }
+
+        validateMagicBytes(file);
+
+        Path companyDir = Path.of(storagePath).resolve("company");
+        Path target = companyDir.resolve("logo" + extension);
+
+        try {
+            if (Files.notExists(companyDir)) {
+                Files.createDirectories(companyDir);
+            }
+        } catch (IOException e) {
+            throw new MediaException(MediaException.STORAGE_ERROR, e);
+        }
+
+        try (InputStream inputStream = file.getInputStream()) {
+            Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new MediaException(MediaException.STORAGE_ERROR, e);
+        }
+
+        return target.toAbsolutePath().toString();
     }
 
     public String getExtension(String originalName) {
