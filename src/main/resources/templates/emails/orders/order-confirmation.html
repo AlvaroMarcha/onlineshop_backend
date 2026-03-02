@@ -91,7 +91,12 @@
             <div class="content">
                 <p>Hola <span th:text="${userName}">Usuario</span>,</p>
                 <p>Gracias por tu pedido. A continuación, encontrarás los detalles:</p>
-                
+
+                <p>
+                    <strong>Pedido #<span th:text="${orderId}">0</span></strong> &nbsp;·&nbsp;
+                    <span th:text="${orderDate}">01/01/2026 10:00</span>
+                </p>
+
                 <table class="order-details">
                     <thead>
                         <tr>
@@ -104,15 +109,26 @@
                         <tr th:each="item : ${orderItems}">
                             <td th:text="${item.name}">Producto</td>
                             <td th:text="${item.quantity}">1</td>
-                            <td th:text="${item.price}">$0.00</td>
+                            <td th:text="${item.price}">0.00 €</td>
                         </tr>
                     </tbody>
                 </table>
 
-                <p>Total: <strong th:text="${orderTotal}">$0.00</strong></p>
+                <p>Total: <strong th:text="${orderTotal}">0.00 €</strong></p>
+
+                <div th:if="${shippingAddress != null}" style="margin: 20px 0; padding: 14px 18px; background-color: #f9f9f9; border-left: 4px solid #232f3e; border-radius: 0 4px 4px 0;">
+                    <p style="margin: 0 0 6px 0; font-weight: bold; color: #232f3e;">Dirección de envío</p>
+                    <p style="margin: 2px 0;" th:text="${shippingAddress.addressLine1}">Calle Ejemplo 1</p>
+                    <p style="margin: 2px 0;" th:if="${shippingAddress.addressLine2 != null and !shippingAddress.addressLine2.isEmpty()}" th:text="${shippingAddress.addressLine2}">Piso 2</p>
+                    <p style="margin: 2px 0;">
+                        <span th:text="${shippingAddress.postalCode}">28001</span>,
+                        <span th:text="${shippingAddress.city}">Madrid</span>
+                    </p>
+                    <p style="margin: 2px 0;" th:text="${shippingAddress.country}">España</p>
+                </div>
 
                 <a th:href="${orderLink}" class="btn-view-order">Ver pedido</a>
-                
+
                 <p>Si tienes alguna pregunta sobre tu pedido, contacta con nuestro soporte.</p>
             </div>
         </div>
