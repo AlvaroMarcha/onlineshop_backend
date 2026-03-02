@@ -80,6 +80,7 @@ public class RateLimitService {
      * @param type El tipo de endpoint
      * @return Bucket configurado con la capacidad y ventana temporal adecuadas
      */
+    @SuppressWarnings("deprecation")
     private Bucket createBucket(EndpointType type) {
         Bandwidth limit = switch (type) {
             case LOGIN -> Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(15)));
