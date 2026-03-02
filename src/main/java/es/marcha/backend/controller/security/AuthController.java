@@ -12,6 +12,7 @@ import es.marcha.backend.dto.request.security.LoginRequestDTO;
 import es.marcha.backend.dto.request.security.LogoutRequestDTO;
 import es.marcha.backend.dto.request.security.PasswordResetConfirmDTO;
 import es.marcha.backend.dto.request.security.PasswordResetRequestDTO;
+import es.marcha.backend.dto.request.security.RefreshTokenRequestDTO;
 import es.marcha.backend.dto.request.security.RegisterRequestDTO;
 import es.marcha.backend.dto.response.security.AuthResponseDTO;
 import es.marcha.backend.dto.response.user.LogoutResponseDTO;
@@ -98,6 +99,25 @@ public class AuthController {
     public ResponseEntity<LogoutResponseDTO> logout(@RequestBody LogoutRequestDTO data) {
         LogoutResponseDTO msg = aService.logout(data.getUserId());
         return new ResponseEntity<>(msg, HttpStatus.OK);
+    }
+
+    /**
+     * Renueva el access token usando un refresh token válido.
+     * <p>
+     * El cliente envía el refresh token recibido en el login. Si es válido
+     * y no ha expirado ni sido revocado, se devuelve un nuevo access token JWT.
+     * El refresh token no cambia.
+     * </p>
+     *
+     * @param body DTO con el refresh token UUID.
+     * @return {@link ResponseEntity} con el nuevo {@link AuthResponseDTO} y código HTTP 200 OK.
+     * @throws es.marcha.backend.exception.UserException con {@code REFRESH_TOKEN_INVALID} si no existe.
+     * @throws es.marcha.backend.exception.UserException con {@code REFRESH_TOKEN_EXPIRED} si ha caducado.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponseDTO> refresh(@RequestBody RefreshTokenRequestDTO body) {
+        AuthResponseDTO response = aService.refreshAccessToken(body.getRefreshToken());
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     /**

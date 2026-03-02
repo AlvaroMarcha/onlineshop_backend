@@ -15,6 +15,7 @@ import es.marcha.backend.dto.response.user.LogoutResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.model.enums.RoleName;
+import es.marcha.backend.model.security.RefreshToken;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.security.JwtUtil;
@@ -32,6 +33,8 @@ public class AuthService {
     private RoleService rService;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private RefreshTokenService refreshTokenService;
 
     @Value("${app.terms.current-version}")
     private String currentTermsVersion;
@@ -62,8 +65,14 @@ public class AuthService {
             throw new UserException(UserException.FAILED_LOGIN);
         }
 
-        String token = JwtUtil.generateToken(user.getUsername(), user.getRole().getName());
-        return new AuthResponseDTO(uService.saveUser(user), token);
+        UserResponseDTO savedUser = uService.saveUser(user);
+        String accessToken = JwtUtil.generateToken(user.getUsername(), user.getRole().getName());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        return AuthResponseDTO.builder()
+                .user(savedUser)
+                .token(accessToken)
+                .refreshToken(refreshToken.getToken())
+                .build();
     }
 
     /**
@@ -130,8 +139,14 @@ public class AuthService {
                 .build();
 
         UserResponseDTO savedUser = uService.saveUser(user);
-        String token = JwtUtil.generateToken(savedUser.getUsername(), savedUser.getRoleName());
-        return new AuthResponseDTO(savedUser, token);
+        String accessToken = JwtUtil.generateToken(savedUser.getUsername(), savedUser.getRoleName());
+        User persistedUser = uService.getUserByIdForHandler(savedUser.getId());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(persistedUser);
+        return AuthResponseDTO.builder()
+                .user(savedUser)
+                .token(accessToken)
+                .refreshToken(refreshToken.getToken())
+                .build();
     }
 
     /**
@@ -154,11 +169,37 @@ public class AuthService {
         user.setActive(false);
         user.setLastLogin(LocalDateTime.now());
         uService.saveUserForHandler(user);
+        // Revocar todos los refresh tokens activos del usuario
+        refreshTokenService.revokeAllTokensByUser(user);
         return LogoutResponseDTO.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
                 .isActive(user.isActive())
                 .lastLogin(user.getLastLogin())
+                .build();
+    }
+
+    /**
+     * Renueva el access token a partir de un refresh token válido.
+     * <p>
+     * Valida que el refresh token exista, no haya expirado y no haya sido revocado.
+     * Si es válido, genera un nuevo access token JWT para el usuario asociado.
+     * El refresh token sigue siendo el mismo — no se rota.
+     * </p>
+     *
+     * @param refreshTokenValue UUID del refresh token emitido en el login
+     * @return {@link AuthResponseDTO} con el nuevo access token y el mismo refresh token
+     * @throws UserException con código {@code REFRESH_TOKEN_INVALID} si no existe
+     * @throws UserException con código {@code REFRESH_TOKEN_EXPIRED} si ha caducado o revocado
+     */
+    public AuthResponseDTO refreshAccessToken(String refreshTokenValue) {
+        RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
+        User user = refreshToken.getUser();
+        String newAccessToken = JwtUtil.generateToken(user.getUsername(), user.getRole().getName());
+        return AuthResponseDTO.builder()
+                .user(uService.saveUser(user))
+                .token(newAccessToken)
+                .refreshToken(refreshToken.getToken())
                 .build();
     }
 

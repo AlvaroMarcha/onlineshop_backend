@@ -15,6 +15,8 @@ public class UserException extends NoHandlerException {
     public static final String INVALID_RESET_TOKEN = "INVALID_RESET_TOKEN";
     public static final String RESET_TOKEN_EXPIRED = "RESET_TOKEN_EXPIRED";
     public static final String TERMS_NOT_ACCEPTED = "TERMS_NOT_ACCEPTED";
+    public static final String REFRESH_TOKEN_INVALID = "REFRESH_TOKEN_INVALID";
+    public static final String REFRESH_TOKEN_EXPIRED = "REFRESH_TOKEN_EXPIRED";
 
     public UserException() {
         this(DEFAULT);

@@ -11,8 +11,7 @@ import lombok.Setter;
 @Builder
 @Setter
 @Getter
-public class LogoutRequestDTO {
-    private long userId;
-    /** Refresh token a revocar en el logout. Opcional pero recomendado. */
+public class RefreshTokenRequestDTO {
+    /** Valor UUID del refresh token emitido en el último login. */
     private String refreshToken;
 }

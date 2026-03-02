@@ -95,6 +95,8 @@ public class GlobalExceptionHandler {
             case UserException.INVALID_RESET_TOKEN -> HttpStatus.BAD_REQUEST;
             case UserException.RESET_TOKEN_EXPIRED -> HttpStatus.GONE;
             case UserException.TERMS_NOT_ACCEPTED -> HttpStatus.BAD_REQUEST;
+            case UserException.REFRESH_TOKEN_INVALID -> HttpStatus.UNAUTHORIZED;
+            case UserException.REFRESH_TOKEN_EXPIRED -> HttpStatus.UNAUTHORIZED;
             case InvoiceException.DEFAULT, InvoiceException.ADDRESS_NOT_FOUND ->
                 HttpStatus.NOT_FOUND;
             case InvoiceException.ALREADY_EXISTS -> HttpStatus.CONFLICT;
