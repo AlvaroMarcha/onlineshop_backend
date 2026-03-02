@@ -1,5 +1,6 @@
 package es.marcha.backend.controller.exception;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -10,10 +11,34 @@ import es.marcha.backend.exception.InvoiceException;
 import es.marcha.backend.exception.MediaException;
 import es.marcha.backend.exception.NoHandlerException;
 import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.exception.RateLimitException;
 import es.marcha.backend.exception.UserException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Maneja las excepciones de tipo {@link RateLimitException} (429 Too Many
+     * Requests).
+     * <p>
+     * Añade el header {@code Retry-After} con los segundos que el cliente debe
+     * esperar
+     * antes de reintentar la petición.
+     * </p>
+     *
+     * @param ex La excepción de rate limit capturada.
+     * @return Un {@link ResponseEntity} con código 429, header Retry-After y cuerpo
+     *         JSON.
+     */
+    @ExceptionHandler(RateLimitException.class)
+    public ResponseEntity<ErrorResponse> handleRateLimitException(RateLimitException ex) {
+        ErrorResponse error = new ErrorResponse(ex.getMessage());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Retry-After", String.valueOf(ex.getRetryAfterSeconds()));
+
+        return new ResponseEntity<>(error, headers, HttpStatus.TOO_MANY_REQUESTS);
+    }
 
     /**
      * Maneja las excepciones de tipo {@link NoHandlerException} lanzadas por los
@@ -68,18 +93,14 @@ public class GlobalExceptionHandler {
             case UserException.USER_LOGGEDOUT -> HttpStatus.FORBIDDEN;
             case UserException.INVALID_RESET_TOKEN -> HttpStatus.BAD_REQUEST;
             case UserException.RESET_TOKEN_EXPIRED -> HttpStatus.GONE;
-            // Invoice
-            case InvoiceException.DEFAULT,
-                    InvoiceException.ADDRESS_NOT_FOUND ->
+            case InvoiceException.DEFAULT, InvoiceException.ADDRESS_NOT_FOUND ->
                 HttpStatus.NOT_FOUND;
             case InvoiceException.ALREADY_EXISTS -> HttpStatus.CONFLICT;
             case InvoiceException.PDF_FAILED,
                     InvoiceException.STORAGE_ERROR ->
                 HttpStatus.INTERNAL_SERVER_ERROR;
             case InvoiceException.FAILED_FETCH -> HttpStatus.NOT_FOUND;
-            // Order
             case OrderException.INVALID_STATUS_TRANSITION -> HttpStatus.CONFLICT;
-            // Media
             case MediaException.INVALID_FILE_TYPE,
                     MediaException.INVALID_FILE_CONTENT,
                     MediaException.FILE_TOO_LARGE ->
