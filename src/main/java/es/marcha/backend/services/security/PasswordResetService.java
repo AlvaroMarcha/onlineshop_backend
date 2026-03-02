@@ -1,23 +1,16 @@
 package es.marcha.backend.services.security;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;
-import es.marcha.backend.services.mail.MailService;
-import es.marcha.backend.services.media.MediaService;
-import jakarta.mail.MessagingException;
+import es.marcha.backend.services.mail.UserEmailNotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,12 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 public class PasswordResetService {
 
     private final UserRepository uRepository;
-    private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
-    private final TemplateEngine templateEngine;
-    private final MediaService mService;
+    private final UserEmailNotificationService userEmailNotificationService;
 
-    @Value("${app.frontend-url:http://localhost:4200}")
+    @Value("${app.frontend-url}")
     private String frontendUrl;
 
     /**
@@ -50,7 +41,7 @@ public class PasswordResetService {
      * @throws IOException
      */
     @Transactional
-    public void requestReset(String email) throws IOException {
+    public void requestReset(String email) {
         User user = uRepository.findByEmail(email).orElse(null);
         if (user == null) {
             log.warn("Password reset requested for unknown email: {}", email);
@@ -62,22 +53,7 @@ public class PasswordResetService {
         user.setResetTokenExpiry(LocalDateTime.now().plusHours(1));
         uRepository.save(user);
 
-        String resetLink = frontendUrl + "/reset-password?token=" + token;
-
-        Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
-
-        Context ctx = new Context();
-        ctx.setVariable("userName", user.getName());
-        ctx.setVariable("resetLink", resetLink);
-        ctx.setVariable("hasLogo", logo.isPresent());
-
-        String html = templateEngine.process("emails/user/password-reset", ctx);
-
-        try {
-            mailService.sendHtmlEmailWithInline(user.getEmail(), "Restablece tu contraseña", html, logo);
-        } catch (MessagingException e) {
-            log.error("Error sending password reset email to {}: {}", email, e.getMessage());
-        }
+        userEmailNotificationService.sendPasswordResetEmail(user.getName(), user.getEmail(), token);
     }
 
     /**
@@ -95,7 +71,7 @@ public class PasswordResetService {
      *                       o ha expirado ({@code RESET_TOKEN_EXPIRED})
      */
     @Transactional
-    public void confirmReset(String token, String newPassword) throws IOException {
+    public void confirmReset(String token, String newPassword) {
         User user = uRepository.findByResetToken(token)
                 .orElseThrow(() -> new UserException(UserException.INVALID_RESET_TOKEN));
 
@@ -109,21 +85,6 @@ public class PasswordResetService {
         user.setResetTokenExpiry(null);
         uRepository.save(user);
 
-        String resetLink = frontendUrl + "/reset-password";
-
-        Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
-
-        Context ctx = new Context();
-        ctx.setVariable("userName", user.getName());
-        ctx.setVariable("resetLink", resetLink);
-        ctx.setVariable("hasLogo", logo.isPresent());
-
-        String html = templateEngine.process("emails/user/password-change-notification", ctx);
-
-        try {
-            mailService.sendHtmlEmailWithInline(user.getEmail(), "Tu contraseña ha sido cambiada", html, logo);
-        } catch (MessagingException e) {
-            log.error("Error sending password change notification to {}: {}", user.getEmail(), e.getMessage());
-        }
+        userEmailNotificationService.sendPasswordChangeNotification(user.getName(), user.getEmail());
     }
 }
