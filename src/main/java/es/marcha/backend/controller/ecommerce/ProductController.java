@@ -3,11 +3,15 @@ package es.marcha.backend.controller.ecommerce;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,8 +20,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import es.marcha.backend.dto.request.ecommerce.StockUpdateRequestDTO;
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
+import es.marcha.backend.dto.request.ecommerce.ProductSearchFilter;
+import es.marcha.backend.dto.request.ecommerce.StockUpdateRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
 import es.marcha.backend.mapper.ecommerce.ProductMapper;
@@ -40,6 +45,42 @@ public class ProductController {
 
     @Autowired
     private SubcategoryService subcatService;
+
+    /**
+     * Busca productos con filtros opcionales y paginación.
+     * <p>
+     * Todos los parámetros son opcionales y combinables:
+     * </p>
+     * <ul>
+     * <li>{@code q} — texto libre (nombre, descripción, slug)</li>
+     * <li>{@code categoryId} — ID de categoría</li>
+     * <li>{@code minPrice} / {@code maxPrice} — rango de precio</li>
+     * <li>{@code featured} — solo productos destacados</li>
+     * <li>{@code newest} — ordena por más recientes; por defecto ordena por más
+     * vendidos</li>
+     * <li>{@code includeInactive} — incluye productos inactivos (solo
+     * ADMIN/SUPER_ADMIN)</li>
+     * <li>{@code page} / {@code size} — paginación (defecto: page=0, size=20, máx:
+     * 100)</li>
+     * </ul>
+     *
+     * @param filter parámetros de búsqueda enlazados desde query string
+     * @return {@link ResponseEntity} con {@link Page} de {@link ProductResponseDTO}
+     *         y código 200 OK
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Page<ProductResponseDTO>> searchProducts(
+            @ModelAttribute ProductSearchFilter filter) {
+
+        // Determinar si el usuario autenticado tiene rol de admin
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                        || a.getAuthority().equals("ROLE_SUPER_ADMIN"));
+
+        Page<ProductResponseDTO> result = prodService.searchProducts(filter, isAdmin);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 
     /**
      * Obtiene todos los productos activos y no eliminados del sistema,
