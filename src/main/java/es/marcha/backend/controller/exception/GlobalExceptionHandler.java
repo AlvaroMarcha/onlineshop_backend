@@ -98,6 +98,10 @@ public class GlobalExceptionHandler {
             case UserException.TERMS_NOT_ACCEPTED -> HttpStatus.BAD_REQUEST;
             case UserException.REFRESH_TOKEN_INVALID -> HttpStatus.UNAUTHORIZED;
             case UserException.REFRESH_TOKEN_EXPIRED -> HttpStatus.UNAUTHORIZED;
+            case UserException.VERIFICATION_TOKEN_INVALID -> HttpStatus.BAD_REQUEST;
+            case UserException.VERIFICATION_TOKEN_EXPIRED -> HttpStatus.GONE;
+            case UserException.EMAIL_ALREADY_VERIFIED -> HttpStatus.CONFLICT;
+            case UserException.USER_NOT_VERIFIED -> HttpStatus.FORBIDDEN;
             case InvoiceException.DEFAULT, InvoiceException.ADDRESS_NOT_FOUND ->
                 HttpStatus.NOT_FOUND;
             case InvoiceException.ALREADY_EXISTS -> HttpStatus.CONFLICT;
