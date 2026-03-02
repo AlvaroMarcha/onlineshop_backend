@@ -188,9 +188,11 @@ public class AuthService {
      * </p>
      *
      * @param refreshTokenValue UUID del refresh token emitido en el login
-     * @return {@link AuthResponseDTO} con el nuevo access token y el mismo refresh token
+     * @return {@link AuthResponseDTO} con el nuevo access token y el mismo refresh
+     *         token
      * @throws UserException con código {@code REFRESH_TOKEN_INVALID} si no existe
-     * @throws UserException con código {@code REFRESH_TOKEN_EXPIRED} si ha caducado o revocado
+     * @throws UserException con código {@code REFRESH_TOKEN_EXPIRED} si ha caducado
+     *                       o revocado
      */
     public AuthResponseDTO refreshAccessToken(String refreshTokenValue) {
         RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);

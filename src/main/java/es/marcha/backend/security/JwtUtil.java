@@ -19,8 +19,8 @@ public class JwtUtil {
      * Inicializa la clave secreta HMAC-SHA y la duración del access token
      * a partir de los valores configurados en {@code application.properties}.
      *
-     * @param secret         Clave secreta en formato base64.
-     * @param expirationMs   Duración del access token en milisegundos.
+     * @param secret       Clave secreta en formato base64.
+     * @param expirationMs Duración del access token en milisegundos.
      */
     public JwtUtil(
             @Value("${jwt.secret}") String secret,

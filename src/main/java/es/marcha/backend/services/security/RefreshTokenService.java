@@ -70,7 +70,8 @@ public class RefreshTokenService {
 
     /**
      * Elimina los tokens expirados y revocados de la base de datos.
-     * Se invoca de forma periódica desde {@link es.marcha.backend.services.scheduled.ScheduledTaskService}.
+     * Se invoca de forma periódica desde
+     * {@link es.marcha.backend.services.scheduled.ScheduledTaskService}.
      */
     public void deleteExpiredTokens() {
         refreshTokenRepository.deleteExpiredAndRevoked(LocalDateTime.now());

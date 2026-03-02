@@ -110,9 +110,14 @@ public class AuthController {
      * </p>
      *
      * @param body DTO con el refresh token UUID.
-     * @return {@link ResponseEntity} con el nuevo {@link AuthResponseDTO} y código HTTP 200 OK.
-     * @throws es.marcha.backend.exception.UserException con {@code REFRESH_TOKEN_INVALID} si no existe.
-     * @throws es.marcha.backend.exception.UserException con {@code REFRESH_TOKEN_EXPIRED} si ha caducado.
+     * @return {@link ResponseEntity} con el nuevo {@link AuthResponseDTO} y código
+     *         HTTP 200 OK.
+     * @throws es.marcha.backend.exception.UserException con
+     *                                                   {@code REFRESH_TOKEN_INVALID}
+     *                                                   si no existe.
+     * @throws es.marcha.backend.exception.UserException con
+     *                                                   {@code REFRESH_TOKEN_EXPIRED}
+     *                                                   si ha caducado.
      */
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponseDTO> refresh(@RequestBody RefreshTokenRequestDTO body) {
