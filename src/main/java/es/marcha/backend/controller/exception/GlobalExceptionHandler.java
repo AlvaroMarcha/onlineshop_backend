@@ -13,6 +13,7 @@ import es.marcha.backend.exception.MediaException;
 import es.marcha.backend.exception.NoHandlerException;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.exception.ProductImageException;
 import es.marcha.backend.exception.RateLimitException;
 import es.marcha.backend.exception.UserException;
 
@@ -123,6 +124,13 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST;
             case MediaException.DEFAULT_MESSAGE -> HttpStatus.BAD_REQUEST;
             case MediaException.STORAGE_ERROR -> HttpStatus.INTERNAL_SERVER_ERROR;
+            case ProductImageException.NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case ProductImageException.PRODUCT_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case ProductImageException.MISMATCH -> HttpStatus.BAD_REQUEST;
+            case ProductImageException.FAILED_UPLOAD -> HttpStatus.INTERNAL_SERVER_ERROR;
+            case ProductImageException.FAILED_DELETE -> HttpStatus.INTERNAL_SERVER_ERROR;
+            case ProductImageException.FAILED_UPDATE -> HttpStatus.BAD_REQUEST;
+            case ProductImageException.MAX_IMAGES_EXCEEDED -> HttpStatus.UNPROCESSABLE_ENTITY;
             default -> HttpStatus.INTERNAL_SERVER_ERROR;
         };
 

@@ -4,9 +4,11 @@ import java.util.Collections;
 import java.util.List;
 
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
+import es.marcha.backend.dto.response.ecommerce.product.ProductImageResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
 import es.marcha.backend.model.ecommerce.Subcategory;
 import es.marcha.backend.model.ecommerce.product.Product;
+import es.marcha.backend.model.ecommerce.product.ProductImage;
 
 public class ProductMapper {
 
@@ -40,6 +42,7 @@ public class ProductMapper {
                                                 ? ProductAttribMapper.toResponseDTOList(product.getAttribs())
                                                 : Collections.emptyList())
                                 .variants(Collections.emptyList())
+                                .mainImageUrl(resolveMainImageUrl(product))
                                 .build();
         }
 
@@ -82,7 +85,43 @@ public class ProductMapper {
                                 .variants(product.getVariants() != null
                                                 ? ProductVariantMapper.toResponseDTOList(product.getVariants())
                                                 : Collections.emptyList())
+                                .mainImageUrl(resolveMainImageUrl(product))
+                                .images(product.getImages() != null
+                                                ? product.getImages().stream()
+                                                                .map(ProductMapper::toProductImageDTO)
+                                                                .toList()
+                                                : Collections.emptyList())
                                 .build();
+        }
+
+        /** Convierte una {@link ProductImage} en su DTO de respuesta. */
+        public static ProductImageResponseDTO toProductImageDTO(ProductImage image) {
+                return ProductImageResponseDTO.builder()
+                                .id(image.getId())
+                                .url(image.getUrl())
+                                .altText(image.getAltText())
+                                .sortOrder(image.getSortOrder())
+                                .isMain(image.isMain())
+                                .uploadedAt(image.getUploadedAt())
+                                .build();
+        }
+
+        /**
+         * Resuelve la URL de la imagen principal ({@code isMain = true}) del producto.
+         * Si no hay ninguna marcada como principal, devuelve la de menor
+         * {@code sortOrder}.
+         * Devuelve {@code null} si el producto no tiene imágenes.
+         */
+        private static String resolveMainImageUrl(Product product) {
+                if (product.getImages() == null || product.getImages().isEmpty()) {
+                        return null;
+                }
+                return product.getImages().stream()
+                                .filter(ProductImage::isMain)
+                                .findFirst()
+                                .or(() -> product.getImages().stream().findFirst())
+                                .map(ProductImage::getUrl)
+                                .orElse(null);
         }
 
         public static Product toProductByRequestProduct(ProductRequestDTO productDTO, List<Subcategory> subcategories) {
