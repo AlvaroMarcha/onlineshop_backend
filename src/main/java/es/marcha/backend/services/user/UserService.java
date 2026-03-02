@@ -189,6 +189,16 @@ public class UserService {
     }
 
     /**
+     * Mapea una entidad {@link User} a su DTO de respuesta.
+     *
+     * @param user La entidad a mapear.
+     * @return {@link UserResponseDTO} con los datos del usuario.
+     */
+    public UserResponseDTO mapUserToDTO(User user) {
+        return UserMapper.toUserDTO(user);
+    }
+
+    /**
      * Actualiza los datos de un usuario existente en la base de datos. Solo se
      * actualizan ciertos
      * campos, y se marca la fecha de actualización con la hora actual.

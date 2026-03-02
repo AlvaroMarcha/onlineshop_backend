@@ -12,17 +12,21 @@ import io.jsonwebtoken.security.Keys;
 public class JwtUtil {
 
     private static SecretKey SECRET_KEY;
+    /** Duración del access token en milisegundos (por defecto 60 min). */
+    private static long ACCESS_TOKEN_EXPIRATION_MS;
 
     /**
-     * Inicializa la clave secreta HMAC-SHA a partir del valor base64 configurado en
-     * {@code jwt.secret}.
+     * Inicializa la clave secreta HMAC-SHA y la duración del access token
+     * a partir de los valores configurados en {@code application.properties}.
      *
-     * @param secret Valor de la clave secreta en formato base64, inyectado desde
-     *               {@code application.properties}.
+     * @param secret       Clave secreta en formato base64.
+     * @param expirationMs Duración del access token en milisegundos.
      */
-    public JwtUtil(@Value("${jwt.secret}") String secret) {
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-token.expiration-ms:3600000}") long expirationMs) {
         SECRET_KEY = Keys.hmacShaKeyFor(Base64.getDecoder().decode(secret));
-
+        ACCESS_TOKEN_EXPIRATION_MS = expirationMs;
     }
 
     /**
@@ -39,7 +43,7 @@ public class JwtUtil {
                 .setSubject(username)
                 .claim("role", roleName)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_MS))
                 .signWith(SECRET_KEY)
                 .compact();
     }

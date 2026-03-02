@@ -15,5 +15,8 @@ import lombok.Setter;
 public class AuthResponseDTO {
     // Attribs
     private UserResponseDTO user;
+    /** Access token JWT (validez 60 minutos). */
     private String token;
+    /** Refresh token UUID (validez 30 días). Usar en POST /auth/refresh. */
+    private String refreshToken;
 }
