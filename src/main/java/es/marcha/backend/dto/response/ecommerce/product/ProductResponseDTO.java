@@ -34,6 +34,7 @@ public class ProductResponseDTO {
     private String metaDescription;
     private double rating;
     private double ratingCount;
+    private int soldCount;
     private int stock;
     private Integer lowStockThreshold;
     private boolean isActive;

@@ -6,9 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
+import es.marcha.backend.dto.request.ecommerce.ProductSearchFilter;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
@@ -17,6 +23,7 @@ import es.marcha.backend.model.ecommerce.Inventory;
 import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.repository.ecommerce.InventoryRepository;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
+import es.marcha.backend.repository.ecommerce.specification.ProductSpecification;
 import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
@@ -282,5 +289,45 @@ public class ProductService {
         product.setRatingCount(product.getRatingCount() + 1);
         prodRepository.save(product);
         return product.getRating();
+    }
+
+    /**
+     * Busca productos aplicando filtros opcionales y paginación.
+     * <p>
+     * Todos los filtros son combinables entre sí. Los usuarios sin rol de
+     * administrador solo ven productos con {@code isActive = true}.
+     * Los admins pueden pasar {@code includeInactive = true} para ver también
+     * los inactivos.
+     * </p>
+     * <p>
+     * Ordenación:
+     * <ul>
+     * <li>newest=true → por createdAt DESC (más recientes primero)</li>
+     * <li>newest=false (defecto) → por soldCount DESC (más vendidos primero)</li>
+     * </ul>
+     * </p>
+     *
+     * @param filter  parámetros de búsqueda y paginación
+     * @param isAdmin {@code true} si el usuario autenticado tiene rol ADMIN o
+     *                SUPER_ADMIN
+     * @return página de {@link ProductResponseDTO} con metadatos de paginación
+     */
+    public Page<ProductResponseDTO> searchProducts(ProductSearchFilter filter, boolean isAdmin) {
+        // Validar tamaño de página para evitar sobrecargas
+        int pageSize = Math.min(Math.max(filter.getSize(), 1), 100);
+        int pageNumber = Math.max(filter.getPage(), 0);
+
+        // Ordenación: newest=true → createdAt DESC, por defecto → soldCount DESC
+        Sort sort = (filter.getNewest() != null && filter.getNewest())
+                ? Sort.by(Sort.Direction.DESC, "createdAt")
+                : Sort.by(Sort.Direction.DESC, "soldCount");
+
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        // Construir Specification con los filtros opcionales
+        Specification<Product> spec = ProductSpecification.build(filter, isAdmin);
+
+        return prodRepository.findAll(spec, pageable)
+                .map(ProductMapper::toProductDTO);
     }
 }
