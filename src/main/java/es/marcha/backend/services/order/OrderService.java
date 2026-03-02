@@ -12,6 +12,7 @@ import es.marcha.backend.dto.request.order.OrderItemRequestDTO;
 import es.marcha.backend.dto.request.order.OrderRequestDTO;
 import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.dto.response.order.OrderResponseDTO;
+import es.marcha.backend.exception.AddressException;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.order.OrderAddrMapper;
@@ -24,6 +25,7 @@ import es.marcha.backend.model.user.Address;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.order.OrderRepository;
+import es.marcha.backend.repository.user.AddressRepository;
 import es.marcha.backend.services.mail.UserEmailNotificationService;
 import es.marcha.backend.services.user.UserService;
 import jakarta.transaction.Transactional;
@@ -45,6 +47,9 @@ public class OrderService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private AddressRepository addressRepository;
 
     @Autowired
     private UserEmailNotificationService userEmailNotificationService;
@@ -109,10 +114,21 @@ public class OrderService {
         if (addresses == null || addresses.isEmpty())
             throw new OrderException(OrderException.USER_ADDRESS_LENGHT_0);
 
-        Address addressDefault = addresses.stream()
-                .filter(Address::isDefault)
-                .findFirst()
-                .orElseThrow(() -> new OrderException(OrderException.USER_ADDRESS_LENGHT_0));
+        // Resolver la dirección de envío: si el cliente elige una concreta se valida
+        // que le pertenezca; si no envía addressId se usa la predeterminada.
+        Address shippingAddress;
+        if (request.getAddressId() != null) {
+            shippingAddress = addressRepository.findById(request.getAddressId())
+                    .orElseThrow(() -> new AddressException(AddressException.DEFAULT));
+            // Seguridad: la dirección debe pertenecer al usuario que crea el pedido
+            if (shippingAddress.getUser().getId() != user.getId())
+                throw new AddressException(AddressException.DEFAULT);
+        } else {
+            shippingAddress = addresses.stream()
+                    .filter(Address::isDefault)
+                    .findFirst()
+                    .orElseThrow(() -> new OrderException(OrderException.USER_ADDRESS_LENGHT_0));
+        }
 
         // Construir snapshot de items + calcular total en un único paso
         List<OrderItems> items = new ArrayList<>();
@@ -173,7 +189,7 @@ public class OrderService {
         savedOrder.setOrderItems(items);
 
         OrderAddrResponseDTO snapOrderAddress = oAddrService.saveOrderAddr(
-                OrderAddrMapper.fromAddresstoOrderAddr(addressDefault, savedOrder));
+                OrderAddrMapper.fromAddresstoOrderAddr(shippingAddress, savedOrder));
 
         OrderResponseDTO finalOrder = OrderMapper.toOrderDTO(savedOrder);
         finalOrder.setAddress(snapOrderAddress);
