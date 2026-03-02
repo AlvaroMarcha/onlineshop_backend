@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -206,7 +205,6 @@ public class ProductController {
      * @return lista de DTOs de las imágenes recién creadas
      */
     @PostMapping("/{productId}/images")
-    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<List<ProductImageResponseDTO>> uploadImages(
             @PathVariable long productId,
             @RequestParam("files") List<MultipartFile> files) {
@@ -246,7 +244,6 @@ public class ProductController {
      * @return lista actualizada de imágenes ordenada por el nuevo {@code sortOrder}
      */
     @PutMapping("/{productId}/images/reorder")
-    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<List<ProductImageResponseDTO>> reorderImages(
             @PathVariable long productId,
             @RequestBody List<ProductImageReorderItemDTO> items) {
@@ -269,7 +266,6 @@ public class ProductController {
      * @return DTO actualizado de la imagen
      */
     @PutMapping("/{productId}/images/{imageId}")
-    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<ProductImageResponseDTO> updateImage(
             @PathVariable long productId,
             @PathVariable long imageId,
@@ -292,7 +288,6 @@ public class ProductController {
      * @return 204 No Content
      */
     @DeleteMapping("/{productId}/images/{imageId}")
-    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Void> deleteImage(
             @PathVariable long productId,
             @PathVariable long imageId) {
