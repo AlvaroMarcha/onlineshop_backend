@@ -23,6 +23,7 @@ public class ProductException extends NoHandlerException {
     public static final String NOT_VALID_RATING = "RATING_MUST_BE_BETWEEN_1_AND_5";
     public static final String INSUFFICIENT_STOCK = "INSUFFICIENT_STOCK";
     public static final String STOCK_UPDATED = "STOCK_UPDATED";
+    public static final String INVALID_INITIAL_STOCK = "INVALID_INITIAL_STOCK_VALUE";
 
     public ProductException() {
         this(DEFAULT);

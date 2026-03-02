@@ -1,16 +1,21 @@
 package es.marcha.backend.services.ecommerce;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
 import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.mapper.ecommerce.ProductMapper;
+import es.marcha.backend.model.ecommerce.Inventory;
 import es.marcha.backend.model.ecommerce.product.Product;
+import es.marcha.backend.repository.ecommerce.InventoryRepository;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.utils.ProductUtils;
 import jakarta.transaction.Transactional;
@@ -20,6 +25,9 @@ public class ProductService {
 
     @Autowired
     private ProductRepository prodRepository;
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
 
     @Autowired
     private ProductReviewService prService;
@@ -89,12 +97,28 @@ public class ProductService {
      * @return el producto creado mapeado a {@link ProductResponseDTO}
      * @throws ProductException si el producto es {@code null} o la creación falla
      */
+    @Transactional
     public ProductResponseDTO createProduct(Product product) {
         if (product == null) {
             throw new ProductException(ProductException.FAILED_CREATE);
         }
 
         String name = product.getName().trim();
+
+        // Auditoría
+        if (product.getCreatedBy() == null || product.getCreatedBy().isBlank()) {
+            product.setCreatedBy(LocalDateTime.now().toString());
+        }
+        // Precio con descuento: si no se pasa, igual al precio base
+        if (product.getDiscountPrice() == null) {
+            product.setDiscountPrice(product.getPrice());
+        }
+        // IVA: si no se pasa, 21 % por defecto
+        if (product.getTaxRate() == null) {
+            product.setTaxRate(new BigDecimal("0.21"));
+        }
+        // Reviews inicializadas a lista vacía para evitar NPE
+        product.setReviews(new ArrayList<>());
 
         product.setSku(ProductUtils.generateSKU(name));
         product.setActive(true);
@@ -107,13 +131,30 @@ public class ProductService {
         product.setMetaDescription(ProductUtils.generateMetaDescriptionES(name));
         product.setRating(0.0);
         product.setRatingCount(0.0);
-        // Stock inicial a 0; el admin lo actualiza con PATCH /products/{id}/stock
-        product.setStock(0);
+        // Validar stock inicial — debe ser >= 1
+        if (product.getStock() < 1) {
+            throw new ProductException(ProductException.INVALID_INITIAL_STOCK);
+        }
         if (product.getLowStockThreshold() == null) {
             product.setLowStockThreshold(5);
         }
 
-        return ProductMapper.toProductDTO(prodRepository.save(product));
+        Product saved = prodRepository.save(product);
+
+        // Crear registro de Inventario con el stock inicial del producto
+        Inventory inventory = Inventory.builder()
+                .product(saved)
+                .quantity(saved.getStock())
+                .reservedQuantity(0)
+                .minStock(5)
+                .maxStock(0)
+                .incomingStock(0)
+                .damagedStock(0)
+                .updatedAt(LocalDateTime.now())
+                .build();
+        inventoryRepository.save(inventory);
+
+        return ProductMapper.toProductDTO(saved);
     }
 
     /**
@@ -132,20 +173,20 @@ public class ProductService {
      * @throws ProductException si el producto no existe o la actualización falla
      */
     @Transactional
-    public ProductResponseDTO updateProduct(Product updatedProduct) {
-        Product product = prodRepository.findById(updatedProduct.getId())
+    public ProductResponseDTO updateProduct(long id, ProductRequestDTO dto) {
+        Product product = prodRepository.findById(id)
                 .orElseThrow(() -> new ProductException(ProductException.FAILED_UPDATE));
 
-        product.setName(updatedProduct.getName());
-        product.setSku(updatedProduct.getSku());
-        product.setDescription(updatedProduct.getDescription());
-        product.setPrice(updatedProduct.getPrice());
-        product.setDiscountPrice(updatedProduct.getDiscountPrice());
-        product.setTaxRate(updatedProduct.getTaxRate());
+        // El SKU es inmutable una vez generado — no se sobreescribe
+        product.setName(dto.getName());
+        product.setDescription(dto.getDescription());
+        product.setPrice(dto.getPrice());
+        product.setDiscountPrice(dto.getDiscountPrice());
+        product.setTaxRate(dto.getTaxRate());
         product.setUpdatedAt(LocalDateTime.now());
-        product.setWeight(updatedProduct.getWeight());
-        product.setDigital(updatedProduct.isDigital());
-        product.setFeatured(updatedProduct.isFeatured());
+        product.setWeight(dto.getWeight());
+        product.setDigital(dto.isDigital());
+        product.setFeatured(dto.isFeatured());
 
         return ProductMapper.toProductDTO(prodRepository.save(product));
     }

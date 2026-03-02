@@ -1,6 +1,7 @@
 package es.marcha.backend.services.ecommerce;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,11 @@ public class SubcategoryService {
      * @throws ProductException Si no se encuentra ninguna subcategoría.
      */
     public List<Subcategory> getAllSubcategoriesHandler(List<Long> categoryIds) {
+        // Lista nula o vacía es válida: el producto se crea sin subcategorías
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         List<Subcategory> subcategories = subcatRepository.findAllById(categoryIds);
 
         if (subcategories.isEmpty()) {

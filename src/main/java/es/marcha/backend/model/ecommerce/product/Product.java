@@ -2,6 +2,7 @@ package es.marcha.backend.model.ecommerce.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -59,7 +60,7 @@ public class Product {
     private BigDecimal discountPrice;
     @Column(name = "tax_rate", nullable = false)
     private BigDecimal taxRate;
-    @OneToOne(mappedBy = "product", optional = false, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "product", optional = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private Inventory inventory;
     @ManyToMany(fetch = FetchType.EAGER)
@@ -75,7 +76,7 @@ public class Product {
     private boolean isActive;
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted;
-    @Column(name = "created_by", nullable = false)
+    @Column(name = "created_by")
     private String createdBy;
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -110,9 +111,10 @@ public class Product {
     private Double rating;
     @Column(name = "rating_count")
     private Double ratingCount;
+    @Builder.Default
     @OneToMany(mappedBy = "product")
     @JsonManagedReference
-    private List<ProductReview> reviews;
+    private List<ProductReview> reviews = new ArrayList<>();
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "product_attrib", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "attrib_id"))
     private List<ProductAttrib> attribs;

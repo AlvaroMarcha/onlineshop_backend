@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import es.marcha.backend.exception.AddressException;
+import es.marcha.backend.exception.CartException;
 import es.marcha.backend.exception.InvoiceException;
 import es.marcha.backend.exception.MediaException;
 import es.marcha.backend.exception.NoHandlerException;
@@ -104,6 +105,12 @@ public class GlobalExceptionHandler {
             case InvoiceException.FAILED_FETCH -> HttpStatus.NOT_FOUND;
             case OrderException.INVALID_STATUS_TRANSITION -> HttpStatus.CONFLICT;
             case ProductException.INSUFFICIENT_STOCK -> HttpStatus.CONFLICT;
+            case ProductException.INVALID_INITIAL_STOCK -> HttpStatus.BAD_REQUEST;
+            case CartException.DEFAULT,
+                    CartException.ITEM_NOT_FOUND,
+                    CartException.EMPTY_CART ->
+                HttpStatus.NOT_FOUND;
+            case CartException.QUANTITY_INVALID -> HttpStatus.BAD_REQUEST;
             case MediaException.INVALID_FILE_TYPE,
                     MediaException.INVALID_FILE_CONTENT,
                     MediaException.FILE_TOO_LARGE ->
