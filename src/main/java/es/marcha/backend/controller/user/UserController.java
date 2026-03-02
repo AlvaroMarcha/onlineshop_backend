@@ -65,6 +65,69 @@ public class UserController {
     }
 
     /**
+     * Devuelve el perfil del usuario autenticado.
+     *
+     * @return {@link ResponseEntity} con el {@link UserResponseDTO} del usuario
+     *         autenticado
+     *         y código HTTP 200 OK.
+     */
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getMyProfile() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserResponseDTO user = uService.getUserByUsername(auth.getName())
+                .orElseThrow(() -> new es.marcha.backend.exception.UserException());
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    /**
+     * Devuelve la versión y fecha de aceptación de los términos y condiciones
+     * del usuario autenticado.
+     *
+     * @return {@link ResponseEntity} con {@link TermsResponseDTO} y código HTTP 200
+     *         OK.
+     */
+    @GetMapping("/me/terms")
+    public ResponseEntity<TermsResponseDTO> getMyTerms() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        TermsResponseDTO terms = uService.getTermsByUsername(auth.getName());
+        return new ResponseEntity<>(terms, HttpStatus.OK);
+    }
+
+    /**
+     * Exporta todos los datos personales del usuario autenticado (Art. 20 RGPD).
+     * <p>
+     * El rate limit es de 1 exportación por día por usuario.
+     *
+     * @param request la petición HTTP entrante, usada para derivar el identificador
+     *                de rate limiting.
+     * @return {@link ResponseEntity} con {@link DataExportResponseDTO} y código
+     *         HTTP 200 OK.
+     */
+    @GetMapping("/me/data-export")
+    public ResponseEntity<DataExportResponseDTO> exportMyData(HttpServletRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        rateLimitService.checkRateLimit(auth.getName(), EndpointType.DATA_EXPORT);
+        DataExportResponseDTO export = dataExportService.export(auth.getName());
+        return new ResponseEntity<>(export, HttpStatus.OK);
+    }
+
+    /**
+     * Anonimiza y elimina la cuenta del usuario autenticado (Art. 17 RGPD).
+     * <p>
+     * Envía un email de notificación, anonimiza los datos de carácter personal
+     * y desactiva la cuenta. Los pedidos e historial de compras se conservan
+     * de forma anonimizada durante 10 años por obligación legal.
+     *
+     * @return {@link ResponseEntity} vacío con código HTTP 200 OK.
+     */
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyAccount() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        userDeletionService.anonymizeAndDelete(auth.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
      * Obtiene un usuario por su ID.
      *
      * @param id El ID del usuario que se desea obtener.
@@ -137,19 +200,6 @@ public class UserController {
     }
 
     /**
-     * Devuelve la versión y fecha de aceptación de los términos y condiciones
-     * del usuario autenticado.
-     *
-     * @return {@link ResponseEntity} con {@link TermsResponseDTO} y código HTTP 200 OK.
-     */
-    @GetMapping("/me/terms")
-    public ResponseEntity<TermsResponseDTO> getMyTerms() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        TermsResponseDTO terms = uService.getTermsByUsername(auth.getName());
-        return new ResponseEntity<>(terms, HttpStatus.OK);
-    }
-
-    /**
      * Sube una nueva imagen de perfil para el usuario indicado y actualiza
      * la URL almacenada en su registro.
      *
@@ -166,36 +216,4 @@ public class UserController {
         return new ResponseEntity<>(imageUrl, HttpStatus.OK);
     }
 
-    /**
-     * Anonimiza y elimina la cuenta del usuario autenticado (Art. 17 RGPD).
-     * <p>
-     * Envía un email de notificación, anonimiza los datos de carácter personal
-     * y desactiva la cuenta. Los pedidos e historial de compras se conservan
-     * de forma anonimizada durante 10 años por obligación legal.
-     *
-     * @return {@link ResponseEntity} vacío con código HTTP 200 OK.
-     */
-    @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteMyAccount() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        userDeletionService.anonymizeAndDelete(auth.getName());
-        return ResponseEntity.ok().build();
-    }
-
-    /**
-     * Exporta todos los datos personales del usuario autenticado (Art. 20 RGPD).
-     * <p>
-     * El rate limit es de 1 exportación por día por usuario.
-     *
-     * @param request la petición HTTP entrante, usada para derivar el identificador
-     *                de rate limiting.
-     * @return {@link ResponseEntity} con {@link DataExportResponseDTO} y código HTTP 200 OK.
-     */
-    @GetMapping("/me/data-export")
-    public ResponseEntity<DataExportResponseDTO> exportMyData(HttpServletRequest request) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        rateLimitService.checkRateLimit(auth.getName(), EndpointType.DATA_EXPORT);
-        DataExportResponseDTO export = dataExportService.export(auth.getName());
-        return new ResponseEntity<>(export, HttpStatus.OK);
-    }
 }
