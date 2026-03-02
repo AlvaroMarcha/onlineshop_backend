@@ -20,7 +20,8 @@ import es.marcha.backend.model.user.User;
 import es.marcha.backend.security.JwtUtil;
 import es.marcha.backend.services.user.RoleService;
 import es.marcha.backend.services.user.UserService;
-import es.marcha.backend.utils.Validations; // solo para validateEmail
+import es.marcha.backend.utils.Validations;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 public class AuthService {
@@ -31,6 +32,9 @@ public class AuthService {
     private RoleService rService;
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Value("${app.terms.current-version}")
+    private String currentTermsVersion;
 
     /**
      * Realiza la autenticación de un usuario mediante username o email y
@@ -101,6 +105,9 @@ public class AuthService {
         if (!isValidEmail) {
             throw new UserException(UserException.FAILED_REGISTER);
         }
+        if (!userData.isTermsAccepted()) {
+            throw new UserException(UserException.TERMS_NOT_ACCEPTED);
+        }
 
         User user = User.builder()
                 .name(userData.getName())
@@ -118,6 +125,8 @@ public class AuthService {
                 .updatedAt(null)
                 .deletedAt(null)
                 .sessionCount(0)
+                .termsAcceptedAt(LocalDateTime.now())
+                .termsVersion(currentTermsVersion)
                 .build();
 
         UserResponseDTO savedUser = uService.saveUser(user);

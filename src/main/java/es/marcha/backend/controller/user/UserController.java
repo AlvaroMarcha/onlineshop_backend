@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
+import es.marcha.backend.dto.response.user.TermsResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
@@ -115,6 +118,19 @@ public class UserController {
     public ResponseEntity<BannedUserResponseDTO> banUser(@PathVariable long id) {
         BannedUserResponseDTO bannedUser = uService.banUserById(id);
         return new ResponseEntity<>(bannedUser, HttpStatus.OK);
+    }
+
+    /**
+     * Devuelve la versión y fecha de aceptación de los términos y condiciones
+     * del usuario autenticado.
+     *
+     * @return {@link ResponseEntity} con {@link TermsResponseDTO} y código HTTP 200 OK.
+     */
+    @GetMapping("/me/terms")
+    public ResponseEntity<TermsResponseDTO> getMyTerms() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        TermsResponseDTO terms = uService.getTermsByUsername(auth.getName());
+        return new ResponseEntity<>(terms, HttpStatus.OK);
     }
 
     /**

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
+import es.marcha.backend.dto.response.user.TermsResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.mapper.user.UserMapper;
@@ -74,6 +75,23 @@ public class UserService {
     public Optional<UserResponseDTO> getUserByUsername(String username) {
         return uRepository.findByUsername(username)
                 .map(UserMapper::toUserDTO);
+    }
+
+    /**
+     * Devuelve la versión y fecha de aceptación de los términos y condiciones del
+     * usuario autenticado, identificado por su username extraído del JWT.
+     *
+     * @param username El username del usuario autenticado.
+     * @return {@link TermsResponseDTO} con la versión y la fecha de aceptación.
+     * @throws UserException si el usuario no existe.
+     */
+    public TermsResponseDTO getTermsByUsername(String username) {
+        User user = uRepository.findByUsername(username)
+                .orElseThrow(() -> new UserException());
+        return TermsResponseDTO.builder()
+                .termsVersion(user.getTermsVersion())
+                .termsAcceptedAt(user.getTermsAcceptedAt())
+                .build();
     }
 
     /**
