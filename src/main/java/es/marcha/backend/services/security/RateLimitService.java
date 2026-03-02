@@ -22,7 +22,8 @@ public class RateLimitService {
     public enum EndpointType {
         LOGIN,
         REGISTER,
-        PASSWORD_RESET
+        PASSWORD_RESET,
+        DATA_EXPORT
     }
 
     private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
@@ -86,6 +87,7 @@ public class RateLimitService {
             case LOGIN -> Bandwidth.classic(5, Refill.intervally(5, Duration.ofMinutes(15)));
             case REGISTER -> Bandwidth.classic(10, Refill.intervally(10, Duration.ofHours(1)));
             case PASSWORD_RESET -> Bandwidth.classic(3, Refill.intervally(3, Duration.ofHours(1)));
+            case DATA_EXPORT -> Bandwidth.classic(1, Refill.intervally(1, Duration.ofDays(1)));
         };
 
         return Bucket.builder()

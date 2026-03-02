@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-wrapper {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #f3f3f3;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #232f3e;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .warning-banner {
+            background-color: #d93025;
+            color: #ffffff;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .content h2 {
+            color: #232f3e;
+            margin-top: 0;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .info-box {
+            background-color: #fff8e1;
+            border-left: 4px solid #f90;
+            padding: 14px 18px;
+            margin: 20px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        .info-box p {
+            margin: 4px 0;
+            font-size: 14px;
+        }
+        .btn-action {
+            display: inline-block;
+            background-color: #f90;
+            color: #111 !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .legal-note {
+            font-size: 12px;
+            color: #777777;
+            border-top: 1px solid #eeeeee;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #f3f3f3;
+        }
+        .footer a {
+            color: #232f3e;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="header">
+                <img th:if="${hasLogo}" src="cid:logoImage" alt="Tu Empresa" />
+                <h1>Eliminación de cuenta</h1>
+            </div>
+            <div class="warning-banner">
+                ⚠ Esta acción es irreversible
+            </div>
+            <div class="content">
+                <h2>Hola, <span th:text="${userName}">Usuario</span></h2>
+                <p>
+                    Hemos recibido una solicitud para eliminar permanentemente tu cuenta.
+                    Tus datos personales han sido anonimizados en cumplimiento del
+                    <strong>Reglamento General de Protección de Datos (RGPD, Art. 17)</strong>.
+                </p>
+
+                <div class="info-box">
+                    <p><strong>Fecha de eliminación:</strong>
+                        <span th:text="${deletionDate}">01/01/2026</span></p>
+                    <p><strong>Email asociado:</strong>
+                        <span th:text="${userEmail}">email@ejemplo.com</span></p>
+                </div>
+
+                <p>
+                    De acuerdo con la normativa vigente, <strong>tus pedidos e historial de compras
+                    se conservarán de forma anonimizada durante 10 años</strong> por obligación legal
+                    y contable (Art. 30 del Código de Comercio y LSSICE).
+                </p>
+                <p>
+                    Si no has solicitado esta eliminación o crees que ha sido un error,
+                    contacta con nuestro servicio de soporte de inmediato.
+                </p>
+
+                <a th:href="${supportLink}" class="btn-action">Contactar soporte</a>
+
+                <p class="legal-note">
+                    Este mensaje se ha generado automáticamente como confirmación del ejercicio
+                    de tu derecho al olvido conforme al Art. 17 del RGPD (UE) 2016/679.
+                    Conserva este email como justificante.
+                </p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tu Empresa. Todos los derechos reservados.</p>
+            <p>
+                <a href="#">Términos</a> |
+                <a href="#">Privacidad</a> |
+                <a href="#">Ayuda</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
