@@ -271,6 +271,10 @@ public class OrderService {
             // Error 1: persistir el cambio antes de retornar
             order.setStatus(OrderStatus.CANCELLED);
             saveOrder(order);
+            // Cargar los items dentro de la transacción para evitar
+            // LazyInitializationException en el hilo async
+            List<OrderItems> cancelledItems = oItemsService.getItemsByOrderId(orderId);
+            userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, cancelledItems);
             return order.getStatus();
         }
 
@@ -285,6 +289,10 @@ public class OrderService {
                         // Error 1: persistir el cambio antes de retornar
                         order.setStatus(OrderStatus.RETURNED);
                         saveOrder(order);
+                        // Cargar los items dentro de la transacción para evitar
+                        // LazyInitializationException en el hilo async
+                        List<OrderItems> returnedItems = oItemsService.getItemsByOrderId(orderId);
+                        userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, returnedItems);
                         return order.getStatus();
                     }
                     // Error 3: lanzar excepción si DELIVERED sin isReturned
@@ -296,6 +304,10 @@ public class OrderService {
         }
         order.setStatus(currentStatus);
         saveOrder(order);
+        // Cargar los items dentro de la transacción para evitar
+        // LazyInitializationException en el hilo async
+        List<OrderItems> loadedItems = oItemsService.getItemsByOrderId(orderId);
+        userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, loadedItems);
         return order.getStatus();
     }
 }
