@@ -18,12 +18,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
+import es.marcha.backend.dto.response.user.DataExportResponseDTO;
 import es.marcha.backend.dto.response.user.TermsResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.services.media.MediaService;
+import es.marcha.backend.services.security.RateLimitService;
+import es.marcha.backend.services.security.RateLimitService.EndpointType;
+import es.marcha.backend.services.user.DataExportService;
+import es.marcha.backend.services.user.UserDeletionService;
 import es.marcha.backend.services.user.UserService;
 
 @RestController
@@ -35,6 +42,15 @@ public class UserController {
 
     @Autowired
     private MediaService mService;
+
+    @Autowired
+    private UserDeletionService userDeletionService;
+
+    @Autowired
+    private DataExportService dataExportService;
+
+    @Autowired
+    private RateLimitService rateLimitService;
 
     /**
      * Obtiene todos los usuarios de la base de datos.
@@ -148,5 +164,38 @@ public class UserController {
     public ResponseEntity<String> uploadProfileImage(@PathVariable long id, @RequestParam("file") MultipartFile file) {
         String imageUrl = mService.newPicProfile(file, id);
         return new ResponseEntity<>(imageUrl, HttpStatus.OK);
+    }
+
+    /**
+     * Anonimiza y elimina la cuenta del usuario autenticado (Art. 17 RGPD).
+     * <p>
+     * Envía un email de notificación, anonimiza los datos de carácter personal
+     * y desactiva la cuenta. Los pedidos e historial de compras se conservan
+     * de forma anonimizada durante 10 años por obligación legal.
+     *
+     * @return {@link ResponseEntity} vacío con código HTTP 200 OK.
+     */
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyAccount() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        userDeletionService.anonymizeAndDelete(auth.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Exporta todos los datos personales del usuario autenticado (Art. 20 RGPD).
+     * <p>
+     * El rate limit es de 1 exportación por día por usuario.
+     *
+     * @param request la petición HTTP entrante, usada para derivar el identificador
+     *                de rate limiting.
+     * @return {@link ResponseEntity} con {@link DataExportResponseDTO} y código HTTP 200 OK.
+     */
+    @GetMapping("/me/data-export")
+    public ResponseEntity<DataExportResponseDTO> exportMyData(HttpServletRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        rateLimitService.checkRateLimit(auth.getName(), EndpointType.DATA_EXPORT);
+        DataExportResponseDTO export = dataExportService.export(auth.getName());
+        return new ResponseEntity<>(export, HttpStatus.OK);
     }
 }
