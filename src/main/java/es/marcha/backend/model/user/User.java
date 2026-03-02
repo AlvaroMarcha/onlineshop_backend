@@ -74,6 +74,10 @@ public class User {
     private String resetToken;
     @Column(name = "reset_token_expiry")
     private LocalDateTime resetTokenExpiry;
+    @Column(name = "terms_accepted_at")
+    private LocalDateTime termsAcceptedAt;
+    @Column(name = "terms_version")
+    private String termsVersion;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Address> addresses;
