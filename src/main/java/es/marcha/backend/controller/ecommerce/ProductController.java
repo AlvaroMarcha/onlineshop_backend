@@ -7,12 +7,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import es.marcha.backend.dto.request.ecommerce.StockUpdateRequestDTO;
 
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
@@ -42,7 +45,8 @@ public class ProductController {
      * Obtiene todos los productos activos y no eliminados del sistema,
      * incluyendo sus reseñas.
      *
-     * @return {@link ResponseEntity} con la lista de {@link ProductResponseDTO} y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con la lista de {@link ProductResponseDTO} y
+     *         código HTTP 200 OK.
      */
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
@@ -54,7 +58,8 @@ public class ProductController {
      * Obtiene un producto activo y no eliminado por su ID.
      *
      * @param id El ID del producto a obtener.
-     * @return {@link ResponseEntity} con el {@link ProductResponseDTO} correspondiente y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con el {@link ProductResponseDTO}
+     *         correspondiente y código HTTP 200 OK.
      */
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable long id) {
@@ -69,8 +74,10 @@ public class ProductController {
      * y delegar la creación al servicio.
      * </p>
      *
-     * @param productDTO DTO con los datos del producto, incluyendo la lista de IDs de subcategorías.
-     * @return {@link ResponseEntity} con el {@link ProductResponseDTO} creado y código HTTP 200 OK.
+     * @param productDTO DTO con los datos del producto, incluyendo la lista de IDs
+     *                   de subcategorías.
+     * @return {@link ResponseEntity} con el {@link ProductResponseDTO} creado y
+     *         código HTTP 200 OK.
      */
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productDTO) {
@@ -83,8 +90,10 @@ public class ProductController {
     /**
      * Actualiza un producto existente con los nuevos datos proporcionados.
      *
-     * @param product La entidad {@link Product} con los datos actualizados. Debe incluir un ID válido.
-     * @return {@link ResponseEntity} con el {@link ProductResponseDTO} actualizado y código HTTP 200 OK.
+     * @param product La entidad {@link Product} con los datos actualizados. Debe
+     *                incluir un ID válido.
+     * @return {@link ResponseEntity} con el {@link ProductResponseDTO} actualizado
+     *         y código HTTP 200 OK.
      */
     @PutMapping
     public ResponseEntity<ProductResponseDTO> updateProduct(@RequestBody Product product) {
@@ -97,11 +106,34 @@ public class ProductController {
      * El producto no se elimina físicamente de la base de datos.
      *
      * @param id El ID del producto a eliminar.
-     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP
+     *         200 OK.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable long id) {
         return new ResponseEntity<>(prodService.deleteProduct(id), HttpStatus.OK);
+    }
+
+    /**
+     * Actualiza el stock de un producto manualmente (solo admin).
+     * <p>
+     * Permite corregir el inventario desde el dashboard sin crear pedidos.
+     * Devuelve 200 OK con un mensaje de confirmación.
+     * Devuelve 400 Bad Request si el stock es negativo.
+     * Devuelve 404 Not Found si el producto no existe.
+     * </p>
+     *
+     * @param id      ID del producto cuyo stock se desea actualizar.
+     * @param request DTO con el nuevo valor de stock.
+     * @return {@link ResponseEntity} con mensaje de confirmación y código HTTP 200
+     *         OK.
+     */
+    @PatchMapping("/{id}/stock")
+    public ResponseEntity<String> updateStock(
+            @PathVariable long id,
+            @RequestBody StockUpdateRequestDTO request) {
+        String result = prodService.updateProductStock(id, request.getStock());
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
     /**
@@ -112,7 +144,8 @@ public class ProductController {
      * Obtiene todas las reseñas activas de un producto por el ID del producto.
      *
      * @param id El ID del producto cuyas reseñas se desean obtener.
-     * @return {@link ResponseEntity} con la lista de {@link ProductReviewResponseDTO} y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con la lista de
+     *         {@link ProductReviewResponseDTO} y código HTTP 200 OK.
      */
     @GetMapping("/reviews/{id}")
     public ResponseEntity<List<ProductReviewResponseDTO>> getProductReviews(@PathVariable long id) {
@@ -123,8 +156,10 @@ public class ProductController {
     /**
      * Crea una nueva reseña para un producto.
      *
-     * @param review La entidad {@link ProductReview} a crear. Debe incluir el ID del producto y el ID del usuario.
-     * @return {@link ResponseEntity} con el {@link ProductReviewResponseDTO} creado y código HTTP 200 OK.
+     * @param review La entidad {@link ProductReview} a crear. Debe incluir el ID
+     *               del producto y el ID del usuario.
+     * @return {@link ResponseEntity} con el {@link ProductReviewResponseDTO} creado
+     *         y código HTTP 200 OK.
      */
     @PostMapping("/reviews")
     public ResponseEntity<ProductReviewResponseDTO> createProductReview(@RequestBody ProductReview review) {
@@ -135,8 +170,10 @@ public class ProductController {
     /**
      * Actualiza una reseña existente con los nuevos datos proporcionados.
      *
-     * @param review La entidad {@link ProductReview} con los datos actualizados. Debe incluir un ID válido.
-     * @return {@link ResponseEntity} con el {@link ProductReviewResponseDTO} actualizado y código HTTP 200 OK.
+     * @param review La entidad {@link ProductReview} con los datos actualizados.
+     *               Debe incluir un ID válido.
+     * @return {@link ResponseEntity} con el {@link ProductReviewResponseDTO}
+     *         actualizado y código HTTP 200 OK.
      */
     @PutMapping("/reviews")
     public ResponseEntity<ProductReviewResponseDTO> updateProductReview(@RequestBody ProductReview review) {
@@ -148,7 +185,8 @@ public class ProductController {
      * Realiza la eliminación lógica de una reseña por su ID.
      *
      * @param id El ID de la reseña a eliminar.
-     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP
+     *         200 OK.
      */
     @DeleteMapping("/reviews/{id}")
     public ResponseEntity<String> deleteProductReview(@PathVariable long id) {

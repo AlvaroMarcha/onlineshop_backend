@@ -91,6 +91,12 @@ public class Product {
     private boolean isFeatured;
     @Column(name = "sold_count")
     private int soldCount;
+    // Gestión de stock
+    @Column(name = "stock", nullable = false)
+    private int stock;
+    @Builder.Default
+    @Column(name = "low_stock_threshold")
+    private Integer lowStockThreshold = 5;
     // SEO && Marketing
     @Column(name = "slug", nullable = false)
     private String slug;

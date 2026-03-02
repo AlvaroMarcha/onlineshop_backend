@@ -44,7 +44,8 @@ public class ProductService {
      * Obtiene todos los productos activos y no eliminados del sistema,
      * incluyendo las reseñas activas de cada uno.
      *
-     * @return Lista de {@link ProductResponseDTO} con todos los productos disponibles.
+     * @return Lista de {@link ProductResponseDTO} con todos los productos
+     *         disponibles.
      * @throws ProductException si no hay productos activos.
      */
     public List<ProductResponseDTO> getAllProducts() {
@@ -106,6 +107,11 @@ public class ProductService {
         product.setMetaDescription(ProductUtils.generateMetaDescriptionES(name));
         product.setRating(0.0);
         product.setRatingCount(0.0);
+        // Stock inicial a 0; el admin lo actualiza con PATCH /products/{id}/stock
+        product.setStock(0);
+        if (product.getLowStockThreshold() == null) {
+            product.setLowStockThreshold(5);
+        }
 
         return ProductMapper.toProductDTO(prodRepository.save(product));
     }
@@ -166,6 +172,33 @@ public class ProductService {
         product.setDeletedAt(LocalDateTime.now());
         prodRepository.save(product);
         return PRODUCT_DELETED;
+    }
+
+    /**
+     * Actualiza el stock de un producto manualmente (uso admin).
+     * <p>
+     * Permite al administrador corregir el inventario desde el dashboard
+     * sin necesidad de crear o cancelar pedidos.
+     * </p>
+     *
+     * @param id       ID del producto cuyo stock se actualiza
+     * @param newStock nuevo valor de stock (debe ser &gt;= 0)
+     * @return mensaje de confirmación de actualización
+     * @throws ProductException si el producto no existe o el stock es negativo
+     */
+    @Transactional
+    public String updateProductStock(long id, int newStock) {
+        if (newStock < 0)
+            throw new ProductException(ProductException.FAILED_UPDATE);
+
+        Product product = prodRepository.findById(id)
+                .orElseThrow(() -> new ProductException(ProductException.DEFAULT));
+
+        product.setStock(newStock);
+        product.setUpdatedAt(LocalDateTime.now());
+        prodRepository.save(product);
+
+        return ProductException.STOCK_UPDATED;
     }
 
     /**

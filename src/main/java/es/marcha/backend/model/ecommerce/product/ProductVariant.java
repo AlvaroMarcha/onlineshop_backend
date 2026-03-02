@@ -49,6 +49,9 @@ public class ProductVariant {
     private BigDecimal discountPriceOverride;
     @Column(name = "stock", nullable = false)
     private int stock;
+    @Builder.Default
+    @Column(name = "low_stock_threshold")
+    private Integer lowStockThreshold = 5;
     @Column(name = "is_default", nullable = false)
     private boolean isDefault;
     @Column(name = "is_active", nullable = false)

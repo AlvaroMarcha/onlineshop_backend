@@ -125,6 +125,15 @@ public class OrderService {
             if (!product.isActive())
                 throw new ProductException(ProductException.DEFAULT);
 
+            // Verificar stock disponible: no se puede comprar más unidades de las
+            // existentes
+            if (product.getStock() <= 0 || product.getStock() < itemDto.getQuantity())
+                throw new ProductException(ProductException.INSUFFICIENT_STOCK);
+
+            // Decrementar stock atómicamente dentro de la transacción
+            product.setStock(product.getStock() - itemDto.getQuantity());
+            productRepository.save(product);
+
             BigDecimal effectivePrice = (product.getDiscountPrice() != null
                     && product.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0)
                             ? product.getDiscountPrice()
