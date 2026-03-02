@@ -93,6 +93,7 @@ public class GlobalExceptionHandler {
             case UserException.USER_LOGGEDOUT -> HttpStatus.FORBIDDEN;
             case UserException.INVALID_RESET_TOKEN -> HttpStatus.BAD_REQUEST;
             case UserException.RESET_TOKEN_EXPIRED -> HttpStatus.GONE;
+            case UserException.TERMS_NOT_ACCEPTED -> HttpStatus.BAD_REQUEST;
             case InvoiceException.DEFAULT, InvoiceException.ADDRESS_NOT_FOUND ->
                 HttpStatus.NOT_FOUND;
             case InvoiceException.ALREADY_EXISTS -> HttpStatus.CONFLICT;
