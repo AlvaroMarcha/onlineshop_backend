@@ -34,6 +34,9 @@ public class ProductResponseDTO {
     private String metaDescription;
     private double rating;
     private double ratingCount;
+    private int stock;
+    private Integer lowStockThreshold;
+    private boolean isActive;
     private List<ProductReviewResponseDTO> reviews;
     private List<ProductAttribResponseDTO> attribs;
     private List<ProductVariantResponseDTO> variants;

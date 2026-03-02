@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.dto.request.ecommerce.StockUpdateRequestDTO;
-
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
@@ -80,11 +80,11 @@ public class ProductController {
      *         código HTTP 200 OK.
      */
     @PostMapping
-    public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productDTO) {
+    public ResponseEntity<ProductResponseDTO> createProduct(@Valid @RequestBody ProductRequestDTO productDTO) {
         List<Subcategory> subcategories = subcatService.getAllSubcategoriesHandler(productDTO.getSubcategoryIds());
         Product product = ProductMapper.toProductByRequestProduct(productDTO, subcategories);
         ProductResponseDTO createdProduct = prodService.createProduct(product);
-        return new ResponseEntity<>(createdProduct, HttpStatus.OK);
+        return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
 
     /**
@@ -95,9 +95,11 @@ public class ProductController {
      * @return {@link ResponseEntity} con el {@link ProductResponseDTO} actualizado
      *         y código HTTP 200 OK.
      */
-    @PutMapping
-    public ResponseEntity<ProductResponseDTO> updateProduct(@RequestBody Product product) {
-        ProductResponseDTO updatedProduct = prodService.updateProduct(product);
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductResponseDTO> updateProduct(
+            @PathVariable long id,
+            @RequestBody ProductRequestDTO productDTO) {
+        ProductResponseDTO updatedProduct = prodService.updateProduct(id, productDTO);
         return new ResponseEntity<>(updatedProduct, HttpStatus.OK);
     }
 
