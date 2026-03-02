@@ -21,6 +21,8 @@ public class ProductException extends NoHandlerException {
     public static final String FAILED_SAVE_REVIEW = "FAILED_TO_SAVE_REVIEW";
     public static final String FAILED_UPDATE_REVIEW = "FAILED_TO_UPDATE_REVIEW";
     public static final String NOT_VALID_RATING = "RATING_MUST_BE_BETWEEN_1_AND_5";
+    public static final String INSUFFICIENT_STOCK = "INSUFFICIENT_STOCK";
+    public static final String STOCK_UPDATED = "STOCK_UPDATED";
 
     public ProductException() {
         this(DEFAULT);

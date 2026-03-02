@@ -11,6 +11,7 @@ import es.marcha.backend.exception.InvoiceException;
 import es.marcha.backend.exception.MediaException;
 import es.marcha.backend.exception.NoHandlerException;
 import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.exception.ProductException;
 import es.marcha.backend.exception.RateLimitException;
 import es.marcha.backend.exception.UserException;
 
@@ -102,6 +103,7 @@ public class GlobalExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR;
             case InvoiceException.FAILED_FETCH -> HttpStatus.NOT_FOUND;
             case OrderException.INVALID_STATUS_TRANSITION -> HttpStatus.CONFLICT;
+            case ProductException.INSUFFICIENT_STOCK -> HttpStatus.CONFLICT;
             case MediaException.INVALID_FILE_TYPE,
                     MediaException.INVALID_FILE_CONTENT,
                     MediaException.FILE_TOO_LARGE ->
