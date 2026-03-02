@@ -31,22 +31,15 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
-
-    /** UUID único que identifica el token. Se almacena en el cliente. */
     @Column(name = "token", nullable = false, unique = true)
     private String token;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    /** Momento en el que el token deja de ser válido (30 días desde creación). */
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
-
     /**
      * Fecha de revocación explícita (logout).
      * {@code null} mientras el token esté activo.
