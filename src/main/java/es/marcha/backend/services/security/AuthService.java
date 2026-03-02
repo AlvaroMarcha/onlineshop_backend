@@ -65,11 +65,12 @@ public class AuthService {
             throw new UserException(UserException.FAILED_LOGIN);
         }
 
-        UserResponseDTO savedUser = uService.saveUser(user);
+        User savedUser = uService.saveUserForHandler(user);
+        UserResponseDTO savedUserDTO = uService.mapUserToDTO(savedUser);
         String accessToken = JwtUtil.generateToken(user.getUsername(), user.getRole().getName());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
         return AuthResponseDTO.builder()
-                .user(savedUser)
+                .user(savedUserDTO)
                 .token(accessToken)
                 .refreshToken(refreshToken.getToken())
                 .build();
