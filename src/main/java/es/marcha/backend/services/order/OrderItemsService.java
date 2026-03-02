@@ -55,5 +55,17 @@ public class OrderItemsService {
                 .toList();
     }
 
+    /**
+     * Recupera directamente los items de una orden por su ID.
+     * Útil para forzar la inicialización de la colección lazy dentro de
+     * un contexto transaccional antes de delegarlo a un hilo asíncrono.
+     *
+     * @param orderId el ID de la orden
+     * @return lista de {@link OrderItems} asociados a esa orden
+     */
+    public List<OrderItems> getItemsByOrderId(long orderId) {
+        return oItemRepository.findByOrderId(orderId);
+    }
+
     /** NO METHOD FOR UPDATE AND DELETE - SNAPSHOTS ARE INMUTABLE */
 }
