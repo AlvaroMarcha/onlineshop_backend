@@ -386,6 +386,177 @@ RUN apk add --no-cache ttf-dejavu
 
 ---
 
+## Rate Limiting
+
+Los endpoints de autenticación y exportación de datos están protegidos con rate limiting basado en token bucket ([Bucket4j](https://github.com/bucket4j/bucket4j) en memoria).
+
+### Límites configurados
+
+| Endpoint | Límite | Ventana | Clave |
+|---|---|---|---|
+| `POST /auth/login` | 5 intentos | 15 minutos | IP del cliente |
+| `POST /auth/register` | 10 peticiones | 1 hora | IP del cliente |
+| `POST /auth/password-reset/request` | 3 intentos | 1 hora | IP del cliente |
+| `GET /users/me/data-export` | 1 exportación | 24 horas | Username (JWT) |
+
+### Comportamiento
+
+- Si se supera el límite, la API responde `429 Too Many Requests` con el header `Retry-After: <segundos>`.
+- Cuando el login es exitoso, el contador de intentos fallidos se **resetea** para esa IP — el usuario legítimo comienza limpio.
+- El contador de `password-reset/request` **nunca se resetea** aunque sea exitoso — protección anti-enumeración de cuentas.
+- El límite de exportación de datos se aplica por username, no por IP.
+
+### Componentes
+
+| Clase | Responsabilidad |
+|---|---|
+| `RateLimitService` | Gestiona los buckets en un `ConcurrentHashMap<String, Bucket>` keyed por `"identifier:ENDPOINT_TYPE"` |
+| `RateLimitException` | Extiende `NoHandlerException`; lleva el campo `retryAfterSeconds` |
+| `GlobalExceptionHandler` | Captura `RateLimitException` → `429` con header `Retry-After` |
+
+### IP del cliente
+
+El servicio respeta la cabecera `X-Forwarded-For` para entornos detrás de un proxy o balanceador de carga. Si no está presente, usa `request.getRemoteAddr()`.
+
+---
+
+## RGPD — Protección de datos
+
+### Art. 7 — Consentimiento de términos y condiciones
+
+En el momento del registro, el usuario debe aceptar explícitamente los términos y condiciones. La versión vigente se configura en `application.properties`:
+
+```properties
+app.terms.current-version=1.0
+```
+
+Si `termsAccepted: false` en el body de registro, la API responde `400 Bad Request` con `TERMS_NOT_ACCEPTED`.
+
+#### Columnas añadidas a `users`
+
+| Columna | Tipo | Descripción |
+|---|---|---|
+| `terms_accepted_at` | `DATETIME` nullable | Fecha y hora de aceptación de los términos |
+| `terms_version` | `VARCHAR` nullable | Versión de los términos aceptados |
+
+#### Endpoint
+
+```
+GET /users/me/terms
+Authorization: Bearer <token>
+```
+
+Devuelve `{ "termsVersion": "1.0", "termsAcceptedAt": "2026-03-02T10:00:00" }`.
+
+---
+
+### Art. 17 — Derecho al olvido (eliminación de cuenta)
+
+`DELETE /users/me` anonimiza y desactiva la cuenta del usuario autenticado:
+
+1. Se envía un email de notificación al **email real** antes de anonimizar.
+2. Se reemplazan los datos personales por valores neutros.
+3. Se desactiva la cuenta (`isActive=false`, `isDeleted=true`, `deletedAt=now()`).
+4. Los pedidos e historial se conservan **de forma anónima** (FK al usuario anonimizado intacta).
+
+#### Campos anonimizados
+
+| Campo | Valor después de anonimizar |
+|---|---|
+| `name` | `"Usuario"` |
+| `surname` | `"Eliminado"` |
+| `username` | `"deleted_{id}"` |
+| `email` | `"deleted_{id}@eliminado.local"` |
+| `phone` | `"0000000000"` |
+| `profileImageUrl` | `null` |
+| `resetToken` / `resetTokenExpiry` | `null` |
+| `termsAcceptedAt` / `termsVersion` | `null` |
+
+> Los valores `username` y `email` incluyen el ID de la entidad para garantizar la unicidad en base de datos.
+
+#### Obligación legal
+
+Los pedidos e historial de compras se conservan anonimizados durante **10 años** conforme al Art. 30 del Código de Comercio y la LSSICE.
+
+#### Componentes
+
+| Clase | Responsabilidad |
+|---|---|
+| `UserDeletionService` | Orquesta anonimización y llama al servicio de email |
+| `account-deletion-notification.html` | Plantilla del email de notificación |
+
+---
+
+### Art. 20 — Derecho a la portabilidad de datos
+
+`GET /users/me/data-export` devuelve todos los datos personales del usuario en formato JSON.
+
+#### Rate limit
+
+1 exportación por día por usuario (identificado por el JWT). Si se supera, responde `429 Too Many Requests` con `Retry-After: 86400`.
+
+#### Estructura del JSON
+
+```json
+{
+  "schemaVersion": "1.0",
+  "exportedAt": "2026-03-02T10:15:00",
+  "profile": { "id": 1, "name": "...", "email": "...", "termsVersion": "1.0", ... },
+  "addresses": [ { "addressLine1": "...", "city": "...", ... } ],
+  "orders": [ { "id": 1, "status": "DELIVERED", "totalAmount": 49.99, ... } ],
+  "invoices": [ { "invoiceNumber": "INV-2026-000001", "totalAmount": 49.99, ... } ],
+  "payments": [ { "id": 1, "orderId": 1, "status": "SUCCESS", "amount": 49.99, ... } ]
+}
+```
+
+#### Componentes
+
+| Clase | Responsabilidad |
+|---|---|
+| `DataExportService` | Consulta y mapea todos los datos del usuario |
+| `DataExportResponseDTO` | DTO raíz con 5 inner classes: `ProfileExport`, `AddressExport`, `OrderExport`, `InvoiceExport`, `PaymentExport` |
+
+---
+
+## Email asíncrono
+
+Todos los envíos de email se realizan de forma **asíncrona** para no bloquear la respuesta HTTP al cliente. Si un email falla, el error se loguea pero la operación de negocio (pedido creado, contraseña actualizada, cuenta eliminada) no se ve afectada.
+
+### Arquitectura
+
+| Clase | Responsabilidad |
+|---|---|
+| `AsyncConfig` | Habilita `@EnableAsync` y define el bean `emailTaskExecutor` (ThreadPool: 2 core / 4 max / queue 50, prefijo `email-async-`) |
+| `UserEmailNotificationService` | Centraliza los emails de usuario: reset de contraseña, cambio de contraseña, eliminación de cuenta. Cada método lleva `@Async("emailTaskExecutor")` |
+| `OrderConfirmationEmailService` | Email de confirmación de pedido con `@Async("emailTaskExecutor")` |
+
+> **Nota importante**: para que `@Async` funcione correctamente, los métodos deben estar en un bean **distinto** al que los invoca. Spring AOP usa proxies y no intercepta auto-llamadas dentro del mismo bean.
+
+---
+
+## Email de confirmación de pedido
+
+Al crear un pedido mediante `POST /orders`, se envía automáticamente un email de confirmación al usuario. El envío es asíncrono — el cliente recibe la respuesta `201 Created` inmediatamente.
+
+### Contenido del email
+
+- Nombre del usuario
+- Número y fecha del pedido
+- Tabla de ítems con nombre, cantidad y precio efectivo (precio con descuento si aplica)
+- Total del pedido
+- Dirección de envío (snapshot del pedido)
+- Botón `Ver pedido` enlazado a `{APP_FRONTEND_URL}/orders/{orderId}`
+- Logo de empresa (si está configurado)
+
+### Componentes
+
+| Clase / Archivo | Responsabilidad |
+|---|---|
+| `OrderConfirmationEmailService` | Construye el contexto Thymeleaf y delega el envío al `MailService` |
+| `order-confirmation.html` | Plantilla del email con tabla de ítems y bloque de dirección condicional |
+
+---
+
 ## Restablecimiento de contraseña
 
 El sistema implementa el flujo estándar de recuperación de cuenta mediante email.
@@ -492,6 +663,9 @@ Estos son los endpoints más relevantes que expone la API:
   - `DELETE /users/{id}`
   - `POST /users/ban/{id}`
   - `POST /users/upload/{id}` — sube foto de perfil (`multipart/form-data`, campo `file`)
+  - `GET /users/me/terms` — versión y fecha de aceptación de los T&C del usuario autenticado · JWT requerido
+  - `DELETE /users/me` — anonimiza y elimina la propia cuenta (RGPD Art. 17) · JWT requerido
+  - `GET /users/me/data-export` — exporta todos los datos personales en JSON (RGPD Art. 20) · JWT requerido · rate limit 1/día
 - Imágenes (recursos estáticos públicos):
   - `GET /images/default/default_pic_profile.jpeg`
   - `GET /images/{userId}/pic-profile/{filename}`
@@ -562,6 +736,11 @@ Estos son los endpoints más relevantes que expone la API:
   - `GET /invoices/{invoiceNumber}/pdf` — descarga el archivo PDF · `200 OK` · `Content-Type: application/pdf`
 - Mail:
   - `POST /mails/testing/send`
+- Emails transaccionales (enviados automáticamente, sin endpoint directo):
+  - Confirmación de pedido — `POST /orders` dispara el envío
+  - Restablecimiento de contraseña — `POST /auth/password-reset/request`
+  - Notificación de cambio de contraseña — `POST /auth/password-reset/confirm`
+  - Notificación de eliminación de cuenta — `DELETE /users/me`
 
 ## Configuración Google OAuth2 — Obtener el Refresh Token
 

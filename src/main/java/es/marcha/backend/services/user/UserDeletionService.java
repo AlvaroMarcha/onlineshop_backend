@@ -1,22 +1,14 @@
 package es.marcha.backend.services.user;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
 
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;
-import es.marcha.backend.services.mail.MailService;
-import es.marcha.backend.services.media.MediaService;
-import jakarta.mail.MessagingException;
+import es.marcha.backend.services.mail.UserEmailNotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,24 +19,24 @@ import lombok.extern.slf4j.Slf4j;
 public class UserDeletionService {
 
     private final UserRepository uRepository;
-    private final MailService mailService;
-    private final MediaService mService;
-    private final TemplateEngine templateEngine;
-
-    @Value("${app.frontend-url}")
-    private String frontendUrl;
+    private final UserEmailNotificationService userEmailNotificationService;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     /**
-     * Anonimiza y desactiva la cuenta del usuario autenticado conforme al Art. 17 del RGPD.
+     * Anonimiza y desactiva la cuenta del usuario autenticado conforme al Art. 17
+     * del RGPD.
      * <p>
-     * Envía un email de notificación con los datos reales del usuario ANTES de anonimizar.
-     * Los datos de carácter personal (nombre, apellido, email, teléfono, imagen) son
-     * reemplazados por valores neutros. El username y el email se construyen con el ID
+     * Envía un email de notificación con los datos reales del usuario ANTES de
+     * anonimizar.
+     * Los datos de carácter personal (nombre, apellido, email, teléfono, imagen)
+     * son
+     * reemplazados por valores neutros. El username y el email se construyen con el
+     * ID
      * para mantener la unicidad en base de datos.
      * <p>
-     * Los pedidos vinculados se conservan de forma anónima por obligación legal de 10 años.
+     * Los pedidos vinculados se conservan de forma anónima por obligación legal de
+     * 10 años.
      *
      * @param username el username del usuario autenticado extraído del JWT
      * @throws UserException si el usuario no existe en el sistema
@@ -58,7 +50,7 @@ public class UserDeletionService {
         String realEmail = user.getEmail();
         String deletionDate = LocalDateTime.now().format(FORMATTER);
 
-        sendDeletionEmail(realName, realEmail, deletionDate, user);
+        userEmailNotificationService.sendAccountDeletionEmail(realName, realEmail, deletionDate, user.getId());
 
         user.setName("Usuario");
         user.setSurname("Eliminado");
@@ -76,33 +68,5 @@ public class UserDeletionService {
 
         uRepository.save(user);
         log.info("Usuario anonimizado y desactivado — id: {}", user.getId());
-    }
-
-    /**
-     * Envía el email de notificación de eliminación con los datos reales del usuario.
-     * Si el envío falla, se registra el error pero no interrumpe el flujo de anonimización.
-     *
-     * @param realName     nombre real del usuario (antes de anonimizar)
-     * @param realEmail    email real del usuario (antes de anonimizar)
-     * @param deletionDate fecha y hora de la eliminación formateada
-     * @param user         entidad del usuario
-     */
-    private void sendDeletionEmail(String realName, String realEmail, String deletionDate, User user) {
-        try {
-            Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
-
-            Context ctx = new Context();
-            ctx.setVariable("userName", realName);
-            ctx.setVariable("userEmail", realEmail);
-            ctx.setVariable("deletionDate", deletionDate);
-            ctx.setVariable("supportLink", frontendUrl + "/contact");
-            ctx.setVariable("hasLogo", logo.isPresent());
-
-            String html = templateEngine.process("emails/user/account-deletion-notification", ctx);
-            mailService.sendHtmlEmailWithInline(realEmail, "Notificación de eliminación de cuenta", html, logo);
-            log.info("Email de eliminación enviado a {}", realEmail);
-        } catch (IOException | MessagingException e) {
-            log.error("Error al enviar email de eliminación al usuario id {}: {}", user.getId(), e.getMessage());
-        }
     }
 }

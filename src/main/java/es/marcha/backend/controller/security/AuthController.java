@@ -1,7 +1,5 @@
 package es.marcha.backend.controller.security;
 
-import java.io.IOException;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -119,12 +117,11 @@ public class AuthController {
      * @param body    DTO con el email del usuario.
      * @param request Petición HTTP para obtener la IP del cliente.
      * @return {@link ResponseEntity} con código HTTP 200 OK.
-     * @throws IOException
      */
     @PostMapping("/password-reset/request")
     public ResponseEntity<Void> requestPasswordReset(
             @RequestBody PasswordResetRequestDTO body,
-            HttpServletRequest request) throws IOException {
+            HttpServletRequest request) {
 
         String ip = getClientIp(request);
         rateLimitService.checkRateLimit(ip, EndpointType.PASSWORD_RESET);
@@ -141,7 +138,6 @@ public class AuthController {
      *
      * @param body DTO con el token y la nueva contraseña.
      * @return {@link ResponseEntity} con código HTTP 200 OK.
-     * @throws IOException
      * @throws es.marcha.backend.exception.UserException con código
      *                                                   {@code INVALID_RESET_TOKEN}
      *                                                   si el token no existe,
@@ -150,7 +146,7 @@ public class AuthController {
      *                                                   si ha caducado.
      */
     @PostMapping("/password-reset/confirm")
-    public ResponseEntity<Void> confirmPasswordReset(@RequestBody PasswordResetConfirmDTO body) throws IOException {
+    public ResponseEntity<Void> confirmPasswordReset(@RequestBody PasswordResetConfirmDTO body) {
         passwordResetService.confirmReset(body.getToken(), body.getNewPassword());
         return ResponseEntity.ok().build();
     }

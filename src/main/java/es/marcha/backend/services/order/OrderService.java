@@ -24,6 +24,7 @@ import es.marcha.backend.model.user.Address;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.order.OrderRepository;
+import es.marcha.backend.services.mail.UserEmailNotificationService;
 import es.marcha.backend.services.user.UserService;
 import jakarta.transaction.Transactional;
 
@@ -46,7 +47,7 @@ public class OrderService {
     private ProductRepository productRepository;
 
     @Autowired
-    private OrderConfirmationEmailService orderConfirmationEmailService;
+    private UserEmailNotificationService userEmailNotificationService;
 
     // Methods
     /**
@@ -168,7 +169,7 @@ public class OrderService {
         OrderResponseDTO finalOrder = OrderMapper.toOrderDTO(savedOrder);
         finalOrder.setAddress(snapOrderAddress);
 
-        orderConfirmationEmailService.sendOrderConfirmationEmail(user, savedOrder, items, snapOrderAddress);
+        userEmailNotificationService.sendOrderConfirmationEmail(user, savedOrder, items, snapOrderAddress);
 
         return finalOrder;
     }
