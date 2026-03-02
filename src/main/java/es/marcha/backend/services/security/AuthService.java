@@ -2,6 +2,7 @@ package es.marcha.backend.services.security;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import es.marcha.backend.model.security.RefreshToken;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.security.JwtUtil;
+import es.marcha.backend.services.mail.UserEmailNotificationService;
 import es.marcha.backend.services.user.RoleService;
 import es.marcha.backend.services.user.UserService;
 import es.marcha.backend.utils.Validations;
@@ -35,6 +37,8 @@ public class AuthService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private RefreshTokenService refreshTokenService;
+    @Autowired
+    private UserEmailNotificationService emailService;
 
     @Value("${app.terms.current-version}")
     private String currentTermsVersion;
@@ -142,6 +146,16 @@ public class AuthService {
         UserResponseDTO savedUser = uService.saveUser(user);
         String accessToken = JwtUtil.generateToken(savedUser.getUsername(), savedUser.getRoleName());
         User persistedUser = uService.getUserByIdForHandler(savedUser.getId());
+
+        // Generar token de verificación de email con expiración de 24h
+        String verificationToken = UUID.randomUUID().toString();
+        persistedUser.setVerificationToken(verificationToken);
+        persistedUser.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
+        uService.saveUserForHandler(persistedUser);
+
+        // Enviar email de verificación de forma asíncrona
+        emailService.sendVerificationEmail(persistedUser.getName(), persistedUser.getEmail(), verificationToken);
+
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(persistedUser);
         return AuthResponseDTO.builder()
                 .user(savedUser)
@@ -200,10 +214,71 @@ public class AuthService {
         User user = refreshToken.getUser();
         String newAccessToken = JwtUtil.generateToken(user.getUsername(), user.getRole().getName());
         return AuthResponseDTO.builder()
-                .user(uService.saveUser(user))
+                .user(uService.mapUserToDTO(user))
                 .token(newAccessToken)
                 .refreshToken(refreshToken.getToken())
                 .build();
+    }
+
+    /**
+     * Verifica el email del usuario usando el token recibido por correo.
+     * <p>
+     * Comprueba que el token existe, que no ha expirado y que el usuario
+     * no está ya verificado. Si todo es correcto, establece {@code isVerified=true}
+     * y limpia el token de verificación de la base de datos.
+     * </p>
+     *
+     * @param token UUID de verificación enviado al email del usuario
+     * @throws UserException con {@code VERIFICATION_TOKEN_INVALID} si el token no
+     *                       existe
+     * @throws UserException con {@code VERIFICATION_TOKEN_EXPIRED} si el token ha
+     *                       caducado
+     * @throws UserException con {@code EMAIL_ALREADY_VERIFIED} si el usuario ya
+     *                       estaba verificado
+     */
+    public void verifyEmail(String token) {
+        User user = uService.getUserByVerificationToken(token);
+
+        if (user.isVerified()) {
+            throw new UserException(UserException.EMAIL_ALREADY_VERIFIED);
+        }
+        if (user.getVerificationTokenExpiry() == null ||
+                LocalDateTime.now().isAfter(user.getVerificationTokenExpiry())) {
+            throw new UserException(UserException.VERIFICATION_TOKEN_EXPIRED);
+        }
+
+        // Marcar como verificado y limpiar el token
+        user.setVerified(true);
+        user.setVerificationToken(null);
+        user.setVerificationTokenExpiry(null);
+        uService.saveUserForHandler(user);
+    }
+
+    /**
+     * Reenvía el email de verificación al usuario.
+     * <p>
+     * Genera un nuevo token con expiración de 24h y lo envía al email registrado.
+     * Lanza excepción si el usuario ya está verificado.
+     * </p>
+     *
+     * @param usernameOrEmail username o email del usuario
+     * @throws UserException con {@code EMAIL_ALREADY_VERIFIED} si ya está
+     *                       verificado
+     */
+    public void resendVerification(String usernameOrEmail) {
+        User user = uService.getUserByUsernameOrEmail(usernameOrEmail);
+
+        if (user.isVerified()) {
+            throw new UserException(UserException.EMAIL_ALREADY_VERIFIED);
+        }
+
+        // Regenerar token con nueva expiración de 24h
+        String newToken = UUID.randomUUID().toString();
+        user.setVerificationToken(newToken);
+        user.setVerificationTokenExpiry(LocalDateTime.now().plusHours(24));
+        uService.saveUserForHandler(user);
+
+        emailService.sendVerificationEmail(user.getName(), user.getEmail(), newToken);
     }
 
 }

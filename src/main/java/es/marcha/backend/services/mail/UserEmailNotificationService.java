@@ -40,7 +40,8 @@ public class UserEmailNotificationService {
     private static final DateTimeFormatter ORDER_DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     /**
-     * Envía el email de solicitud de restablecimiento de contraseña de forma asíncrona.
+     * Envía el email de solicitud de restablecimiento de contraseña de forma
+     * asíncrona.
      *
      * @param name       nombre del usuario
      * @param email      dirección de correo del usuario
@@ -168,6 +169,36 @@ public class UserEmailNotificationService {
             log.info("Email de confirmación enviado a {} para el pedido #{}", user.getEmail(), order.getId());
         } catch (IOException | MessagingException e) {
             log.error("Error enviando email de confirmación del pedido #{}: {}", order.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Envía el email de verificación de cuenta de forma asíncrona.
+     * <p>
+     * Incluye un enlace con el token de verificación que expira en 24 horas.
+     * El fallo en el envío se registra pero no interrumpe el registro del usuario.
+     * </p>
+     *
+     * @param name              nombre del usuario
+     * @param email             dirección de correo del usuario
+     * @param verificationToken token UUID para construir el enlace de verificación
+     */
+    @Async("emailTaskExecutor")
+    public void sendVerificationEmail(String name, String email, String verificationToken) {
+        try {
+            String verificationLink = frontendUrl + "/verify-email?token=" + verificationToken;
+            Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
+
+            Context ctx = new Context();
+            ctx.setVariable("userName", name);
+            ctx.setVariable("verificationLink", verificationLink);
+            ctx.setVariable("hasLogo", logo.isPresent());
+
+            String html = templateEngine.process("emails/user/user-verification", ctx);
+            mailService.sendHtmlEmailWithInline(email, "Verifica tu cuenta", html, logo);
+            log.info("Email de verificación enviado a {}", email);
+        } catch (IOException | MessagingException e) {
+            log.error("Error al enviar email de verificación a {}: {}", email, e.getMessage());
         }
     }
 }

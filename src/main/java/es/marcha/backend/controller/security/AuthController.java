@@ -3,9 +3,11 @@ package es.marcha.backend.controller.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.dto.request.security.LoginRequestDTO;
@@ -14,6 +16,7 @@ import es.marcha.backend.dto.request.security.PasswordResetConfirmDTO;
 import es.marcha.backend.dto.request.security.PasswordResetRequestDTO;
 import es.marcha.backend.dto.request.security.RefreshTokenRequestDTO;
 import es.marcha.backend.dto.request.security.RegisterRequestDTO;
+import es.marcha.backend.dto.request.security.ResendVerificationRequestDTO;
 import es.marcha.backend.dto.response.security.AuthResponseDTO;
 import es.marcha.backend.dto.response.user.LogoutResponseDTO;
 import es.marcha.backend.services.security.AuthService;
@@ -173,6 +176,50 @@ public class AuthController {
     @PostMapping("/password-reset/confirm")
     public ResponseEntity<Void> confirmPasswordReset(@RequestBody PasswordResetConfirmDTO body) {
         passwordResetService.confirmReset(body.getToken(), body.getNewPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Verifica el email del usuario mediante el token recibido por correo.
+     * <p>
+     * El cliente redirige al usuario a esta URL desde el enlace del email.
+     * Si el token es válido y no ha expirado, el usuario queda verificado.
+     * </p>
+     *
+     * @param token UUID de verificación enviado por email
+     * @return {@link ResponseEntity} vacío con código HTTP 200 OK
+     * @throws es.marcha.backend.exception.UserException con
+     *                                                   {@code VERIFICATION_TOKEN_INVALID}
+     *                                                   si el token no existe
+     * @throws es.marcha.backend.exception.UserException con
+     *                                                   {@code VERIFICATION_TOKEN_EXPIRED}
+     *                                                   si el token ha caducado
+     * @throws es.marcha.backend.exception.UserException con
+     *                                                   {@code EMAIL_ALREADY_VERIFIED}
+     *                                                   si ya estaba verificado
+     */
+    @GetMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
+        aService.verifyEmail(token);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Reenvía el email de verificación al usuario.
+     * <p>
+     * Genera un nuevo token con expiración de 24h y envía el email.
+     * Útil cuando el enlace original ha expirado.
+     * </p>
+     *
+     * @param body DTO con el username o email del usuario
+     * @return {@link ResponseEntity} vacío con código HTTP 200 OK
+     * @throws es.marcha.backend.exception.UserException con
+     *                                                   {@code EMAIL_ALREADY_VERIFIED}
+     *                                                   si ya estaba verificado
+     */
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(@RequestBody ResendVerificationRequestDTO body) {
+        aService.resendVerification(body.getUsernameOrEmail());
         return ResponseEntity.ok().build();
     }
 

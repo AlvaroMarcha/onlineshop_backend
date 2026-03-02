@@ -1,9 +1,13 @@
 package es.marcha.backend.services.scheduled;
 
+import java.time.LocalDateTime;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import es.marcha.backend.repository.user.UserRepository;
 import es.marcha.backend.services.cart.CartService;
 import es.marcha.backend.services.security.RefreshTokenService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +30,9 @@ public class ScheduledTaskService {
     @Autowired
     private RefreshTokenService refreshTokenService;
 
+    @Autowired
+    private UserRepository userRepository;
+
     /**
      * Expira automáticamente los carritos inactivos.
      * <p>
@@ -47,5 +54,20 @@ public class ScheduledTaskService {
     @Scheduled(cron = "0 0 0 * * *")
     public void cleanExpiredRefreshTokens() {
         refreshTokenService.deleteExpiredTokens();
+    }
+
+    /**
+     * Limpia los tokens de verificación de email que han expirado.
+     * <p>
+     * Borra el token y la fecha de expiración de los usuarios que no completaron
+     * la verificación en 24h, liberando espacio en BD.
+     * Se ejecuta cada día a las 01:00.
+     * </p>
+     */
+    @Transactional
+    @Scheduled(cron = "0 0 1 * * *")
+    public void cleanExpiredVerificationTokens() {
+        int updated = userRepository.clearExpiredVerificationTokens(LocalDateTime.now());
+        log.info("[Scheduler] Tokens de verificación expirados limpiados: {}", updated);
     }
 }

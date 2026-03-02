@@ -17,6 +17,10 @@ public class UserException extends NoHandlerException {
     public static final String TERMS_NOT_ACCEPTED = "TERMS_NOT_ACCEPTED";
     public static final String REFRESH_TOKEN_INVALID = "REFRESH_TOKEN_INVALID";
     public static final String REFRESH_TOKEN_EXPIRED = "REFRESH_TOKEN_EXPIRED";
+    public static final String VERIFICATION_TOKEN_INVALID = "VERIFICATION_TOKEN_INVALID";
+    public static final String VERIFICATION_TOKEN_EXPIRED = "VERIFICATION_TOKEN_EXPIRED";
+    public static final String EMAIL_ALREADY_VERIFIED = "EMAIL_ALREADY_VERIFIED";
+    public static final String USER_NOT_VERIFIED = "USER_NOT_VERIFIED";
 
     public UserException() {
         this(DEFAULT);

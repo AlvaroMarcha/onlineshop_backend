@@ -199,6 +199,19 @@ public class UserService {
     }
 
     /**
+     * Busca un usuario por su token de verificación de email.
+     * Usado por el flujo de verificación para validar el token recibido.
+     *
+     * @param token el UUID de verificación enviado al correo del usuario
+     * @return la entidad {@link User} asociada al token
+     * @throws UserException si el token no existe en la base de datos
+     */
+    public User getUserByVerificationToken(String token) {
+        return uRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new UserException(UserException.VERIFICATION_TOKEN_INVALID));
+    }
+
+    /**
      * Actualiza los datos de un usuario existente en la base de datos. Solo se
      * actualizan ciertos
      * campos, y se marca la fecha de actualización con la hora actual.

@@ -78,6 +78,10 @@ public class User {
     private LocalDateTime termsAcceptedAt;
     @Column(name = "terms_version")
     private String termsVersion;
+    @Column(name = "verification_token")
+    private String verificationToken;
+    @Column(name = "verification_token_expiry")
+    private LocalDateTime verificationTokenExpiry;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<Address> addresses;
