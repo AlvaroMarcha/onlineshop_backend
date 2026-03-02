@@ -45,6 +45,9 @@ public class OrderService {
     @Autowired
     private ProductRepository productRepository;
 
+    @Autowired
+    private OrderConfirmationEmailService orderConfirmationEmailService;
+
     // Methods
     /**
      * Obtiene una orden por su ID para uso interno de otros servicios.
@@ -164,6 +167,8 @@ public class OrderService {
 
         OrderResponseDTO finalOrder = OrderMapper.toOrderDTO(savedOrder);
         finalOrder.setAddress(snapOrderAddress);
+
+        orderConfirmationEmailService.sendOrderConfirmationEmail(user, savedOrder, items, snapOrderAddress);
 
         return finalOrder;
     }
