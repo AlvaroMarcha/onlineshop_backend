@@ -26,6 +26,7 @@ import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.order.OrderRepository;
 import es.marcha.backend.repository.user.AddressRepository;
+import es.marcha.backend.services.cart.CartService;
 import es.marcha.backend.services.mail.UserEmailNotificationService;
 import es.marcha.backend.services.user.UserService;
 import jakarta.transaction.Transactional;
@@ -53,6 +54,9 @@ public class OrderService {
 
     @Autowired
     private UserEmailNotificationService userEmailNotificationService;
+
+    @Autowired
+    private CartService cartService;
 
     // Methods
     /**
@@ -195,6 +199,9 @@ public class OrderService {
         finalOrder.setAddress(snapOrderAddress);
 
         userEmailNotificationService.sendOrderConfirmationEmail(user, savedOrder, items, snapOrderAddress);
+
+        // Limpiar el carrito del usuario una vez el pedido queda confirmado
+        cartService.clearCartByUserId(user.getId());
 
         return finalOrder;
     }
