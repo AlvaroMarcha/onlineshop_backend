@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +39,13 @@ public class ProductService {
 
     @Autowired
     private ProductReviewService prService;
+
+    /**
+     * Inyectado con @Lazy para evitar dependencia circular con ProductImageService
+     */
+    @Autowired
+    @Lazy
+    private ProductImageService imageService;
 
     public static final String PRODUCT_DELETED = "PRODUCT WAS DELETED";
 
@@ -216,6 +224,10 @@ public class ProductService {
     public String deleteProduct(long id) {
         Product product = prodRepository.findById(id)
                 .orElseThrow(() -> new ProductException(ProductException.FAILED_DELETE));
+
+        // Eliminar ficheros de imagen del disco antes del soft-delete
+        imageService.deleteAllFilesForProduct(id);
+
         product.setDeleted(true);
         product.setDeletedAt(LocalDateTime.now());
         prodRepository.save(product);

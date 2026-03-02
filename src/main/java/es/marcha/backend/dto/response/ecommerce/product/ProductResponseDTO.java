@@ -41,4 +41,6 @@ public class ProductResponseDTO {
     private List<ProductReviewResponseDTO> reviews;
     private List<ProductAttribResponseDTO> attribs;
     private List<ProductVariantResponseDTO> variants;
+    private String mainImageUrl;
+    private List<ProductImageResponseDTO> images;
 }

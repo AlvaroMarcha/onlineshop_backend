@@ -8,6 +8,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
@@ -255,6 +256,127 @@ public class MediaService {
             return ".jpg";
         }
         return originalName.substring(originalName.lastIndexOf("."));
+    }
+
+    // =========================================================================
+    // Imágenes de producto (galería)
+    // =========================================================================
+
+    /**
+     * Valida y persiste en disco una imagen de la galería de un producto.
+     *
+     * <p>
+     * El fichero se almacena en
+     * {@code {storagePath}/products/{productId}/gallery/{uuid}{ext}}.
+     * </p>
+     *
+     * @param file      fichero recibido en la petición multipart
+     * @param productId ID del producto propietario
+     * @return nombre del fichero generado (UUID + extensión), para guardarlo en BD
+     * @throws MediaException si el fichero está vacío, tiene tipo no permitido o
+     *                        no supera la validación de magic bytes
+     */
+    public String saveProductImage(MultipartFile file, long productId) {
+        if (file.isEmpty()) {
+            throw new MediaException();
+        }
+
+        String contentType = file.getContentType();
+        String normalizedType = contentType != null ? contentType.split(";")[0].trim().toLowerCase() : null;
+        if (normalizedType == null || !ALLOWED_MIME_TYPES.contains(normalizedType)) {
+            throw new MediaException(MediaException.INVALID_FILE_TYPE);
+        }
+
+        String extension = getExtension(file.getOriginalFilename());
+        if (!ALLOWED_EXTENSIONS.contains(extension.toLowerCase())) {
+            throw new MediaException(MediaException.INVALID_FILE_TYPE);
+        }
+
+        validateMagicBytes(file);
+
+        String fileName = UUID.randomUUID() + extension;
+        Path galleryDir = Path.of(storagePath)
+                .resolve("products")
+                .resolve(String.valueOf(productId))
+                .resolve("gallery");
+        Path target = galleryDir.resolve(fileName);
+
+        try {
+            if (Files.notExists(galleryDir)) {
+                Files.createDirectories(galleryDir);
+            }
+        } catch (IOException e) {
+            throw new MediaException(MediaException.STORAGE_ERROR, e);
+        }
+
+        try (InputStream inputStream = file.getInputStream()) {
+            Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (Exception e) {
+            throw new MediaException(MediaException.STORAGE_ERROR, e);
+        }
+
+        return fileName;
+    }
+
+    /**
+     * Construye la URL pública de una imagen de la galería de un producto.
+     *
+     * @param filename  nombre del fichero (UUID + extensión)
+     * @param productId ID del producto
+     * @return URL pública accesible desde el navegador
+     */
+    public String buildProductImageUrl(String filename, long productId) {
+        String base = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
+        String path = imagesPublicPath.startsWith("/") ? imagesPublicPath : "/" + imagesPublicPath;
+        if (path.endsWith("/"))
+            path = path.substring(0, path.length() - 1);
+        return base + path + "/products/" + productId + "/gallery/" + filename;
+    }
+
+    /**
+     * Elimina del disco una imagen concreta de la galería de un producto.
+     * Si el fichero no existe, la operación no lanza error.
+     *
+     * @param productId ID del producto
+     * @param filename  nombre del fichero a eliminar
+     */
+    public void deleteProductImageFile(long productId, String filename) {
+        Path target = Path.of(storagePath)
+                .resolve("products")
+                .resolve(String.valueOf(productId))
+                .resolve("gallery")
+                .resolve(filename);
+        try {
+            Files.deleteIfExists(target);
+        } catch (IOException e) {
+            // No lanzamos excepción: el fichero ya puede estar ausente
+        }
+    }
+
+    /**
+     * Elimina del disco todos los ficheros de la galería de un producto.
+     * Se usa al realizar la eliminación lógica del producto.
+     * Si la carpeta no existe, la operación no lanza error.
+     *
+     * @param productId ID del producto
+     */
+    public void deleteAllProductImageFiles(long productId) {
+        Path galleryDir = Path.of(storagePath)
+                .resolve("products")
+                .resolve(String.valueOf(productId))
+                .resolve("gallery");
+        if (!Files.exists(galleryDir)) {
+            return;
+        }
+        try (var stream = Files.list(galleryDir)) {
+            stream.forEach(p -> {
+                try {
+                    Files.deleteIfExists(p);
+                } catch (IOException ignored) {
+                }
+            });
+        } catch (IOException ignored) {
+        }
     }
 
 }

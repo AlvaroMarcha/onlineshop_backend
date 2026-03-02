@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,17 +19,23 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import es.marcha.backend.dto.request.ecommerce.ProductImageReorderItemDTO;
+import es.marcha.backend.dto.request.ecommerce.ProductImageUpdateRequestDTO;
 import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
 import es.marcha.backend.dto.request.ecommerce.ProductSearchFilter;
 import es.marcha.backend.dto.request.ecommerce.StockUpdateRequestDTO;
+import es.marcha.backend.dto.response.ecommerce.product.ProductImageResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
 import es.marcha.backend.mapper.ecommerce.ProductMapper;
 import es.marcha.backend.model.ecommerce.Subcategory;
 import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.model.ecommerce.product.ProductReview;
+import es.marcha.backend.services.ecommerce.ProductImageService;
 import es.marcha.backend.services.ecommerce.ProductReviewService;
 import es.marcha.backend.services.ecommerce.ProductService;
 import es.marcha.backend.services.ecommerce.SubcategoryService;
@@ -45,6 +52,9 @@ public class ProductController {
 
     @Autowired
     private SubcategoryService subcatService;
+
+    @Autowired
+    private ProductImageService imageService;
 
     /**
      * Busca productos con filtros opcionales y paginación.
@@ -177,6 +187,117 @@ public class ProductController {
             @RequestBody StockUpdateRequestDTO request) {
         String result = prodService.updateProductStock(id, request.getStock());
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    /**
+     * IMAGES (Galería de imágenes del producto)
+     */
+
+    /**
+     * Sube una o varias imágenes a la galería de un producto.
+     *
+     * <p>
+     * Máximo {@code 10} imágenes por producto. Formatos permitidos: JPEG y PNG.
+     * Tamaño máximo por fichero: 5 MB.
+     * </p>
+     *
+     * @param productId ID del producto
+     * @param files     ficheros de imagen (campo {@code files} en el form-data)
+     * @return lista de DTOs de las imágenes recién creadas
+     */
+    @PostMapping("/{productId}/images")
+    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<List<ProductImageResponseDTO>> uploadImages(
+            @PathVariable long productId,
+            @RequestParam("files") List<MultipartFile> files) {
+        List<ProductImageResponseDTO> result = imageService.uploadImages(productId, files);
+        return new ResponseEntity<>(result, HttpStatus.CREATED);
+    }
+
+    /**
+     * Devuelve todas las imágenes de la galería de un producto,
+     * ordenadas por {@code sortOrder} ascendente.
+     *
+     * @param productId ID del producto
+     * @return lista de DTOs de imagen
+     */
+    @GetMapping("/{productId}/images")
+    public ResponseEntity<List<ProductImageResponseDTO>> getImages(
+            @PathVariable long productId) {
+        List<ProductImageResponseDTO> images = imageService.getImagesForProduct(productId);
+        return new ResponseEntity<>(images, HttpStatus.OK);
+    }
+
+    /**
+     * Reordena las imágenes de la galería del producto.
+     *
+     * <p>
+     * Recibe una lista de pares {@code {id, sortOrder}} y aplica los nuevos
+     * valores a las imágenes correspondientes del producto.
+     * </p>
+     *
+     * <p>
+     * <strong>Nota:</strong> este endpoint debe declararse antes de
+     * {@code /{imageId}} para evitar ambigüedades de ruta en Spring MVC.
+     * </p>
+     *
+     * @param productId ID del producto
+     * @param items     lista de reordenación
+     * @return lista actualizada de imágenes ordenada por el nuevo {@code sortOrder}
+     */
+    @PutMapping("/{productId}/images/reorder")
+    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<List<ProductImageResponseDTO>> reorderImages(
+            @PathVariable long productId,
+            @RequestBody List<ProductImageReorderItemDTO> items) {
+        List<ProductImageResponseDTO> result = imageService.reorderImages(productId, items);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    /**
+     * Actualiza los metadatos de una imagen: {@code altText}, {@code sortOrder}
+     * y/o {@code isMain}.
+     *
+     * <p>
+     * Cuando {@code isMain = true} se envía, la imagen anterior principal
+     * pierde el flag automáticamente.
+     * </p>
+     *
+     * @param productId ID del producto
+     * @param imageId   ID de la imagen
+     * @param dto       campos a actualizar (todos opcionales)
+     * @return DTO actualizado de la imagen
+     */
+    @PutMapping("/{productId}/images/{imageId}")
+    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<ProductImageResponseDTO> updateImage(
+            @PathVariable long productId,
+            @PathVariable long imageId,
+            @RequestBody ProductImageUpdateRequestDTO dto) {
+        ProductImageResponseDTO result = imageService.updateImage(productId, imageId, dto);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    /**
+     * Elimina una imagen de la galería del producto.
+     *
+     * <p>
+     * Borra el fichero del disco y el registro de base de datos.
+     * Si la imagen era la principal, se promueve automáticamente la
+     * siguiente imagen (menor {@code sortOrder}) como nueva principal.
+     * </p>
+     *
+     * @param productId ID del producto
+     * @param imageId   ID de la imagen a eliminar
+     * @return 204 No Content
+     */
+    @DeleteMapping("/{productId}/images/{imageId}")
+    @PreAuthorize("hasAnyRole('STORE', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<Void> deleteImage(
+            @PathVariable long productId,
+            @PathVariable long imageId) {
+        imageService.deleteImage(productId, imageId);
+        return ResponseEntity.noContent().build();
     }
 
     /**
