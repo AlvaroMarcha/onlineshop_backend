@@ -49,7 +49,6 @@ import es.marcha.backend.repository.order.InvoiceRepository;
 import es.marcha.backend.repository.order.OrderAddrRepository;
 import es.marcha.backend.services.media.MediaService;
 import es.marcha.backend.services.order.OrderService;
-import jakarta.annotation.PostConstruct;
 import jakarta.transaction.Transactional;
 
 @Service
