@@ -159,7 +159,7 @@ public class UserEmailNotificationService {
             ctx.setVariable("orderDate", order.getCreatedAt().format(ORDER_DATE_FMT));
             ctx.setVariable("orderItems", itemsData);
             ctx.setVariable("orderTotal", String.format("%.2f €", order.getTotalAmount()));
-            ctx.setVariable("orderLink", frontendUrl + "/orders.html?id=" + order.getId());
+            ctx.setVariable("orderLink", frontendUrl + "/pages/orders.html");
             ctx.setVariable("shippingAddress", address);
 
             String html = templateEngine.process("emails/orders/order-confirmation", ctx);
@@ -249,7 +249,7 @@ public class UserEmailNotificationService {
             ctx.setVariable("statusMessage", banner[2]);
             ctx.setVariable("orderItems", itemsData);
             ctx.setVariable("orderTotal", String.format("%.2f €", order.getTotalAmount()));
-            ctx.setVariable("orderLink", frontendUrl + "/orders.html?id=" + order.getId());
+            ctx.setVariable("orderLink", frontendUrl + "/pages/orders.html");
             ctx.setVariable("supportLink", frontendUrl + "/contact");
 
             String html = templateEngine.process("emails/orders/order-status-update", ctx);
@@ -314,7 +314,7 @@ public class UserEmailNotificationService {
             ctx.setVariable("statusMessage", banner[2]);
             ctx.setVariable("orderItems", itemsData);
             ctx.setVariable("orderTotal", String.format("%.2f €", order.getTotalAmount()));
-            ctx.setVariable("orderLink", frontendUrl + "/orders.html?id=" + order.getId());
+            ctx.setVariable("orderLink", frontendUrl + "/pages/orders.html");
             ctx.setVariable("supportLink", frontendUrl + "/contact");
 
             String html = templateEngine.process("emails/orders/order-status-update", ctx);
