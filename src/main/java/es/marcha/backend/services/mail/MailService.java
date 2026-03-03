@@ -95,7 +95,7 @@ public class MailService {
      * @param htmlBody Cuerpo del mensaje en HTML (con {@code src="cid:logoImage"}).
      * @param logo     Recurso del archivo de logo a incrustar, o vacío.
      * @throws MessagingException si ocurre un error durante el envío por SMTP.
-     * @throws IOException 
+     * @throws IOException
      */
     public void sendHtmlEmailWithInline(String to, String subject, String htmlBody,
             Optional<FileSystemResource> logo) throws MessagingException, IOException {
@@ -127,5 +127,76 @@ public class MailService {
 
         Transport.send(message);
         log.info("HTML email with inline sent to {} with subject '{}'", to, subject);
+    }
+
+    /**
+     * Envía un correo HTML con logo incrustado inline (CID) y un adjunto PDF.
+     * <p>
+     * Estructura MIME:
+     * 
+     * <pre>
+     * multipart/mixed
+     *   └─ multipart/related   (HTML + logo CID)
+     *        ├─ text/html
+     *        └─ image/*  (inline, Content-ID: logoImage)
+     *   └─ application/pdf    (adjunto)
+     * </pre>
+     *
+     * @param to                 Dirección de correo del destinatario.
+     * @param subject            Asunto del mensaje.
+     * @param htmlBody           Cuerpo del mensaje en HTML.
+     * @param logo               Recurso del logo a incrustar, o vacío.
+     * @param attachmentPath     Ruta en disco del PDF a adjuntar.
+     * @param attachmentFileName Nombre del archivo que verá el destinatario.
+     * @throws MessagingException si ocurre un error SMTP.
+     * @throws IOException        si no se puede leer el logo o el PDF.
+     */
+    public void sendHtmlEmailWithInlineAndAttachment(String to, String subject, String htmlBody,
+            Optional<FileSystemResource> logo, String attachmentPath, String attachmentFileName)
+            throws MessagingException, IOException {
+        String accessToken = googleOAuthService.getAccessToken();
+        Session session = MailConfig.getSessionWithOAuth2(username, accessToken);
+
+        MimeMessage message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(username));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(to));
+        message.setSubject(subject);
+
+        // Contenedor raíz: mixed (contenido HTML + adjunto PDF)
+        MimeMultipart mixedMultipart = new MimeMultipart("mixed");
+
+        // Parte HTML (con logo inline si está disponible)
+        if (logo.isPresent()) {
+            MimeMultipart relatedMultipart = new MimeMultipart("related");
+
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setContent(htmlBody, "text/html; charset=UTF-8");
+            relatedMultipart.addBodyPart(htmlPart);
+
+            MimeBodyPart imagePart = new MimeBodyPart();
+            imagePart.attachFile(logo.get().getFile());
+            imagePart.setContentID("<logoImage>");
+            imagePart.setDisposition(Part.INLINE);
+            relatedMultipart.addBodyPart(imagePart);
+
+            MimeBodyPart relatedWrapper = new MimeBodyPart();
+            relatedWrapper.setContent(relatedMultipart);
+            mixedMultipart.addBodyPart(relatedWrapper);
+        } else {
+            MimeBodyPart htmlPart = new MimeBodyPart();
+            htmlPart.setContent(htmlBody, "text/html; charset=UTF-8");
+            mixedMultipart.addBodyPart(htmlPart);
+        }
+
+        // Adjunto PDF
+        MimeBodyPart pdfPart = new MimeBodyPart();
+        pdfPart.attachFile(attachmentPath);
+        pdfPart.setFileName(attachmentFileName);
+        pdfPart.setDisposition(Part.ATTACHMENT);
+        mixedMultipart.addBodyPart(pdfPart);
+
+        message.setContent(mixedMultipart);
+        Transport.send(message);
+        log.info("HTML email with inline and PDF attachment sent to {} with subject '{}'", to, subject);
     }
 }

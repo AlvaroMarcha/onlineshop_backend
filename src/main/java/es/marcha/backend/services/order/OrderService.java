@@ -20,6 +20,7 @@ import es.marcha.backend.exception.AddressException;
 import es.marcha.backend.exception.InvoiceException;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.model.order.Invoice;
 import es.marcha.backend.services.invoice.InvoiceService;
 import es.marcha.backend.mapper.order.OrderAddrMapper;
 import es.marcha.backend.mapper.order.OrderMapper;
@@ -319,21 +320,31 @@ public class OrderService {
         order.setStatus(currentStatus);
         saveOrder(order);
 
-        // Si el pedido acaba de pasar a PAID, generar la factura PDF automáticamente
-        // y persistirla en disco en la ruta del cliente
-        if (currentStatus == OrderStatus.PAID) {
-            try {
-                invoiceService.generateInvoice(orderId);
-                log.info("[OrderService] Factura generada automáticamente para el pedido {} al pasar a PAID.", orderId);
-            } catch (InvoiceException e) {
-                log.error("[OrderService] Error al generar la factura para el pedido {}: {}", orderId, e.getMessage(),
-                        e);
-            }
-        }
-
         // Cargar los items dentro de la transacción para evitar
         // LazyInitializationException en el hilo async
         List<OrderItems> loadedItems = oItemsService.getItemsByOrderId(orderId);
+
+        // Si el pedido acaba de pasar a PAID, generar la factura PDF automáticamente
+        // y enviar el email con la factura adjunta
+        if (currentStatus == OrderStatus.PAID) {
+            try {
+                Invoice invoice = invoiceService.generateInvoice(orderId);
+                log.info("[OrderService] Factura {} generada automáticamente para el pedido {} al pasar a PAID.",
+                        invoice.getInvoiceNumber(), orderId);
+                // Enviar email de pago confirmado con la factura como adjunto
+                userEmailNotificationService.sendOrderStatusUpdateEmailWithInvoice(
+                        order.getUser(), order, loadedItems,
+                        invoice.getPdfPath(),
+                        invoice.getInvoiceNumber() + ".pdf");
+                return order.getStatus();
+            } catch (InvoiceException e) {
+                log.error(
+                        "[OrderService] Error al generar la factura para el pedido {} — se enviará el email sin adjunto: {}",
+                        orderId, e.getMessage(), e);
+                // Fallback: enviar email normal sin adjunto si la factura falla
+            }
+        }
+
         userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, loadedItems);
         return order.getStatus();
     }
