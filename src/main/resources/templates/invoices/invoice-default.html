@@ -211,11 +211,12 @@
         </tr>
     </tbody>
     <tfoot>
+        <!-- Subtotales brutos de las líneas (sin descuento) -->
         <tr>
-            <td colspan="3" style="text-align:right;">Subtotales</td>
-            <td class="r" th:text="${#numbers.formatDecimal(invoice.totalBase,   1, 'POINT', 2, 'COMMA')}">0,00</td>
+            <td colspan="3" style="text-align:right;">Subtotales (antes de descuento)</td>
+            <td class="r" th:text="${#numbers.formatDecimal(invoice.totalBase, 1, 'POINT', 2, 'COMMA')}">0,00</td>
             <td></td>
-            <td class="r" th:text="${#numbers.formatDecimal(invoice.totalTax,    1, 'POINT', 2, 'COMMA')}">0,00</td>
+            <td class="r" th:text="${#numbers.formatDecimal(invoice.totalTax,  1, 'POINT', 2, 'COMMA')}">0,00</td>
             <td class="r" th:text="${#numbers.formatDecimal(invoice.totalAmount, 1, 'POINT', 2, 'COMMA')}">0,00</td>
         </tr>
     </tfoot>
@@ -225,13 +226,13 @@
 <!-- ═══ DESGLOSE IVA + TOTALES ══════════════════════════════════ -->
 <table class="w100" style="margin-bottom:14px;">
     <tr>
-        <!-- Desglose IVA -->
+        <!-- Desglose IVA (calculado sobre base CON descuento) -->
         <td style="vertical-align:top; width:50%;">
             <table class="tt">
                 <thead>
                     <tr th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + ';'">
                         <th style="width:33%;">Tipo IVA</th>
-                        <th style="width:33%;">Base imponible (&#8364;)</th>
+                        <th style="width:33%;">Base con descuento (&#8364;)</th>
                         <th style="width:34%;">Cuota IVA (&#8364;)</th>
                     </tr>
                 </thead>
@@ -245,17 +246,49 @@
             </table>
         </td>
         <td style="width:4%;"></td>
-        <!-- Totales -->
+        <!-- Totales con desglose completo del cupón -->
         <td style="vertical-align:top; width:46%;">
             <table class="tot">
+                <!-- Fila 1: base imponible bruta -->
                 <tr>
-                    <td class="lbl">Base imponible</td>
+                    <td class="lbl">Base imponible bruta</td>
                     <td class="amt" th:text="${#numbers.formatDecimal(invoice.totalBase, 1, 'POINT', 2, 'COMMA')} + ' &#8364;'">0,00 &#8364;</td>
                 </tr>
+
+                <!-- Filas de descuento: solo si hay cupón aplicado -->
+                <tr th:if="${invoice.discountAmount != null and invoice.discountAmount.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                    <!-- Etiqueta dinámica según tipo de descuento -->
+                    <td class="lbl" style="color:#e53e3e;">
+                        <span th:if="${invoice.discountType != null and invoice.discountType.name() == 'PERCENTAGE'}">
+                            Cup&#243;n <strong th:text="${invoice.couponCode}">CODE</strong>
+                            (<span th:text="${#numbers.formatDecimal(invoice.discountValue, 1, 'POINT', 2, 'COMMA')}">0</span>% descuento)
+                        </span>
+                        <span th:if="${invoice.discountType != null and invoice.discountType.name() == 'FIXED'}">
+                            Cup&#243;n <strong th:text="${invoice.couponCode}">CODE</strong>
+                            (descuento fijo)
+                        </span>
+                        <span th:if="${invoice.discountType == null}">
+                            Descuento cup&#243;n <strong th:text="${invoice.couponCode}">CODE</strong>
+                        </span>
+                    </td>
+                    <td class="amt" style="color:#e53e3e;">
+                        - <span th:text="${#numbers.formatDecimal(invoice.discountAmount, 1, 'POINT', 2, 'COMMA')}">0,00</span> &#8364;
+                    </td>
+                </tr>
+
+                <!-- Fila: base imponible con descuento (solo si hay cupón) -->
+                <tr th:if="${invoice.discountAmount != null and invoice.discountAmount.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                    <td class="lbl">Base imponible con descuento</td>
+                    <td class="amt" th:text="${#numbers.formatDecimal(invoice.discountedBase, 1, 'POINT', 2, 'COMMA')} + ' &#8364;'">0,00 &#8364;</td>
+                </tr>
+
+                <!-- IVA (siempre) -->
                 <tr>
                     <td class="lbl">Total IVA</td>
                     <td class="amt" th:text="${#numbers.formatDecimal(invoice.totalTax, 1, 'POINT', 2, 'COMMA')} + ' &#8364;'">0,00 &#8364;</td>
                 </tr>
+
+                <!-- TOTAL A PAGAR -->
                 <tr th:style="'background-color:' + (${company.primaryColor} ?: '#1e3a5f') + '; color:#ffffff;'">
                     <td class="lbl" style="font-size:10pt; font-weight:bold; color:#ffffff;">TOTAL A PAGAR</td>
                     <td class="amt"

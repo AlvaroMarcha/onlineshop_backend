@@ -47,7 +47,6 @@ public class Order {
             "isVerified", "isBanned", "isDeleted", "profileImageUrl", "lastLogin", "createdAt",
             "updatedAt", "deletedAt" })
     private User user;
-
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -55,6 +54,10 @@ public class Order {
     private double totalAmount;
     @Column(name = "payment_method")
     private String paymentMethod;
+    @Column(name = "coupon_id")
+    private Long couponId;
+    @Column(name = "discount_amount", nullable = false)
+    private double discountAmount;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     @Column(name = "updated_at")
