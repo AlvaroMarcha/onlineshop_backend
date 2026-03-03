@@ -193,7 +193,20 @@ public class SecurityConfig {
                                                 .requestMatchers("/invoices/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN", "CUSTOMERS_INVOICES", "USER")
 
-                                                // === Gestión de usuarios ===
+                                                // === Gestión de usuarios: reglas específicas (antes de la general) ===
+                                                // DELETE /users/{id} — eliminación física: solo SUPER_ADMIN
+                                                .requestMatchers(HttpMethod.DELETE, "/users/*").hasRole("SUPER_ADMIN")
+                                                // PUT /users/{id}/role y PUT /users/{id}/role/{roleId} — solo
+                                                // SUPER_ADMIN
+                                                .requestMatchers(HttpMethod.PUT, "/users/*/role").hasRole("SUPER_ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/users/*/role/*")
+                                                .hasRole("SUPER_ADMIN")
+                                                // DELETE /users/{id}/role — revocar rol: solo SUPER_ADMIN
+                                                .requestMatchers(HttpMethod.DELETE, "/users/*/role")
+                                                .hasRole("SUPER_ADMIN")
+                                                // DELETE /users/me — autoelimación: cualquier usuario autenticado
+                                                .requestMatchers(HttpMethod.DELETE, "/users/me").authenticated()
+                                                // Resto de operaciones /users/** — ADMIN y superiores
                                                 .requestMatchers("/users/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN", "CUSTOMERS_INVOICES", "SUPPORT")
 

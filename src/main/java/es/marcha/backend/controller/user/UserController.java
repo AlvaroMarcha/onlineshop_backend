@@ -1,8 +1,9 @@
 package es.marcha.backend.controller.user;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,12 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
+import es.marcha.backend.dto.request.user.ChangeRoleRequestDTO;
+import es.marcha.backend.dto.response.user.AdminUserResponseDTO;
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.user.DataExportResponseDTO;
 import es.marcha.backend.dto.response.user.TermsResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
-import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.services.media.MediaService;
 import es.marcha.backend.services.security.RateLimitService;
@@ -53,14 +56,22 @@ public class UserController {
     private RateLimitService rateLimitService;
 
     /**
-     * Obtiene todos los usuarios de la base de datos.
+     * Obtiene todos los usuarios de la base de datos con paginación (panel admin).
+     * Incluye usuarios baneados y eliminados. Solo accesible para ADMIN /
+     * SUPER_ADMIN.
      *
-     * @return {@link ResponseEntity} con la lista de {@link User} y código HTTP 200
-     *         OK.
+     * @param page número de página (0-based, por defecto 0).
+     * @param size tamaño de la página (por defecto 20).
+     * @return {@link ResponseEntity} con {@link Page} de
+     *         {@link AdminUserResponseDTO}
+     *         y código HTTP 200 OK.
      */
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
-        List<UserResponseDTO> users = uService.getAllUsers();
+    public ResponseEntity<Page<AdminUserResponseDTO>> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<AdminUserResponseDTO> users = uService.getAllUsersForAdmin(
+                PageRequest.of(page, size, Sort.by("createdAt").descending()));
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
@@ -128,16 +139,16 @@ public class UserController {
     }
 
     /**
-     * Obtiene un usuario por su ID.
+     * Obtiene el perfil completo de un usuario por su ID (panel admin).
+     * No filtra usuarios baneados ni eliminados.
      *
      * @param id El ID del usuario que se desea obtener.
-     * @return {@link ResponseEntity} con el {@link User} correspondiente y código
-     *         HTTP 200 OK. Si
-     *         no existe, devuelve {@code null} en el cuerpo.
+     * @return {@link ResponseEntity} con {@link AdminUserResponseDTO} y código
+     *         HTTP 200 OK.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable long id) {
-        UserResponseDTO user = uService.getUserById(id);
+    public ResponseEntity<AdminUserResponseDTO> getUserById(@PathVariable long id) {
+        AdminUserResponseDTO user = uService.getUserByIdForAdmin(id);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
@@ -172,31 +183,107 @@ public class UserController {
     }
 
     /**
-     * Marca un usuario como eliminado (soft delete) en la base de datos.
+     * Elimina físicamente un usuario de la base de datos (hard delete).
+     * Solo accesible para SUPER_ADMIN. Invalida el JWT del usuario antes de
+     * eliminarlo.
      *
      * @param id El ID del usuario a eliminar.
-     * @return {@link ResponseEntity} con un mensaje de éxito o error y código HTTP
+     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP
      *         200 OK.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteUser(@PathVariable long id) {
-        String msg = uService.deleteUser(id);
+        String msg = uService.hardDeleteUser(id);
         return new ResponseEntity<>(msg, HttpStatus.OK);
     }
 
     /**
      * Banea a un usuario por su ID, desactivando su cuenta e impidiendo futuros
-     * accesos.
+     * accesos. Invalida el JWT del usuario de forma inmediata.
      *
      * @param id El ID del usuario a banear.
      * @return {@link ResponseEntity} con el {@link BannedUserResponseDTO} que
-     *         refleja
-     *         el nuevo estado del usuario, con código HTTP 200 OK.
+     *         refleja el nuevo estado del usuario, con código HTTP 200 OK.
      */
-    @PostMapping("/ban/{id}")
+    @PutMapping("/{id}/ban")
     public ResponseEntity<BannedUserResponseDTO> banUser(@PathVariable long id) {
         BannedUserResponseDTO bannedUser = uService.banUserById(id);
         return new ResponseEntity<>(bannedUser, HttpStatus.OK);
+    }
+
+    /**
+     * Desbanea a un usuario por su ID, restaurando su acceso al sistema.
+     *
+     * @param id El ID del usuario a desbanear.
+     * @return {@link ResponseEntity} con el {@link BannedUserResponseDTO} que
+     *         refleja el nuevo estado del usuario, con código HTTP 200 OK.
+     */
+    @PutMapping("/{id}/unban")
+    public ResponseEntity<BannedUserResponseDTO> unbanUser(@PathVariable long id) {
+        BannedUserResponseDTO result = uService.unbanUser(id);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    /**
+     * Cambia el rol de un usuario e invalida su JWT de forma inmediata.
+     * Solo accesible para SUPER_ADMIN.
+     *
+     * @param id  El ID del usuario cuyo rol se desea cambiar.
+     * @param dto cuerpo de la petición con el nombre del nuevo rol.
+     * @return {@link ResponseEntity} con {@link AdminUserResponseDTO} actualizado
+     *         y código HTTP 200 OK.
+     */
+    @PutMapping("/{id}/role")
+    public ResponseEntity<AdminUserResponseDTO> changeUserRole(
+            @PathVariable long id,
+            @Valid @RequestBody ChangeRoleRequestDTO dto) {
+        AdminUserResponseDTO updated = uService.changeUserRole(id, dto.getRoleName());
+        return new ResponseEntity<>(updated, HttpStatus.OK);
+    }
+
+    /**
+     * Obtiene el rol actual del usuario indicado.
+     *
+     * @param id El ID del usuario.
+     * @return {@link ResponseEntity} con la entidad
+     *         {@link es.marcha.backend.model.user.Role}
+     *         y código HTTP 200 OK.
+     */
+    @GetMapping("/{id}/role")
+    public ResponseEntity<?> getUserRole(@PathVariable long id) {
+        return new ResponseEntity<>(uService.getUserRole(id), HttpStatus.OK);
+    }
+
+    /**
+     * Asigna un rol a un usuario por el ID del rol. Invalida el JWT del usuario
+     * de forma inmediata. Solo accesible para SUPER_ADMIN.
+     *
+     * @param id     El ID del usuario.
+     * @param roleId El ID del nuevo rol.
+     * @return {@link ResponseEntity} con {@link AdminUserResponseDTO} actualizado
+     *         y código HTTP 200 OK.
+     */
+    @PutMapping("/{id}/role/{roleId}")
+    public ResponseEntity<AdminUserResponseDTO> assignRoleById(
+            @PathVariable long id,
+            @PathVariable long roleId) {
+        AdminUserResponseDTO updated = uService.assignRoleById(id, roleId);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
+    }
+
+    /**
+     * Revoca el rol actual del usuario y le asigna {@code ROLE_USER} por defecto.
+     * Invalida el JWT del usuario de forma inmediata. Solo accesible para
+     * SUPER_ADMIN.
+     *
+     * @param id El ID del usuario.
+     * @return {@link ResponseEntity} con {@link AdminUserResponseDTO} actualizado
+     *         y código HTTP 200 OK.
+     */
+    @DeleteMapping("/{id}/role")
+    public ResponseEntity<AdminUserResponseDTO> revokeUserRole(@PathVariable long id) {
+        AdminUserResponseDTO updated = uService.revokeUserRole(id);
+        return new ResponseEntity<>(updated, HttpStatus.OK);
     }
 
     /**

@@ -39,6 +39,8 @@ public class AuthService {
     private RefreshTokenService refreshTokenService;
     @Autowired
     private UserEmailNotificationService emailService;
+    @Autowired
+    private TokenInvalidationService tokenInvalidationService;
 
     @Value("${app.terms.current-version}")
     private String currentTermsVersion;
@@ -68,6 +70,10 @@ public class AuthService {
         if (!passwordEncoder.matches(credentials.getPassword(), user.getPassword())) {
             throw new UserException(UserException.FAILED_LOGIN);
         }
+
+        // Al hacer login se elimina la posible invalidación previa (p. ej. por cambio
+        // de rol)
+        tokenInvalidationService.clearInvalidation(user.getUsername());
 
         User savedUser = uService.saveUserForHandler(user);
         UserResponseDTO savedUserDTO = uService.mapUserToDTO(savedUser);

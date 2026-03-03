@@ -13,10 +13,16 @@ import java.util.List;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import es.marcha.backend.services.security.TokenInvalidationService;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private TokenInvalidationService tokenInvalidationService;
 
     /**
      * Intercepta cada petición HTTP y valida el token JWT presente en la cabecera
@@ -55,6 +61,13 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 String username = JwtUtil.validateToken(token);
                 String roleName = JwtUtil.getRoleFromToken(token);
+
+                // Rechazar el token si el usuario tiene un JWT invalidado (p. ej. por cambio de
+                // rol)
+                if (tokenInvalidationService.isInvalidated(username)) {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "TOKEN_INVALIDATED_ROLE_CHANGED");
+                    return;
+                }
 
                 List<SimpleGrantedAuthority> authorities = (roleName != null && !roleName.isBlank())
                         ? List.of(new SimpleGrantedAuthority(roleName))
