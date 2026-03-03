@@ -267,6 +267,73 @@ public class UserEmailNotificationService {
         }
     }
 
+    /**
+     * Envía el email de actualización de estado de pedido cuando este pasa a PAID,
+     * adjuntando la factura PDF generada automáticamente.
+     * Si el envío falla, el error se registra pero no interrumpe el flujo.
+     *
+     * @param user            el usuario propietario del pedido
+     * @param order           la orden con el estado PAID ya persistido
+     * @param items           los ítems snapshot de la orden
+     * @param invoicePdfPath  ruta en disco del PDF de la factura
+     * @param invoiceFileName nombre del archivo que verá el destinatario (p. ej.
+     *                        INV-2026-000001.pdf)
+     */
+    @Async("emailTaskExecutor")
+    public void sendOrderStatusUpdateEmailWithInvoice(User user, Order order, List<OrderItems> items,
+            String invoicePdfPath, String invoiceFileName) {
+        try {
+            Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
+            OrderStatus status = order.getStatus();
+
+            // Construir datos de los artículos del pedido
+            List<Map<String, Object>> itemsData = items.stream().map(item -> {
+                BigDecimal effectivePrice = (item.getDiscountPrice() != null
+                        && item.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0)
+                                ? item.getDiscountPrice()
+                                : item.getPrice();
+                Map<String, Object> row = new HashMap<>();
+                row.put("name", item.getName());
+                row.put("quantity", item.getQuantity());
+                row.put("price", String.format("%.2f €", effectivePrice));
+                return row;
+            }).collect(Collectors.toList());
+
+            // Construir pasos del tracker y datos del banner
+            List<Map<String, Object>> steps = buildOrderSteps(status);
+            String[] banner = buildBannerData(status);
+
+            Context ctx = new Context();
+            ctx.setVariable("hasLogo", logo.isPresent());
+            ctx.setVariable("userName", user.getName() + " " + user.getSurname());
+            ctx.setVariable("orderId", order.getId());
+            ctx.setVariable("orderDate", order.getCreatedAt().format(ORDER_DATE_FMT));
+            ctx.setVariable("steps", steps);
+            ctx.setVariable("bannerClass", banner[0]);
+            ctx.setVariable("statusTitle", banner[1]);
+            ctx.setVariable("statusMessage", banner[2]);
+            ctx.setVariable("orderItems", itemsData);
+            ctx.setVariable("orderTotal", String.format("%.2f €", order.getTotalAmount()));
+            ctx.setVariable("orderLink", frontendUrl + "/orders/" + order.getId());
+            ctx.setVariable("supportLink", frontendUrl + "/contact");
+
+            String html = templateEngine.process("emails/orders/order-status-update", ctx);
+            mailService.sendHtmlEmailWithInlineAndAttachment(
+                    user.getEmail(),
+                    "Pago confirmado – Factura de tu pedido #" + order.getId(),
+                    html,
+                    logo,
+                    invoicePdfPath,
+                    invoiceFileName);
+
+            log.info("Email de pago confirmado con factura enviado a {} para el pedido #{}",
+                    user.getEmail(), order.getId());
+        } catch (IOException | MessagingException e) {
+            log.error("Error enviando email con factura del pedido #{}: {}",
+                    order.getId(), e.getMessage());
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Helpers privados
     // -----------------------------------------------------------------------
