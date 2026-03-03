@@ -1,12 +1,16 @@
 package es.marcha.backend.services.user;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.exception.RolePermissionsException;
+import es.marcha.backend.model.enums.RoleName;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.repository.user.RoleRepository;
 import jakarta.transaction.Transactional;
@@ -18,6 +22,14 @@ public class RoleService {
     private RoleRepository rRepository;
 
     private final static String ROLE_DELETED = "ROLE_wAS_DELETED";
+
+    /**
+     * Nombres de los roles del sistema que nunca pueden eliminarse.
+     * Se derivan del enum {@link RoleName} para mantenerlos sincronizados.
+     */
+    private static final Set<String> SYSTEM_ROLES = Arrays.stream(RoleName.values())
+            .map(Enum::name)
+            .collect(Collectors.toUnmodifiableSet());
 
     // Methods
     /**
@@ -94,18 +106,19 @@ public class RoleService {
     }
 
     /**
-     * Elimina un rol por su ID. No permite eliminar el rol {@code ADMIN}.
+     * Elimina un rol por su ID.
+     * No está permitido eliminar ninguno de los roles del sistema
+     * ({@link RoleName}): ROLE_USER, ROLE_ADMIN, ROLE_SUPER_ADMIN, etc.
      *
      * @param id El ID del rol a eliminar.
      * @return Mensaje de confirmación de la eliminación.
-     * @throws RolePermissionsException si el rol no existe o es el rol ADMIN.
+     * @throws RolePermissionsException si el rol no existe o es un rol del sistema.
      */
     public String deleteRole(long id) {
         Role existRole = getRoleById(id);
-        boolean isAdmin = existRole.getName().equals("ADMIN");
-        if (isAdmin)
-            throw new RolePermissionsException();
-
+        if (SYSTEM_ROLES.contains(existRole.getName())) {
+            throw new RolePermissionsException(RolePermissionsException.SYSTEM_ROLE);
+        }
         rRepository.delete(existRole);
         return ROLE_DELETED;
     }

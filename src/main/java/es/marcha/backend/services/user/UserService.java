@@ -6,17 +6,22 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.response.user.AdminUserResponseDTO;
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.user.TermsResponseDTO;
 import es.marcha.backend.dto.response.user.UserResponseDTO;
 import es.marcha.backend.exception.UserException;
 import es.marcha.backend.mapper.user.UserMapper;
+import es.marcha.backend.model.enums.RoleName;
 import es.marcha.backend.model.user.Role;
 import es.marcha.backend.model.user.User;
 import es.marcha.backend.repository.user.UserRepository;
 import es.marcha.backend.services.media.MediaService;
+import es.marcha.backend.services.security.TokenInvalidationService;
 import es.marcha.backend.utils.Validations;
 import jakarta.transaction.Transactional;
 
@@ -29,6 +34,8 @@ public class UserService {
     private RoleService rService;
     @Autowired
     private MediaService mService;
+    @Autowired
+    private TokenInvalidationService tokenInvalidationService;
 
     public static final String USER_DELETED = "USER WAS DELETED";
 
@@ -298,7 +305,155 @@ public class UserService {
                 .isActive(user.isActive())
                 .build();
         uRepository.save(user);
+        // Invalidar el JWT del usuario baneado de forma inmediata
+        tokenInvalidationService.invalidate(user.getUsername());
         return bannedUser;
+    }
+
+    // ─── Métodos de administración ────────────────────────────────────────────
+
+    /**
+     * Lista todos los usuarios del sistema con paginación para el panel de
+     * administración. A diferencia de {@link #getAllUsers()}, no filtra usuarios
+     * baneados ni eliminados.
+     *
+     * @param pageable parámetros de paginación y ordenación
+     * @return {@link Page} de {@link AdminUserResponseDTO} con todos los usuarios
+     */
+    @Transactional
+    public Page<AdminUserResponseDTO> getAllUsersForAdmin(Pageable pageable) {
+        return uRepository.findAll(pageable).map(UserMapper::toAdminUserDTO);
+    }
+
+    /**
+     * Obtiene el perfil completo de cualquier usuario por su ID para el panel de
+     * administración, incluyendo usuarios baneados o eliminados.
+     *
+     * @param id El ID del usuario a buscar.
+     * @return {@link AdminUserResponseDTO} con todos los datos del usuario.
+     * @throws UserException si el usuario no existe.
+     */
+    @Transactional
+    public AdminUserResponseDTO getUserByIdForAdmin(long id) {
+        return uRepository.findById(id)
+                .map(UserMapper::toAdminUserDTO)
+                .orElseThrow(() -> new UserException());
+    }
+
+    /**
+     * Desbanea a un usuario, restableciendo su acceso al sistema.
+     *
+     * @param id El ID del usuario a desbanear.
+     * @return {@link BannedUserResponseDTO} con el nuevo estado del usuario.
+     * @throws UserException si el usuario no existe.
+     */
+    @Transactional
+    public BannedUserResponseDTO unbanUser(long id) {
+        User user = uRepository.findById(id).orElseThrow(() -> new UserException());
+        user.setBanned(false);
+        user.setActive(true);
+        user.setUpdatedAt(LocalDateTime.now());
+        uRepository.save(user);
+        return BannedUserResponseDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .isBanned(user.isBanned())
+                .isActive(user.isActive())
+                .build();
+    }
+
+    /**
+     * Cambia el rol de un usuario e invalida su JWT de forma inmediata.
+     * El usuario afectado recibirá un 401 en su próxima petición y deberá
+     * volver a autenticarse para obtener un token con el nuevo rol.
+     *
+     * @param id       El ID del usuario cuyo rol se va a cambiar.
+     * @param roleName El nombre del nuevo rol (p. ej. {@code ROLE_ADMIN}).
+     * @return {@link AdminUserResponseDTO} con el nuevo estado del usuario.
+     * @throws UserException si el usuario no existe.
+     */
+    @Transactional
+    public AdminUserResponseDTO changeUserRole(long id, String roleName) {
+        User user = uRepository.findById(id).orElseThrow(() -> new UserException());
+        Role newRole = rService.getRoleByName(roleName);
+        user.setRole(newRole);
+        user.setUpdatedAt(LocalDateTime.now());
+        User saved = uRepository.save(user);
+        // Invalidar JWT actual para que el cambio de rol tenga efecto inmediato
+        tokenInvalidationService.invalidate(user.getUsername());
+        return UserMapper.toAdminUserDTO(saved);
+    }
+
+    /**
+     * Obtiene el rol actual de un usuario.
+     *
+     * @param id El ID del usuario.
+     * @return La entidad {@link Role} asignada actualmente al usuario.
+     * @throws UserException si el usuario no existe.
+     */
+    @Transactional
+    public Role getUserRole(long id) {
+        return uRepository.findById(id)
+                .map(User::getRole)
+                .orElseThrow(() -> new UserException());
+    }
+
+    /**
+     * Asigna un nuevo rol a un usuario por el ID del rol e invalida su JWT.
+     *
+     * @param userId El ID del usuario.
+     * @param roleId El ID del nuevo rol.
+     * @return {@link AdminUserResponseDTO} con el estado actualizado del usuario.
+     * @throws UserException            si el usuario no existe.
+     * @throws RolePermissionsException si el rol no existe.
+     */
+    @Transactional
+    public AdminUserResponseDTO assignRoleById(long userId, long roleId) {
+        User user = uRepository.findById(userId).orElseThrow(() -> new UserException());
+        Role newRole = rService.getRoleById(roleId);
+        user.setRole(newRole);
+        user.setUpdatedAt(LocalDateTime.now());
+        User saved = uRepository.save(user);
+        tokenInvalidationService.invalidate(saved.getUsername());
+        return UserMapper.toAdminUserDTO(saved);
+    }
+
+    /**
+     * Revoca el rol actual de un usuario y le asigna el rol por defecto
+     * ({@code ROLE_USER}). Invalida el JWT del usuario de forma inmediata.
+     *
+     * @param userId El ID del usuario.
+     * @return {@link AdminUserResponseDTO} con el estado actualizado del usuario.
+     * @throws UserException si el usuario no existe.
+     */
+    @Transactional
+    public AdminUserResponseDTO revokeUserRole(long userId) {
+        User user = uRepository.findById(userId).orElseThrow(() -> new UserException());
+        Role defaultRole = rService.getRoleByName(RoleName.ROLE_USER.name());
+        user.setRole(defaultRole);
+        user.setUpdatedAt(LocalDateTime.now());
+        User saved = uRepository.save(user);
+        tokenInvalidationService.invalidate(saved.getUsername());
+        return UserMapper.toAdminUserDTO(saved);
+    }
+
+    /**
+     * Elimina físicamente un usuario de la base de datos (solo SUPER_ADMIN).
+     * Opera como hard delete: el registro desaparece de la BD.
+     * Para eliminaciones con cumplimiento RGPD usar
+     * {@code UserDeletionService.anonymizeAndDelete}.
+     *
+     * @param id El ID del usuario a eliminar.
+     * @return Mensaje de confirmación.
+     * @throws UserException si el usuario no existe.
+     */
+    @Transactional
+    public String hardDeleteUser(long id) {
+        User user = uRepository.findById(id).orElseThrow(() -> new UserException());
+        // Invalidar JWT antes de borrar para evitar peticiones en tránsito
+        tokenInvalidationService.invalidate(user.getUsername());
+        uRepository.delete(user);
+        return USER_DELETED;
     }
 
 }
