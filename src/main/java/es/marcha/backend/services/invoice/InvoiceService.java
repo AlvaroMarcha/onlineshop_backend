@@ -118,7 +118,7 @@ public class InvoiceService {
                         OrderAddresses addr = orderAddrRepository.findByOrderId(orderId)
                                 .orElseThrow(() -> new InvoiceException(InvoiceException.ADDRESS_NOT_FOUND));
                         String newPath = regeneratePdfFile(existing.getInvoiceNumber(), order, addr,
-                                existing.getUser().getId());
+                                existing.getUser().getId(), existing.getId());
                         existing.setPdfPath(newPath);
                         return invoiceRepository.save(existing);
                     }
@@ -179,15 +179,16 @@ public class InvoiceService {
     // Private helpers
     // =========================================================================
 
-    private String regeneratePdfFile(String invoiceNumber, Order order, OrderAddresses addr, long userId) {
+    private String regeneratePdfFile(String invoiceNumber, Order order, OrderAddresses addr, long userId,
+            long invoiceId) {
         CompanyDTO companyDTO = buildCompanyDTO();
-        InvoiceDataDTO invoiceDTO = buildInvoiceDataDTO(order, addr, invoiceNumber);
+        InvoiceDataDTO invoiceDTO = buildInvoiceDataDTO(order, addr, invoiceNumber, invoiceId);
         Context ctx = new Context();
         ctx.setVariable("company", companyDTO);
         ctx.setVariable("invoice", invoiceDTO);
         String html = templateEngine.process(TEMPLATE_NAME, ctx);
         byte[] pdfBytes = renderPdf(html);
-        return savePdf(pdfBytes, userId, invoiceNumber);
+        return savePdf(pdfBytes, userId, invoiceNumber, invoiceId);
     }
 
     private Invoice createInvoice(long orderId) {
@@ -199,9 +200,25 @@ public class InvoiceService {
 
         String invoiceNumber = buildInvoiceNumber();
 
-        // --- Build Thymeleaf context ---
+        // --- Persistir la entidad primero para obtener el ID de BD ---
+        // El PDF se genera después, usando el ID como parte del nombre del archivo
+        Invoice invoice = Invoice.builder()
+                .order(order)
+                .user(user)
+                .invoiceNumber(invoiceNumber)
+                .pdfPath(null)
+                .status(InvoiceStatus.GENERATED)
+                .issueDate(LocalDate.now())
+                .totalAmount(BigDecimal.valueOf(order.getTotalAmount())
+                        .setScale(SCALE, RoundingMode.HALF_UP))
+                .createdAt(LocalDateTime.now())
+                .build();
+        invoice = invoiceRepository.save(invoice);
+        long invoiceId = invoice.getId();
+
+        // --- Build Thymeleaf context (incluye el ID interno de BD) ---
         CompanyDTO companyDTO = buildCompanyDTO();
-        InvoiceDataDTO invoiceDTO = buildInvoiceDataDTO(order, orderAddr, invoiceNumber);
+        InvoiceDataDTO invoiceDTO = buildInvoiceDataDTO(order, orderAddr, invoiceNumber, invoiceId);
 
         Context ctx = new Context();
         ctx.setVariable("company", companyDTO);
@@ -213,23 +230,13 @@ public class InvoiceService {
         // --- Convert to PDF ---
         byte[] pdfBytes = renderPdf(html);
 
-        // --- Persist file ---
-        String pdfPath = savePdf(pdfBytes, user.getId(), invoiceNumber);
+        // --- Guardar PDF con el ID de BD en el nombre del archivo ---
+        String pdfPath = savePdf(pdfBytes, user.getId(), invoiceNumber, invoiceId);
 
-        // --- Persist entity ---
-        Invoice invoice = Invoice.builder()
-                .order(order)
-                .user(user)
-                .invoiceNumber(invoiceNumber)
-                .pdfPath(pdfPath)
-                .status(InvoiceStatus.GENERATED)
-                .issueDate(LocalDate.now())
-                .totalAmount(BigDecimal.valueOf(order.getTotalAmount())
-                        .setScale(SCALE, RoundingMode.HALF_UP))
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        log.info("Invoice {} generated for order {} (user {})", invoiceNumber, orderId, user.getId());
+        // --- Actualizar la entidad con la ruta del PDF generado ---
+        invoice.setPdfPath(pdfPath);
+        log.info("Invoice {} (id={}) generated for order {} (user {})", invoiceNumber, invoiceId, orderId,
+                user.getId());
         return invoiceRepository.save(invoice);
     }
 
@@ -322,7 +329,8 @@ public class InvoiceService {
 
     // ---- invoice data DTO -----------------------------------------------
 
-    private InvoiceDataDTO buildInvoiceDataDTO(Order order, OrderAddresses addr, String invoiceNumber) {
+    private InvoiceDataDTO buildInvoiceDataDTO(Order order, OrderAddresses addr, String invoiceNumber,
+            long internalId) {
         LocalDate today = LocalDate.now();
 
         List<InvoiceLineDTO> lines = buildLines(order.getOrderItems());
@@ -338,9 +346,11 @@ public class InvoiceService {
 
         User user = order.getUser();
 
+        // NIF/DNI se deja vacío hasta que se implemente el campo en el registro de
+        // usuario
         InvoiceCustomerDTO customer = InvoiceCustomerDTO.builder()
                 .name(user.getName() + " " + user.getSurname())
-                .nif(user.getUsername()) // NIF not stored; username used as placeholder
+                .nif(null)
                 .address(buildAddressLine(addr))
                 .postalCode(addr.getPostalCode())
                 .city(addr.getCity())
@@ -348,6 +358,8 @@ public class InvoiceService {
                 .build();
 
         return InvoiceDataDTO.builder()
+                .internalId(internalId)
+                .orderId(order.getId())
                 .invoiceNumber(invoiceNumber)
                 .issueDate(today.format(DATE_FMT))
                 .operationDate(order.getCreatedAt().toLocalDate().format(DATE_FMT))
@@ -497,11 +509,13 @@ public class InvoiceService {
 
     // ---- file storage ---------------------------------------------------
 
-    private String savePdf(byte[] pdfBytes, long userId, String invoiceNumber) {
+    private String savePdf(byte[] pdfBytes, long userId, String invoiceNumber, long invoiceId) {
         Path invoiceDir = Path.of(storagePath)
                 .resolve(String.valueOf(userId))
                 .resolve("invoices");
-        Path target = invoiceDir.resolve(invoiceNumber + ".pdf");
+        // Nombre: {invoiceNumber}_{invoiceId}.pdf — el número legal no cambia,
+        // el ID de BD se añade al nombre del archivo para identificación rápida
+        Path target = invoiceDir.resolve(invoiceNumber + "_" + invoiceId + ".pdf");
 
         try {
             if (Files.notExists(invoiceDir)) {

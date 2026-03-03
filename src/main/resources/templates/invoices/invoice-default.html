@@ -144,6 +144,8 @@
                     <td class="mb-body">
                         <table class="mb-inner">
                             <tr><td class="ml">N.&#186; factura:</td><td class="mv" th:text="${invoice.invoiceNumber}">INV-2026-000001</td></tr>
+                            <tr><td class="ml">N.&#186; pedido:</td><td class="mv" th:text="'#' + ${invoice.orderId}">#1</td></tr>
+                            <tr><td class="ml">Ref. interna:</td><td class="mv" th:text="'#' + ${invoice.internalId}">#1</td></tr>
                             <tr><td class="ml">Emisi&#243;n:</td><td class="mv" th:text="${invoice.issueDate}">01/03/2026</td></tr>
                             <tr><td class="ml">Operaci&#243;n:</td><td class="mv" th:text="${invoice.operationDate}">28/02/2026</td></tr>
                             <tr><td class="ml">Vencimiento:</td><td class="mv" th:text="${invoice.dueDate}">31/03/2026</td></tr>
@@ -166,7 +168,7 @@
                     <td class="mb-body">
                         <table class="mb-inner">
                             <tr><td class="ml">Cliente:</td><td class="mv" th:text="${invoice.customer.name}">Cliente</td></tr>
-                            <tr><td class="ml">NIF / DNI:</td><td class="mv" th:text="${invoice.customer.nif}">-</td></tr>
+                            <tr><td class="ml">NIF / DNI:</td><td class="mv" th:text="${invoice.customer.nif} ?: ''">-</td></tr>
                             <tr><td class="ml">Direcci&#243;n:</td><td class="mv" th:text="${invoice.customer.address}">C/ Calle 1</td></tr>
                             <tr>
                                 <td class="ml">Localidad:</td>

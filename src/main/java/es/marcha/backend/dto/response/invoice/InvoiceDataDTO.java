@@ -16,6 +16,8 @@ import lombok.Setter;
 @Setter
 public class InvoiceDataDTO {
 
+    private Long internalId;
+    private Long orderId;
     private String invoiceNumber;
     private String issueDate;
     private String operationDate;
