@@ -201,6 +201,14 @@ public class SecurityConfig {
                                                 .requestMatchers("/wishlist/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN", "USER")
 
+                                                // === Cupones: validación pública ===
+                                                .requestMatchers(HttpMethod.GET, "/coupons/*/validate")
+                                                .permitAll()
+
+                                                // === Cupones: CRUD solo ADMIN ===
+                                                .requestMatchers("/coupons/**")
+                                                .hasAnyRole("SUPER_ADMIN", "ADMIN")
+
                                                 // === Resto de endpoints: solo administradores ===
                                                 .anyRequest().hasAnyRole("SUPER_ADMIN", "ADMIN"))
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

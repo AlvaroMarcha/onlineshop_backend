@@ -20,7 +20,9 @@ import es.marcha.backend.exception.AddressException;
 import es.marcha.backend.exception.InvoiceException;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.model.coupon.Coupon;
 import es.marcha.backend.model.order.Invoice;
+import es.marcha.backend.services.coupon.CouponService;
 import es.marcha.backend.services.invoice.InvoiceService;
 import es.marcha.backend.mapper.order.OrderAddrMapper;
 import es.marcha.backend.mapper.order.OrderMapper;
@@ -66,6 +68,9 @@ public class OrderService {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private CouponService couponService;
 
     // Inyectado con @Lazy para evitar dependencia circular con InvoiceService
     // (InvoiceService -> OrderService -> InvoiceService)
@@ -194,14 +199,56 @@ public class OrderService {
                     .build());
         }
 
+        // Base imponible bruta (suma de precio_base × cantidad por ítem)
+        BigDecimal rawBase = total;
+
+        // Aplicar cupón sobre la base imponible
+        Coupon appliedCoupon = null;
+        BigDecimal discountAmount = BigDecimal.ZERO;
+        BigDecimal discountedBase = rawBase;
+
+        if (request.getCouponCode() != null && !request.getCouponCode().isBlank()) {
+            appliedCoupon = couponService.findAndValidate(request.getCouponCode(), rawBase, user.getId());
+            discountAmount = couponService.calculateDiscount(appliedCoupon, rawBase);
+            discountedBase = rawBase.subtract(discountAmount).max(BigDecimal.ZERO);
+        }
+
+        // IVA recalculado sobre la base con descuento, prorrateando entre ítems
+        BigDecimal discountRatio = rawBase.compareTo(BigDecimal.ZERO) > 0
+                ? discountedBase.divide(rawBase, 10, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ONE;
+
+        BigDecimal totalVat = BigDecimal.ZERO;
+        for (OrderItems item : items) {
+            BigDecimal unitPrice = (item.getDiscountPrice() != null
+                    && item.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0)
+                            ? item.getDiscountPrice()
+                            : item.getPrice() != null ? item.getPrice() : BigDecimal.ZERO;
+            BigDecimal itemBase = unitPrice.multiply(BigDecimal.valueOf(item.getQuantity()));
+            BigDecimal itemDiscountedBase = itemBase.multiply(discountRatio)
+                    .setScale(2, java.math.RoundingMode.HALF_UP);
+            BigDecimal taxRate = item.getTaxRate() != null ? item.getTaxRate() : BigDecimal.ZERO;
+            totalVat = totalVat.add(itemDiscountedBase.multiply(taxRate)
+                    .setScale(2, java.math.RoundingMode.HALF_UP));
+        }
+
+        BigDecimal totalAmount = discountedBase.add(totalVat).setScale(2, java.math.RoundingMode.HALF_UP);
+
         Order order = Order.builder()
                 .user(user)
                 .status(OrderStatus.CREATED)
-                .totalAmount(total.doubleValue())
+                .totalAmount(totalAmount.doubleValue())
+                .discountAmount(discountAmount.doubleValue())
+                .couponId(appliedCoupon != null ? appliedCoupon.getId() : null)
                 .createdAt(LocalDateTime.now())
                 .build();
 
         Order savedOrder = oRepository.save(order);
+
+        // Incrementar el contador de usos del cupón una vez el pedido queda guardado
+        if (appliedCoupon != null) {
+            couponService.incrementUsedCount(appliedCoupon.getId(), user.getId());
+        }
 
         items.forEach(item -> item.setOrder(savedOrder));
         oItemsService.saveOrderItems(items);

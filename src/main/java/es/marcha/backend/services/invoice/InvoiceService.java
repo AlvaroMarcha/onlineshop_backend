@@ -35,13 +35,16 @@ import es.marcha.backend.dto.response.invoice.InvoiceCustomerDTO;
 import es.marcha.backend.dto.response.invoice.InvoiceDataDTO;
 import es.marcha.backend.dto.response.invoice.InvoiceLineDTO;
 import es.marcha.backend.dto.response.invoice.TaxSummaryDTO;
+import es.marcha.backend.model.coupon.Coupon;
 import es.marcha.backend.exception.InvoiceException;
+import es.marcha.backend.model.enums.DiscountType;
 import es.marcha.backend.model.enums.InvoiceStatus;
 import es.marcha.backend.model.order.Invoice;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.OrderAddresses;
 import es.marcha.backend.model.order.OrderItems;
 import es.marcha.backend.model.user.User;
+import es.marcha.backend.repository.coupon.CouponRepository;
 import es.marcha.backend.repository.order.InvoiceRepository;
 import es.marcha.backend.repository.order.OrderAddrRepository;
 import es.marcha.backend.services.media.MediaService;
@@ -64,6 +67,7 @@ public class InvoiceService {
     private final SpringTemplateEngine templateEngine;
     private final CompanyProperties companyProps;
     private final MediaService mediaService;
+    private final CouponRepository couponRepository;
 
     @Value("${app.invoices.storage-path}")
     private String storagePath;
@@ -73,19 +77,15 @@ public class InvoiceService {
             InvoiceRepository invoiceRepository,
             SpringTemplateEngine templateEngine,
             CompanyProperties companyProps,
-            MediaService mediaService) {
+            MediaService mediaService,
+            CouponRepository couponRepository) {
         this.orderService = orderService;
         this.orderAddrRepository = orderAddrRepository;
         this.invoiceRepository = invoiceRepository;
         this.templateEngine = templateEngine;
         this.companyProps = companyProps;
         this.mediaService = mediaService;
-    }
-
-    @PostConstruct
-    private void logStoragePath() {
-        log.info("[InvoiceService] PDF storage path resolved to: {}", storagePath);
-        log.info("[InvoiceService] Company address loaded: '{}'", companyProps.getAddress());
+        this.couponRepository = couponRepository;
     }
 
     // =========================================================================
@@ -334,20 +334,49 @@ public class InvoiceService {
         LocalDate today = LocalDate.now();
 
         List<InvoiceLineDTO> lines = buildLines(order.getOrderItems());
-        List<TaxSummaryDTO> taxes = buildTaxSummary(lines);
 
         BigDecimal totalBase = lines.stream()
                 .map(InvoiceLineDTO::getBaseAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalTax = lines.stream()
-                .map(InvoiceLineDTO::getTaxAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal totalAmount = totalBase.add(totalTax);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(SCALE, RoundingMode.HALF_UP);
+
+        BigDecimal discountAmountBD = order.getDiscountAmount() > 0
+                ? BigDecimal.valueOf(order.getDiscountAmount()).setScale(SCALE, RoundingMode.HALF_UP)
+                : null;
+
+        String couponCode = null;
+        DiscountType discountType = null;
+        BigDecimal discountValue = null;
+        if (order.getCouponId() != null) {
+            Coupon coupon = couponRepository.findById(order.getCouponId()).orElse(null);
+            if (coupon != null) {
+                couponCode = coupon.getCode();
+                discountType = coupon.getDiscountType();
+                discountValue = coupon.getValue();
+            }
+        }
+
+        BigDecimal discountedBase = discountAmountBD != null
+                ? totalBase.subtract(discountAmountBD).max(BigDecimal.ZERO)
+                        .setScale(SCALE, RoundingMode.HALF_UP)
+                : totalBase;
+
+        // IVA calculado sobre la base con descuento, prorrateando el descuento entre
+        // ítems
+        BigDecimal discountRatio = totalBase.compareTo(BigDecimal.ZERO) > 0
+                ? discountedBase.divide(totalBase, 10, RoundingMode.HALF_UP)
+                : BigDecimal.ONE;
+        List<TaxSummaryDTO> taxSummary = buildTaxSummaryWithDiscount(lines, discountRatio);
+        BigDecimal totalTax = taxSummary.stream()
+                .map(TaxSummaryDTO::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(SCALE, RoundingMode.HALF_UP);
+
+        BigDecimal totalAmount = BigDecimal.valueOf(order.getTotalAmount())
+                .setScale(SCALE, RoundingMode.HALF_UP);
 
         User user = order.getUser();
 
-        // NIF/DNI se deja vacío hasta que se implemente el campo en el registro de
-        // usuario
         InvoiceCustomerDTO customer = InvoiceCustomerDTO.builder()
                 .name(user.getName() + " " + user.getSurname())
                 .nif(null)
@@ -366,12 +395,17 @@ public class InvoiceService {
                 .dueDate(today.plusDays(PAYMENT_DAYS).format(DATE_FMT))
                 .paymentMethod(order.getPaymentMethod())
                 .notes(null)
-                .totalBase(totalBase.setScale(SCALE, RoundingMode.HALF_UP))
-                .totalTax(totalTax.setScale(SCALE, RoundingMode.HALF_UP))
-                .totalAmount(totalAmount.setScale(SCALE, RoundingMode.HALF_UP))
+                .totalBase(totalBase)
+                .discountAmount(discountAmountBD)
+                .couponCode(couponCode)
+                .discountType(discountType)
+                .discountValue(discountValue)
+                .discountedBase(discountedBase)
+                .totalTax(totalTax)
+                .totalAmount(totalAmount)
                 .customer(customer)
                 .lines(lines)
-                .taxSummary(taxes)
+                .taxSummary(taxSummary)
                 .build();
     }
 
@@ -424,21 +458,35 @@ public class InvoiceService {
 
     // ---- tax summary ----------------------------------------------------
 
-    private List<TaxSummaryDTO> buildTaxSummary(List<InvoiceLineDTO> lines) {
-        // Group by taxPercent preserving order of first occurrence
+    /**
+     * Agrupa líneas por tipo de IVA y calcula base + cuota sobre la base con
+     * descuento.
+     * Si no hay cupón, {@code discountRatio} es 1 y los valores son idénticos a los
+     * brutos.
+     */
+    private List<TaxSummaryDTO> buildTaxSummaryWithDiscount(List<InvoiceLineDTO> lines, BigDecimal discountRatio) {
         Map<BigDecimal, TaxSummaryDTO> taxMap = new LinkedHashMap<>();
 
         for (InvoiceLineDTO line : lines) {
-            taxMap.compute(line.getTaxPercent(), (key, existing) -> {
+            // Base imponible de esta línea con el descuento prorrateado
+            BigDecimal discountedLineBase = line.getBaseAmount()
+                    .multiply(discountRatio)
+                    .setScale(SCALE, RoundingMode.HALF_UP);
+            BigDecimal taxPercent = line.getTaxPercent();
+            BigDecimal taxAmount = discountedLineBase
+                    .multiply(taxPercent.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP))
+                    .setScale(SCALE, RoundingMode.HALF_UP);
+
+            taxMap.compute(taxPercent, (key, existing) -> {
                 if (existing == null) {
                     return TaxSummaryDTO.builder()
                             .percent(key)
-                            .base(line.getBaseAmount())
-                            .amount(line.getTaxAmount())
+                            .base(discountedLineBase)
+                            .amount(taxAmount)
                             .build();
                 }
-                existing.setBase(existing.getBase().add(line.getBaseAmount()));
-                existing.setAmount(existing.getAmount().add(line.getTaxAmount()));
+                existing.setBase(existing.getBase().add(discountedLineBase));
+                existing.setAmount(existing.getAmount().add(taxAmount));
                 return existing;
             });
         }
@@ -500,7 +548,6 @@ public class InvoiceService {
                 builder.useFont(bold, "Arial", 700,
                         BaseRendererBuilder.FontStyle.NORMAL, true);
             }
-            log.info("[InvoiceService] Fuente registrada: {}", entry[0]);
             return;
         }
         log.warn(

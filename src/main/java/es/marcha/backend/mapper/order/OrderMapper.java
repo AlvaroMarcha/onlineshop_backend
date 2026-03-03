@@ -12,6 +12,8 @@ public class OrderMapper {
                                 .userId(order.getUser().getId())
                                 .status(order.getStatus())
                                 .totalAmount(order.getTotalAmount())
+                                .discountAmount(order.getDiscountAmount())
+                                .couponCode(null) // populated externally when needed
                                 .paymentMethod(order.getPaymentMethod())
                                 .createdAt(order.getCreatedAt())
                                 .payments(order.getPayments() != null

@@ -20,6 +20,8 @@ public class OrderResponseDTO {
     private long userId;
     private OrderStatus status;
     private double totalAmount;
+    private double discountAmount;
+    private String couponCode;
     private String paymentMethod;
     private LocalDateTime createdAt;
     private List<PaymentResponseDTO> payments;
