@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.dto.request.user.UpdateUserRequestDTO;
 import es.marcha.backend.dto.response.user.AdminUserResponseDTO;
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.user.TermsResponseDTO;
@@ -219,34 +220,34 @@ public class UserService {
     }
 
     /**
-     * Actualiza los datos de un usuario existente en la base de datos. Solo se
-     * actualizan ciertos
-     * campos, y se marca la fecha de actualización con la hora actual.
+     * Actualiza los datos del usuario autenticado. Solo se permiten cambios en
+     * nombre, apellido, email y teléfono. Los campos {@code null} conservan su
+     * valor actual. Si se cambia el email se verifica que no esté ya en uso.
      *
-     * @param updatedUser El objeto {@link User} que contiene los nuevos datos a
-     *                    actualizar. Debe
-     *                    incluir un ID válido de un usuario existente.
-     * @return El {@link User} actualizado después de guardarlo en la base de datos,
-     *         o {@code null}
-     *         si el usuario no existe.
+     * @param currentEmail email del usuario autenticado (extraído del JWT)
+     * @param dto          DTO con los campos a actualizar
+     * @return {@link UserResponseDTO} con los datos actualizados
+     * @throws UserException si el usuario no existe o el email nuevo ya está en uso
      */
     @Transactional
-    public UserResponseDTO updateUser(User updatedUser) {
-
-        User user = uRepository.findById(updatedUser.getId())
+    public UserResponseDTO updateUser(String currentUsername, UpdateUserRequestDTO dto) {
+        User user = uRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new UserException());
 
-        user.setName(updatedUser.getName());
-        user.setSurname(updatedUser.getSurname());
-        user.setUsername(updatedUser.getUsername());
-        user.setEmail(updatedUser.getEmail());
-        user.setPhone(updatedUser.getPhone());
-        user.setProfileImageUrl(updatedUser.getProfileImageUrl());
+        if (dto.getEmail() != null && !dto.getEmail().equalsIgnoreCase(user.getEmail())) {
+            if (uRepository.existsByEmail(dto.getEmail())) {
+                throw new UserException(UserException.EMAIL_ALREADY_IN_USE);
+            }
+            user.setEmail(dto.getEmail());
+        }
+        if (dto.getName() != null)
+            user.setName(dto.getName());
+        if (dto.getSurname() != null)
+            user.setSurname(dto.getSurname());
+        if (dto.getPhone() != null)
+            user.setPhone(dto.getPhone());
 
-        user.setActive(updatedUser.isActive());
-        user.setLastLogin(updatedUser.getLastLogin());
         user.setUpdatedAt(LocalDateTime.now());
-
         return UserMapper.toUserDTO(uRepository.save(user));
     }
 
