@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +14,13 @@ import es.marcha.backend.dto.request.order.OrderItemRequestDTO;
 import es.marcha.backend.dto.request.order.OrderRequestDTO;
 import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.dto.response.order.OrderResponseDTO;
+import org.springframework.context.annotation.Lazy;
+
 import es.marcha.backend.exception.AddressException;
+import es.marcha.backend.exception.InvoiceException;
 import es.marcha.backend.exception.OrderException;
 import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.services.invoice.InvoiceService;
 import es.marcha.backend.mapper.order.OrderAddrMapper;
 import es.marcha.backend.mapper.order.OrderMapper;
 import es.marcha.backend.model.ecommerce.product.Product;
@@ -34,6 +40,8 @@ import jakarta.transaction.Transactional;
 @Service
 public class OrderService {
     // Attribs
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+
     @Autowired
     private OrderRepository oRepository;
 
@@ -57,6 +65,12 @@ public class OrderService {
 
     @Autowired
     private CartService cartService;
+
+    // Inyectado con @Lazy para evitar dependencia circular con InvoiceService
+    // (InvoiceService -> OrderService -> InvoiceService)
+    @Lazy
+    @Autowired
+    private InvoiceService invoiceService;
 
     // Methods
     /**
@@ -304,6 +318,19 @@ public class OrderService {
         }
         order.setStatus(currentStatus);
         saveOrder(order);
+
+        // Si el pedido acaba de pasar a PAID, generar la factura PDF automáticamente
+        // y persistirla en disco en la ruta del cliente
+        if (currentStatus == OrderStatus.PAID) {
+            try {
+                invoiceService.generateInvoice(orderId);
+                log.info("[OrderService] Factura generada automáticamente para el pedido {} al pasar a PAID.", orderId);
+            } catch (InvoiceException e) {
+                log.error("[OrderService] Error al generar la factura para el pedido {}: {}", orderId, e.getMessage(),
+                        e);
+            }
+        }
+
         // Cargar los items dentro de la transacción para evitar
         // LazyInitializationException en el hilo async
         List<OrderItems> loadedItems = oItemsService.getItemsByOrderId(orderId);
