@@ -1,6 +1,8 @@
 package es.marcha.backend.controller.ecommerce;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -38,6 +40,7 @@ import es.marcha.backend.services.ecommerce.ProductImageService;
 import es.marcha.backend.services.ecommerce.ProductReviewService;
 import es.marcha.backend.services.ecommerce.ProductService;
 import es.marcha.backend.services.ecommerce.SubcategoryService;
+import es.marcha.backend.services.wishlist.WishlistService;
 
 @RestController
 @RequestMapping("/products")
@@ -54,6 +57,9 @@ public class ProductController {
 
     @Autowired
     private ProductImageService imageService;
+
+    @Autowired
+    private WishlistService wishlistService;
 
     /**
      * Busca productos con filtros opcionales y paginación.
@@ -88,6 +94,13 @@ public class ProductController {
                         || a.getAuthority().equals("ROLE_SUPER_ADMIN"));
 
         Page<ProductResponseDTO> result = prodService.searchProducts(filter, isAdmin);
+
+        // Enriquecer con isInWishlist si el usuario está autenticado
+        Set<Long> wishlistIds = getWishlistProductIds(auth);
+        if (!wishlistIds.isEmpty()) {
+            result.getContent().forEach(dto -> dto.setIsInWishlist(wishlistIds.contains(dto.getId())));
+        }
+
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -101,6 +114,14 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductResponseDTO>> getAllProducts() {
         List<ProductResponseDTO> products = prodService.getAllProducts();
+
+        // Enriquecer con isInWishlist si el usuario está autenticado
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Set<Long> wishlistIds = getWishlistProductIds(auth);
+        if (!wishlistIds.isEmpty()) {
+            products.forEach(dto -> dto.setIsInWishlist(wishlistIds.contains(dto.getId())));
+        }
+
         return new ResponseEntity<>(products, HttpStatus.OK);
     }
 
@@ -114,6 +135,14 @@ public class ProductController {
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable long id) {
         ProductResponseDTO product = prodService.getProductById(id);
+
+        // Enriquecer con isInWishlist si el usuario está autenticado
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Set<Long> wishlistIds = getWishlistProductIds(auth);
+        if (!wishlistIds.isEmpty()) {
+            product.setIsInWishlist(wishlistIds.contains(product.getId()));
+        }
+
         return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
@@ -350,6 +379,30 @@ public class ProductController {
     @DeleteMapping("/reviews/{id}")
     public ResponseEntity<String> deleteProductReview(@PathVariable long id) {
         return new ResponseEntity<>(rService.deleteReview(id), HttpStatus.OK);
+    }
+
+    // ─── Utilidades internas
+    // ──────────────────────────────────────────────────────
+
+    /**
+     * Devuelve los IDs de productos en la wishlist del usuario autenticado.
+     * Si no hay usuario autenticado o no tiene wishlist, devuelve un conjunto
+     * vacío.
+     *
+     * @param auth objeto de autenticación del contexto de seguridad
+     * @return {@link Set} de IDs de productos en la wishlist
+     */
+    private Set<Long> getWishlistProductIds(Authentication auth) {
+        if (auth == null || auth.getPrincipal() == null
+                || "anonymousUser".equals(auth.getPrincipal())) {
+            return Collections.emptySet();
+        }
+        try {
+            return wishlistService.getWishlistProductIds((String) auth.getPrincipal());
+        } catch (Exception e) {
+            // Si hay cualquier error al obtener la wishlist, simplemente no enriquecemos
+            return Collections.emptySet();
+        }
     }
 
 }

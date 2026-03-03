@@ -43,4 +43,6 @@ public class ProductResponseDTO {
     private List<ProductVariantResponseDTO> variants;
     private String mainImageUrl;
     private List<ProductImageResponseDTO> images;
+    // Solo se rellena cuando hay un usuario autenticado; null en caso contrario
+    private Boolean isInWishlist;
 }
