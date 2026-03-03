@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.model.order.Invoice;
@@ -53,18 +54,23 @@ public class InvoiceController {
     }
 
     /**
-     * * Descarga el PDF de la factura indicada.
+     * Descarga o visualiza el PDF de la factura indicada.
      *
-     * @param invoiceNumber n&#250;mero de referencia de la factura.
+     * @param invoiceNumber número de referencia de la factura.
+     * @param view          si {@code true} muestra el PDF en el navegador
+     *                      (inline); si {@code false} o ausente lo descarga
+     *                      (attachment).
      * @return el archivo PDF con HTTP 200 OK.
      */
     @GetMapping("/{invoiceNumber}/pdf")
-    public ResponseEntity<byte[]> downloadPdf(@PathVariable String invoiceNumber) {
+    public ResponseEntity<byte[]> downloadPdf(
+            @PathVariable String invoiceNumber,
+            @RequestParam(defaultValue = "false") boolean view) {
         byte[] pdfBytes = invoiceService.getPdfBytes(invoiceNumber);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDisposition(
-                ContentDisposition.attachment()
+                (view ? ContentDisposition.inline() : ContentDisposition.attachment())
                         .filename(invoiceNumber + ".pdf")
                         .build());
         headers.setContentLength(pdfBytes.length);

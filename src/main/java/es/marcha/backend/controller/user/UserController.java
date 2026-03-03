@@ -23,6 +23,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import es.marcha.backend.dto.request.user.ChangeRoleRequestDTO;
+import es.marcha.backend.dto.request.user.UpdateUserRequestDTO;
 import es.marcha.backend.dto.response.user.AdminUserResponseDTO;
 import es.marcha.backend.dto.response.user.BannedUserResponseDTO;
 import es.marcha.backend.dto.response.user.DataExportResponseDTO;
@@ -167,18 +168,17 @@ public class UserController {
     }
 
     /**
-     * Actualiza un usuario existente en la base de datos.
+     * Actualiza los datos del usuario autenticado.
+     * Solo se permiten cambios en nombre, apellido, email y teléfono.
      *
-     * @param updatedUser El {@link User} con los nuevos datos a actualizar. Debe
-     *                    incluir un ID
-     *                    válido.
-     * @return {@link ResponseEntity} con el {@link User} actualizado y código HTTP
-     *         200 OK. Si el
-     *         usuario no existe, devuelve {@code null} en el cuerpo.
+     * @param dto datos a actualizar (todos opcionales)
+     * @return {@link ResponseEntity} con {@link UserResponseDTO} actualizado y
+     *         código HTTP 200 OK.
      */
-    @PutMapping
-    public ResponseEntity<UserResponseDTO> updateUser(@RequestBody User updatedUser) {
-        UserResponseDTO user = uService.updateUser(updatedUser);
+    @PutMapping("/me")
+    public ResponseEntity<UserResponseDTO> updateUser(@Valid @RequestBody UpdateUserRequestDTO dto) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserResponseDTO user = uService.updateUser(auth.getName(), dto);
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 

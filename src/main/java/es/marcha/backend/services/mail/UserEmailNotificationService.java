@@ -53,7 +53,7 @@ public class UserEmailNotificationService {
     @Async("emailTaskExecutor")
     public void sendPasswordResetEmail(String name, String email, String resetToken) {
         try {
-            String resetLink = frontendUrl + "/reset-password?token=" + resetToken;
+            String resetLink = frontendUrl + "/reset-password.html?token=" + resetToken;
             Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
 
             Context ctx = new Context();
@@ -78,7 +78,7 @@ public class UserEmailNotificationService {
     @Async("emailTaskExecutor")
     public void sendPasswordChangeNotification(String name, String email) {
         try {
-            String resetLink = frontendUrl + "/reset-password";
+            String resetLink = frontendUrl + "/reset-password.html";
             Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
 
             Context ctx = new Context();
@@ -159,7 +159,7 @@ public class UserEmailNotificationService {
             ctx.setVariable("orderDate", order.getCreatedAt().format(ORDER_DATE_FMT));
             ctx.setVariable("orderItems", itemsData);
             ctx.setVariable("orderTotal", String.format("%.2f €", order.getTotalAmount()));
-            ctx.setVariable("orderLink", frontendUrl + "/orders/" + order.getId());
+            ctx.setVariable("orderLink", frontendUrl + "/orders.html?id=" + order.getId());
             ctx.setVariable("shippingAddress", address);
 
             String html = templateEngine.process("emails/orders/order-confirmation", ctx);
@@ -189,7 +189,7 @@ public class UserEmailNotificationService {
     @Async("emailTaskExecutor")
     public void sendVerificationEmail(String name, String email, String verificationToken) {
         try {
-            String verificationLink = frontendUrl + "/verify-email?token=" + verificationToken;
+            String verificationLink = frontendUrl + "/verify-email.html?token=" + verificationToken;
             Optional<FileSystemResource> logo = mService.getCompanyLogoResource();
 
             Context ctx = new Context();
@@ -249,7 +249,7 @@ public class UserEmailNotificationService {
             ctx.setVariable("statusMessage", banner[2]);
             ctx.setVariable("orderItems", itemsData);
             ctx.setVariable("orderTotal", String.format("%.2f €", order.getTotalAmount()));
-            ctx.setVariable("orderLink", frontendUrl + "/orders/" + order.getId());
+            ctx.setVariable("orderLink", frontendUrl + "/orders.html?id=" + order.getId());
             ctx.setVariable("supportLink", frontendUrl + "/contact");
 
             String html = templateEngine.process("emails/orders/order-status-update", ctx);
@@ -314,7 +314,7 @@ public class UserEmailNotificationService {
             ctx.setVariable("statusMessage", banner[2]);
             ctx.setVariable("orderItems", itemsData);
             ctx.setVariable("orderTotal", String.format("%.2f €", order.getTotalAmount()));
-            ctx.setVariable("orderLink", frontendUrl + "/orders/" + order.getId());
+            ctx.setVariable("orderLink", frontendUrl + "/orders.html?id=" + order.getId());
             ctx.setVariable("supportLink", frontendUrl + "/contact");
 
             String html = templateEngine.process("emails/orders/order-status-update", ctx);

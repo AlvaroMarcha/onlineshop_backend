@@ -21,6 +21,7 @@ public class UserException extends NoHandlerException {
     public static final String VERIFICATION_TOKEN_EXPIRED = "VERIFICATION_TOKEN_EXPIRED";
     public static final String EMAIL_ALREADY_VERIFIED = "EMAIL_ALREADY_VERIFIED";
     public static final String USER_NOT_VERIFIED = "USER_NOT_VERIFIED";
+    public static final String EMAIL_ALREADY_IN_USE = "EMAIL_ALREADY_IN_USE";
 
     public UserException() {
         this(DEFAULT);
