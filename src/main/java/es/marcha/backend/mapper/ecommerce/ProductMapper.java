@@ -13,6 +13,21 @@ import es.marcha.backend.model.ecommerce.product.ProductImage;
 public class ProductMapper {
 
         public static ProductResponseDTO toProductDTO(Product product) {
+                return toProductDTO(product, null);
+        }
+
+        /**
+         * Convierte un producto a DTO enriqueciendo el campo {@code isInWishlist}.
+         * Usar este método cuando se dispone de contexto de usuario autenticado.
+         *
+         * @param product      entidad a convertir
+         * @param isInWishlist {@code true} si el producto está en la wishlist del
+         *                     usuario,
+         *                     {@code false} si no, o {@code null} si no hay usuario
+         *                     autenticado
+         * @return DTO con el campo {@code isInWishlist} establecido
+         */
+        public static ProductResponseDTO toProductDTO(Product product, Boolean isInWishlist) {
                 return ProductResponseDTO.builder()
                                 .id(product.getId())
                                 .name(product.getName())
@@ -43,6 +58,7 @@ public class ProductMapper {
                                                 : Collections.emptyList())
                                 .variants(Collections.emptyList())
                                 .mainImageUrl(resolveMainImageUrl(product))
+                                .isInWishlist(isInWishlist)
                                 .build();
         }
 
@@ -54,6 +70,22 @@ public class ProductMapper {
          * @return DTO con todos los campos incluidas las variantes
          */
         public static ProductResponseDTO toProductDetailDTO(Product product) {
+                return toProductDetailDTO(product, null);
+        }
+
+        /**
+         * Convierte un producto a DTO de detalle enriqueciendo el campo
+         * {@code isInWishlist}.
+         *
+         * @param product      entidad a convertir
+         * @param isInWishlist {@code true} si el producto está en la wishlist del
+         *                     usuario,
+         *                     {@code false} si no, o {@code null} si no hay usuario
+         *                     autenticado
+         * @return DTO con todos los campos incluidas las variantes e
+         *         {@code isInWishlist}
+         */
+        public static ProductResponseDTO toProductDetailDTO(Product product, Boolean isInWishlist) {
                 return ProductResponseDTO.builder()
                                 .id(product.getId())
                                 .name(product.getName())
@@ -91,6 +123,7 @@ public class ProductMapper {
                                                                 .map(ProductMapper::toProductImageDTO)
                                                                 .toList()
                                                 : Collections.emptyList())
+                                .isInWishlist(isInWishlist)
                                 .build();
         }
 

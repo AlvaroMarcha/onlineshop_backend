@@ -152,6 +152,10 @@ public class SecurityConfig {
                                                 // === Stripe webhook: público — Stripe no puede enviar JWT ===
                                                 .requestMatchers(HttpMethod.POST, "/stripe/webhook").permitAll()
 
+                                                // === Wishlist: contador público de producto ===
+                                                .requestMatchers(HttpMethod.GET, "/wishlist/product/*/count")
+                                                .permitAll()
+
                                                 // === Gestión de roles: solo SUPER_ADMIN ===
                                                 .requestMatchers("/roles/**").hasRole("SUPER_ADMIN")
 
@@ -192,6 +196,10 @@ public class SecurityConfig {
                                                 // === Gestión de usuarios ===
                                                 .requestMatchers("/users/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN", "CUSTOMERS_INVOICES", "SUPPORT")
+
+                                                // === Wishlist: operaciones del usuario autenticado ===
+                                                .requestMatchers("/wishlist/**")
+                                                .hasAnyRole("SUPER_ADMIN", "ADMIN", "USER")
 
                                                 // === Resto de endpoints: solo administradores ===
                                                 .anyRequest().hasAnyRole("SUPER_ADMIN", "ADMIN"))
