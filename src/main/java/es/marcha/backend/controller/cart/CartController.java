@@ -3,6 +3,8 @@ package es.marcha.backend.controller.cart;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,79 +27,88 @@ public class CartController {
     private CartService cartService;
 
     /**
-     * Devuelve el carrito activo del usuario.
-     * Si no existe carrito activo devuelve 404.
+     * Devuelve el carrito activo del usuario autenticado.
+     * Si no existe carrito activo, se crea automáticamente.
      *
-     * @param userId ID del usuario
      * @return {@link CartResponseDTO} con ítems y total
      */
-    @GetMapping("/{userId}")
-    public ResponseEntity<CartResponseDTO> getCart(@PathVariable long userId) {
-        CartResponseDTO cart = cartService.getCartByUserId(userId);
+    @GetMapping
+    public ResponseEntity<CartResponseDTO> getCart() {
+        String username = getAuthenticatedUsername();
+        CartResponseDTO cart = cartService.getCartByUsername(username);
         return new ResponseEntity<>(cart, HttpStatus.OK);
     }
 
     /**
-     * Agrega un producto al carrito del usuario.
+     * Agrega un producto al carrito del usuario autenticado.
      * Crea el carrito si no existía. Si el mismo producto+variante ya está,
      * incrementa la cantidad. Valida el stock antes de agregar.
      *
-     * @param userId  ID del usuario
      * @param request DTO con productId, variantId (nullable) y quantity
      * @return {@link CartResponseDTO} actualizado con código 201 Created
      */
-    @PostMapping("/{userId}/items")
+    @PostMapping("/items")
     public ResponseEntity<CartResponseDTO> addItem(
-            @PathVariable long userId,
             @RequestBody AddCartItemRequestDTO request) {
-        CartResponseDTO cart = cartService.addItem(userId, request);
+        String username = getAuthenticatedUsername();
+        CartResponseDTO cart = cartService.addItem(username, request);
         return new ResponseEntity<>(cart, HttpStatus.CREATED);
     }
 
     /**
-     * Actualiza la cantidad de un ítem existente en el carrito.
+     * Actualiza la cantidad de un ítem existente en el carrito del usuario
+     * autenticado.
      * Si quantity == 0, el ítem se elimina automáticamente.
      *
-     * @param userId  ID del usuario
      * @param itemId  ID del CartItem
      * @param request DTO con la nueva cantidad
      * @return {@link CartResponseDTO} actualizado
      */
-    @PutMapping("/{userId}/items/{itemId}")
+    @PutMapping("/items/{itemId}")
     public ResponseEntity<CartResponseDTO> updateItem(
-            @PathVariable long userId,
             @PathVariable long itemId,
             @RequestBody UpdateCartItemRequestDTO request) {
-        CartResponseDTO cart = cartService.updateItemQuantity(userId, itemId, request);
+        String username = getAuthenticatedUsername();
+        CartResponseDTO cart = cartService.updateItemQuantity(username, itemId, request);
         return new ResponseEntity<>(cart, HttpStatus.OK);
     }
 
     /**
-     * Elimina un ítem específico del carrito.
+     * Elimina un ítem específico del carrito del usuario autenticado.
      *
-     * @param userId ID del usuario
      * @param itemId ID del CartItem a eliminar
      * @return {@link CartResponseDTO} actualizado
      */
-    @DeleteMapping("/{userId}/items/{itemId}")
+    @DeleteMapping("/items/{itemId}")
     public ResponseEntity<CartResponseDTO> removeItem(
-            @PathVariable long userId,
             @PathVariable long itemId) {
-        CartResponseDTO cart = cartService.removeItem(userId, itemId);
+        String username = getAuthenticatedUsername();
+        CartResponseDTO cart = cartService.removeItem(username, itemId);
         return new ResponseEntity<>(cart, HttpStatus.OK);
     }
 
     /**
-     * Vacía completamente el carrito del usuario (elimina todos los ítems
+     * Vacía completamente el carrito del usuario autenticado (elimina todos los
+     * ítems
      * y marca el carrito como CONVERTED).
      * También se llama internamente al confirmar un pedido.
      *
-     * @param userId ID del usuario
      * @return 204 No Content
      */
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> clearCart(@PathVariable long userId) {
-        cartService.clearCartByUserId(userId);
+    @DeleteMapping
+    public ResponseEntity<Void> clearCart() {
+        String username = getAuthenticatedUsername();
+        cartService.clearCartByUsername(username);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    /**
+     * Extrae el username del usuario autenticado desde el SecurityContextHolder.
+     *
+     * @return username del usuario autenticado
+     */
+    private String getAuthenticatedUsername() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return (String) auth.getPrincipal();
     }
 }

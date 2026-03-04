@@ -41,6 +41,9 @@ public class StripeService {
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private PaymentService paymentService;
+
     /**
      * Crea un PaymentIntent en Stripe para la orden indicada y persiste un registro
      * local
@@ -209,6 +212,57 @@ public class StripeService {
         paymentRepository.save(payment);
         log.info("Payment id={} status updated to {} via Stripe webhook (intentId={})",
                 payment.getId(), targetStatus, intentId);
+    }
+
+    /**
+     * Confirma el pago verificando el estado del PaymentIntent en Stripe y
+     * actualizando el estado local del Payment correspondiente.
+     *
+     * @param intentId ID del PaymentIntent de Stripe
+     */
+    @Transactional
+    public void confirmPayment(String intentId) {
+        PaymentIntent intent;
+        try {
+            intent = PaymentIntent.retrieve(intentId);
+        } catch (StripeException e) {
+            log.error("Failed to retrieve PaymentIntent {}: {}", intentId, e.getMessage());
+            throw new StripePaymentException(StripePaymentException.FAILED_RETRIEVE_INTENT);
+        }
+
+        String stripeStatus = intent.getStatus();
+        Payment payment = paymentRepository.findByTransactionId(intentId).orElse(null);
+        if (payment == null) {
+            log.warn("No local payment found for intentId={}", intentId);
+            throw new StripePaymentException(StripePaymentException.PAYMENT_NOT_FOUND);
+        }
+
+        try {
+            if ("succeeded".equalsIgnoreCase(stripeStatus)) {
+                if (payment.getStatus() == PaymentStatus.CREATED) {
+                    paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.PENDING);
+                    paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.AUTHORIZED);
+                    paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.SUCCESS);
+                } else if (payment.getStatus() == PaymentStatus.PENDING) {
+                    paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.AUTHORIZED);
+                    paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.SUCCESS);
+                } else if (payment.getStatus() == PaymentStatus.AUTHORIZED) {
+                    paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.SUCCESS);
+                }
+            } else if ("processing".equalsIgnoreCase(stripeStatus)
+                    || "requires_action".equalsIgnoreCase(stripeStatus)
+                    || "requires_payment_method".equalsIgnoreCase(stripeStatus)) {
+                if (payment.getStatus() == PaymentStatus.CREATED) {
+                    paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.PENDING);
+                }
+            } else if ("canceled".equalsIgnoreCase(stripeStatus)) {
+                paymentService.cancelPayment(payment.getId());
+            }
+        } catch (Exception e) {
+            log.error("Error advancing payment status for local payment id={} intent={}: {}",
+                    payment.getId(), intentId, e.getMessage());
+            throw new StripePaymentException(StripePaymentException.FAILED_UPDATE_PAYMENT);
+        }
     }
 
     private PaymentIntent extractPaymentIntent(Event event) {

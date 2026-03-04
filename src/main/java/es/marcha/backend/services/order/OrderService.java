@@ -263,7 +263,7 @@ public class OrderService {
         userEmailNotificationService.sendOrderConfirmationEmail(user, savedOrder, items, snapOrderAddress);
 
         // Limpiar el carrito del usuario una vez el pedido queda confirmado
-        cartService.clearCartByUserId(user.getId());
+        cartService.clearCartByUsername(user.getUsername());
 
         return finalOrder;
     }

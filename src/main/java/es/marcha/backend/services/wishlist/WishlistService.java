@@ -179,7 +179,6 @@ public class WishlistService {
      */
     @Transactional
     public CartResponseDTO moveToCart(String username, long itemId) {
-        User user = userService.getUserByUsernameOrEmail(username);
         Wishlist wishlist = getWishlistOrThrow(username);
 
         WishlistItem item = wishlistItemRepository.findByWishlistIdAndId(wishlist.getId(), itemId)
@@ -192,7 +191,7 @@ public class WishlistService {
                 .build();
 
         // Agregar al carrito usando el servicio existente
-        CartResponseDTO cartResponse = cartService.addItem(user.getId(), cartRequest);
+        CartResponseDTO cartResponse = cartService.addItem(username, cartRequest);
 
         // Eliminar el ítem de la wishlist después de moverlo al carrito
         wishlist.getItems().remove(item);

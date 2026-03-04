@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.dto.request.payment.CreatePaymentIntentRequestDTO;
+import es.marcha.backend.dto.request.payment.StripeConfirmRequestDTO;
 import es.marcha.backend.dto.response.payment.StripePaymentIntentResponseDTO;
 import es.marcha.backend.exception.StripePaymentException;
 import es.marcha.backend.services.order.StripeService;
@@ -63,6 +65,31 @@ public class StripeController {
         try {
             stripeService.handleWebhookEvent(payload, sigHeader);
             return ResponseEntity.ok("Webhook processed");
+        } catch (StripePaymentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    /**
+     * Confirma el pago verificando el estado del PaymentIntent en Stripe.
+     *
+     * Este endpoint es llamado por el frontend después de que Stripe.js confirme
+     * el pago del cliente. Verifica el estado del PaymentIntent en Stripe y
+     * actualiza el estado del pago local en consecuencia.
+     *
+     * @param request contiene {@code paymentIntentId} y opcionalmente
+     *                {@code shippingAddressId} y {@code couponCode}.
+     * @param auth    objeto de autenticación del usuario.
+     * @return 200 OK si el pago se confirma correctamente; 400 BAD REQUEST si hay
+     *         un error.
+     */
+    @PostMapping("/confirm")
+    public ResponseEntity<?> confirmPayment(
+            @RequestBody StripeConfirmRequestDTO request,
+            Authentication auth) {
+        try {
+            stripeService.confirmPayment(request.getPaymentIntentId());
+            return ResponseEntity.ok("Payment confirmed successfully");
         } catch (StripePaymentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
