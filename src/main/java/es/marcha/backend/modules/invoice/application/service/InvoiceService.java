@@ -38,7 +38,7 @@ import es.marcha.backend.modules.invoice.application.dto.response.TaxSummaryDTO;
 import es.marcha.backend.modules.coupon.domain.model.Coupon;
 import es.marcha.backend.core.error.exception.InvoiceException;
 import es.marcha.backend.core.shared.domain.enums.DiscountType;
-import es.marcha.backend.core.shared.domain.enums.InvoiceStatus;
+import es.marcha.backend.modules.invoice.domain.enums.InvoiceStatus;
 import es.marcha.backend.modules.invoice.domain.model.Invoice;
 import es.marcha.backend.modules.order.domain.model.Order;
 import es.marcha.backend.modules.order.domain.model.OrderAddresses;

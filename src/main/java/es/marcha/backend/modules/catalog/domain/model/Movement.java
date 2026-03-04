@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import es.marcha.backend.modules.catalog.domain.model.product.Product;
-import es.marcha.backend.core.shared.domain.enums.MovementType;
+import es.marcha.backend.modules.catalog.domain.enums.MovementType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

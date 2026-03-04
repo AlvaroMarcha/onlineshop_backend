@@ -1,7 +1,7 @@
-package es.marcha.backend.core.shared.domain.enums;
+package es.marcha.backend.modules.cart.domain.enums;
 
 public enum CartStatus {
-    /** Carrito activo: el usuario lo está usando */
+    /** Carrito activo: el usuario lo est├í usando */
     ACTIVE,
     /** Expirado por inactividad tras 2 horas sin modificaciones */
     EXPIRED,

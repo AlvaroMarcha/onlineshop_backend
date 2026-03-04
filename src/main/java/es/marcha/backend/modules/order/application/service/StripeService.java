@@ -20,7 +20,7 @@ import com.stripe.param.PaymentIntentCreateParams;
 import es.marcha.backend.core.config.StripeConfig;
 import es.marcha.backend.modules.order.application.dto.response.StripePaymentIntentResponseDTO;
 import es.marcha.backend.core.error.exception.StripePaymentException;
-import es.marcha.backend.core.shared.domain.enums.PaymentStatus;
+import es.marcha.backend.modules.order.domain.enums.PaymentStatus;
 import es.marcha.backend.modules.order.domain.model.Order;
 import es.marcha.backend.modules.order.domain.model.Payment;
 import es.marcha.backend.modules.order.infrastructure.persistence.PaymentRepository;

@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import es.marcha.backend.core.shared.domain.enums.AttribType;
+import es.marcha.backend.modules.catalog.domain.enums.AttribType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

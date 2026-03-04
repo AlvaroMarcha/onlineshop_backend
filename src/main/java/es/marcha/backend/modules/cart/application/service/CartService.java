@@ -18,7 +18,7 @@ import es.marcha.backend.modules.cart.domain.model.Cart;
 import es.marcha.backend.modules.cart.domain.model.CartItem;
 import es.marcha.backend.modules.catalog.domain.model.product.Product;
 import es.marcha.backend.modules.catalog.domain.model.product.ProductVariant;
-import es.marcha.backend.core.shared.domain.enums.CartStatus;
+import es.marcha.backend.modules.cart.domain.enums.CartStatus;
 import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.modules.cart.infrastructure.persistence.CartItemRepository;
 import es.marcha.backend.modules.cart.infrastructure.persistence.CartRepository;

@@ -1,19 +1,19 @@
-package es.marcha.backend.core.shared.domain.enums;
+package es.marcha.backend.modules.order.domain.enums;
 
 /**
  * Representa el estado del ciclo de vida de un pago.
  *
  * Un pago es un evento financiero inmutable.
  * Una vez que un pago alcanza un estado final, NO debe modificarse.
- * Cualquier nueva acción financiera (reintento, reembolso, pago parcial)
+ * Cualquier nueva acci├│n financiera (reintento, reembolso, pago parcial)
  * debe representarse como un NUEVO registro de pago.
  */
 public enum PaymentStatus {
     /**
      * El pago ha sido creado en el sistema,
-     * pero TODAVÍA no se ha enviado al proveedor de pago.
+     * pero TODAV├ìA no se ha enviado al proveedor de pago.
      *
-     * No se ha realizado ninguna operación financiera.
+     * No se ha realizado ninguna operaci├│n financiera.
      */
     CREATED,
 
@@ -21,14 +21,14 @@ public enum PaymentStatus {
      * El pago ha sido enviado al proveedor y
      * se encuentra actualmente en proceso.
      *
-     * Común en métodos de pago asíncronos.
+     * Com├║n en m├®todos de pago as├¡ncronos.
      */
     PENDING,
 
     /**
      * El importe del pago ha sido autorizado por el banco,
-     * lo que significa que los fondos están reservados
-     * pero AÚN no han sido capturados.
+     * lo que significa que los fondos est├ín reservados
+     * pero A├ÜN no han sido capturados.
      *
      * Se usa principalmente en pagos con tarjeta.
      */
@@ -50,7 +50,7 @@ public enum PaymentStatus {
      * - Error del proveedor
      * - Rechazo del usuario
      *
-     * Este pago nunca llegará a completarse.
+     * Este pago nunca llegar├í a completarse.
      */
     FAILED,
 
@@ -58,18 +58,18 @@ public enum PaymentStatus {
      * El pago ha sido cancelado de forma intencionada.
      *
      * Puede producirse por:
-     * - Acción del usuario
-     * - Decisión del sistema
+     * - Acci├│n del usuario
+     * - Decisi├│n del sistema
      *
-     * No se ha capturado ningún importe.
+     * No se ha capturado ning├║n importe.
      */
     CANCELLED,
 
     /**
      * El pago ha expirado por inactividad
-     * o por superar el tiempo límite permitido.
+     * o por superar el tiempo l├¡mite permitido.
      *
-     * Muy común en flujos de pago con redirección.
+     * Muy com├║n en flujos de pago con redirecci├│n.
      */
     EXPIRED,
 

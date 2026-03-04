@@ -2,7 +2,7 @@ package es.marcha.backend.modules.order.application.dto.response;
 
 import java.time.LocalDateTime;
 
-import es.marcha.backend.core.shared.domain.enums.PaymentStatus;
+import es.marcha.backend.modules.order.domain.enums.PaymentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

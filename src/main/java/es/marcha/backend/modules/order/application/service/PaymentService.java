@@ -12,7 +12,7 @@ import es.marcha.backend.modules.order.application.dto.response.PaymentResponseD
 import es.marcha.backend.core.error.exception.OrderException;
 import es.marcha.backend.modules.order.application.mapper.PaymentMapper;
 import es.marcha.backend.core.shared.domain.enums.OrderStatus;
-import es.marcha.backend.core.shared.domain.enums.PaymentStatus;
+import es.marcha.backend.modules.order.domain.enums.PaymentStatus;
 import es.marcha.backend.modules.order.domain.model.Order;
 import es.marcha.backend.modules.order.domain.model.Payment;
 import es.marcha.backend.modules.order.infrastructure.persistence.PaymentRepository;
