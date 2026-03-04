@@ -16,16 +16,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
         @Value("${app.images.storage-path}")
         private String imagesStoragePath;
 
-        /**
-         * Mapea las solicitudes a la ruta pública de imágenes hacia el directorio
-         * del sistema de ficheros donde se almacenan las imágenes subidas por los
-         * usuarios y los recursos por defecto.
-         *
-         * <p>
-         * Ejemplo: {@code GET /images/42/pic-profile/john_profile.jpg}
-         * → {@code C:/uploads/images/42/pic-profile/john_profile.jpg}
-         * </p>
-         */
         private final ModuleFlagInterceptor moduleFlagInterceptor;
 
         @Autowired
@@ -38,6 +28,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 registry.addInterceptor(moduleFlagInterceptor);
         }
 
+        /**
+         * Mapea las solicitudes a la ruta pública de imágenes hacia el directorio
+         * del sistema de ficheros donde se almacenan las imágenes subidas por los
+         * usuarios y los recursos por defecto.
+         *
+         * <p>
+         * Ejemplo: {@code GET /images/42/pic-profile/john_profile.jpg}
+         * → {@code C:/uploads/images/42/pic-profile/john_profile.jpg}
+         * </p>
+         */
         @Override
         public void addResourceHandlers(ResourceHandlerRegistry registry) {
                 String pathPattern = imagesPublicPath.endsWith("/")
