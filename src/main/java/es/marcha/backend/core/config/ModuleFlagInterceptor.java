@@ -45,25 +45,16 @@ public class ModuleFlagInterceptor implements HandlerInterceptor {
         if (segments.length < 2) {
             return null;
         }
-        switch (segments[1]) {
-            case "cart":
-                return "cart";
-            case "products":
-            case "categories":
-                return "catalog";
-            case "company":
-                return "company";
-            case "coupons":
-                return "coupon";
-            case "invoices":
-                return "invoice";
-            case "orders":
-            case "stripe":
-                return "order";
-            case "wishlist":
-                return "wishlist";
-            default:
-                return null; // no es ruta de módulo
-        }
+
+        return switch (segments[1]) {
+            case "cart" -> "cart";
+            case "products", "categories" -> "catalog";
+            case "company" -> "company";
+            case "coupons" -> "coupon";
+            case "invoices" -> "invoice";
+            case "orders", "stripe" -> "order";
+            case "wishlist" -> "wishlist";
+            default -> null; // no es ruta de módulo
+        };
     }
 }
