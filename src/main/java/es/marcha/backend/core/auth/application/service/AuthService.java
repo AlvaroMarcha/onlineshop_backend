@@ -20,7 +20,7 @@ import es.marcha.backend.core.auth.domain.model.RefreshToken;
 import es.marcha.backend.core.user.domain.model.Role;
 import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.core.security.jwt.JwtUtil;
-import es.marcha.backend.services.mail.UserEmailNotificationService;
+import es.marcha.backend.modules.notification.application.service.UserEmailNotificationService;
 import es.marcha.backend.core.user.application.service.RoleService;
 import es.marcha.backend.core.user.application.service.UserService;
 import es.marcha.backend.core.shared.utils.Validations;

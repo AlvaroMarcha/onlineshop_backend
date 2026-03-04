@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.core.error.exception.UserException;
 import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.core.user.infrastructure.persistence.UserRepository;
-import es.marcha.backend.services.mail.UserEmailNotificationService;
+import es.marcha.backend.modules.notification.application.service.UserEmailNotificationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
