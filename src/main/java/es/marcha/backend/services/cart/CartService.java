@@ -51,15 +51,15 @@ public class CartService {
     // ─── Consulta ────────────────────────────────────────────────────────────────
 
     /**
-     * Devuelve el carrito activo del usuario, o 404 si no existe ninguno activo.
+     * Devuelve el carrito activo del usuario autenticado.
+     * Si no existe, se crea automáticamente.
      *
-     * @param userId ID del usuario
+     * @param username nombre de usuario (extraído del JWT)
      * @return {@link CartResponseDTO} con el carrito y sus ítems
-     * @throws CartException si no hay carrito activo
      */
-    public CartResponseDTO getCartByUserId(long userId) {
-        Cart cart = cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
-                .orElseThrow(() -> new CartException(CartException.DEFAULT));
+    public CartResponseDTO getCartByUsername(String username) {
+        User user = userService.getUserByUsernameOrEmail(username);
+        Cart cart = getOrCreateActiveCart(user);
         return CartMapper.toCartDTO(cart);
     }
 
@@ -67,7 +67,7 @@ public class CartService {
     // ─────────────────────────────────────────────────────────────
 
     /**
-     * Agrega un producto al carrito del usuario.
+     * Agrega un producto al carrito del usuario autenticado.
      * <p>
      * Si el carrito no existe se crea automáticamente.
      * Si el mismo producto+variante ya está en el carrito, se incrementa la
@@ -75,19 +75,19 @@ public class CartService {
      * Se valida el stock disponible antes de agregar.
      * </p>
      *
-     * @param userId  ID del usuario propietario del carrito
-     * @param request DTO con productId, variantId (nullable) y quantity
+     * @param username nombre de usuario (extraído del JWT)
+     * @param request  DTO con productId, variantId (nullable) y quantity
      * @return {@link CartResponseDTO} actualizado
      * @throws ProductException si el producto no existe, está inactivo o no hay
      *                          stock
      * @throws CartException    si la cantidad solicitada no es válida
      */
     @Transactional
-    public CartResponseDTO addItem(long userId, AddCartItemRequestDTO request) {
+    public CartResponseDTO addItem(String username, AddCartItemRequestDTO request) {
         if (request.getQuantity() <= 0)
             throw new CartException(CartException.QUANTITY_INVALID);
 
-        User user = userService.getUserByIdForHandler(userId);
+        User user = userService.getUserByUsernameOrEmail(username);
         Cart cart = getOrCreateActiveCart(user);
 
         // Resolver producto y variante
@@ -156,25 +156,26 @@ public class CartService {
     // ──────────────────────────────────────────────────────
 
     /**
-     * Actualiza la cantidad de un ítem existente en el carrito.
+     * Actualiza la cantidad de un ítem existente en el carrito del usuario
+     * autenticado.
      * Si la nueva cantidad es 0 o menos, el ítem se elimina.
      *
-     * @param userId  ID del usuario (para verificar propiedad del carrito)
-     * @param itemId  ID del CartItem a modificar
-     * @param request DTO con la nueva cantidad
+     * @param username nombre de usuario (extraído del JWT)
+     * @param itemId   ID del CartItem a modificar
+     * @param request  DTO con la nueva cantidad
      * @return {@link CartResponseDTO} actualizado
      * @throws CartException    si el carrito o el ítem no existen
      * @throws ProductException si la nueva cantidad supera el stock disponible
      */
     @Transactional
-    public CartResponseDTO updateItemQuantity(long userId, long itemId, UpdateCartItemRequestDTO request) {
-        Cart cart = getActiveCartOrThrow(userId);
+    public CartResponseDTO updateItemQuantity(String username, long itemId, UpdateCartItemRequestDTO request) {
+        User user = userService.getUserByUsernameOrEmail(username);
+        Cart cart = getActiveCartOrThrow(user.getId());
         CartItem item = cartItemRepository.findByCartIdAndId(cart.getId(), itemId)
                 .orElseThrow(() -> new CartException(CartException.ITEM_NOT_FOUND));
 
         // Cantidad <= 0 → eliminar el ítem directamente
         if (request.getQuantity() <= 0) {
-            cartItemRepository.delete(item);
             cart.getItems().remove(item);
         } else {
             // Validar stock antes de actualizar
@@ -202,23 +203,26 @@ public class CartService {
     // ────────────────────────────────────────────────────────────
 
     /**
-     * Elimina un ítem del carrito del usuario.
+     * Elimina un ítem del carrito del usuario autenticado.
      *
-     * @param userId ID del usuario
-     * @param itemId ID del CartItem a eliminar
+     * @param username nombre de usuario (extraído del JWT)
+     * @param itemId   ID del CartItem a eliminar
      * @return {@link CartResponseDTO} actualizado
      * @throws CartException si el carrito o el ítem no se encuentran
      */
     @Transactional
-    public CartResponseDTO removeItem(long userId, long itemId) {
-        Cart cart = getActiveCartOrThrow(userId);
+    public CartResponseDTO removeItem(String username, long itemId) {
+        User user = userService.getUserByUsernameOrEmail(username);
+        Cart cart = getActiveCartOrThrow(user.getId());
         CartItem item = cartItemRepository.findByCartIdAndId(cart.getId(), itemId)
                 .orElseThrow(() -> new CartException(CartException.ITEM_NOT_FOUND));
 
-        cartItemRepository.delete(item);
+        // Remover de la colección - orphanRemoval=true se encarga de eliminar de BD
+        cart.getItems().remove(item);
         refreshExpiry(cart);
         cartRepository.save(cart);
 
+        // Recargar para asegurar que el mapper tiene datos frescos
         Cart updatedCart = cartRepository.findById(cart.getId())
                 .orElseThrow(() -> new CartException());
         return CartMapper.toCartDTO(updatedCart);
@@ -228,14 +232,15 @@ public class CartService {
     // ──────────────────────────────────────────────────────────
 
     /**
-     * Elimina todos los ítems del carrito activo del usuario.
+     * Elimina todos los ítems del carrito activo del usuario autenticado.
      * Se usa externamente al confirmar un pedido.
      *
-     * @param userId ID del usuario
+     * @param username nombre de usuario (extraído del JWT)
      */
     @Transactional
-    public void clearCartByUserId(long userId) {
-        cartRepository.findByUserIdAndStatus(userId, CartStatus.ACTIVE)
+    public void clearCartByUsername(String username) {
+        User user = userService.getUserByUsernameOrEmail(username);
+        cartRepository.findByUserIdAndStatus(user.getId(), CartStatus.ACTIVE)
                 .ifPresent(cart -> {
                     cart.getItems().clear();
                     cart.setStatus(CartStatus.CONVERTED);
