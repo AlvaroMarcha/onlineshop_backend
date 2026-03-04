@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import es.marcha.backend.core.shared.domain.enums.CartStatus;
+import es.marcha.backend.modules.cart.domain.enums.CartStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

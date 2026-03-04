@@ -18,7 +18,7 @@ import es.marcha.backend.modules.order.application.dto.response.OrderResponseDTO
 import es.marcha.backend.modules.order.application.dto.response.PaymentResponseDTO;
 import es.marcha.backend.core.error.exception.OrderException;
 import es.marcha.backend.core.shared.domain.enums.OrderStatus;
-import es.marcha.backend.core.shared.domain.enums.PaymentStatus;
+import es.marcha.backend.modules.order.domain.enums.PaymentStatus;
 import es.marcha.backend.modules.order.domain.model.Payment;
 import es.marcha.backend.modules.order.application.service.OrderService;
 import es.marcha.backend.modules.order.application.service.PaymentService;

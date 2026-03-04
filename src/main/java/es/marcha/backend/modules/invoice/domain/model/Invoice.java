@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import es.marcha.backend.core.shared.domain.enums.InvoiceStatus;
+import es.marcha.backend.modules.invoice.domain.enums.InvoiceStatus;
 import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.modules.order.domain.model.Order;
 import jakarta.persistence.Column;

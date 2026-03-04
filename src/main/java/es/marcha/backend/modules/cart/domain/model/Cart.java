@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import es.marcha.backend.core.shared.domain.enums.CartStatus;
+import es.marcha.backend.modules.cart.domain.enums.CartStatus;
 import es.marcha.backend.core.user.domain.model.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
