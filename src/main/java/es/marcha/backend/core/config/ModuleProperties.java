@@ -1,148 +1,96 @@
 package es.marcha.backend.core.config;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import es.marcha.backend.core.config.domain.model.ModuleFlag;
+import es.marcha.backend.core.config.infrastructure.persistence.ModuleFlagRepository;
+import jakarta.annotation.PostConstruct;
+
 /**
- * Bean que guarda el estado de habilitación de cada módulo de negocio.
+ * Bean que gestiona el estado de habilitación de cada módulo de negocio.
  *
- * <p>
- * Las propiedades se pueden establecer en <code>application.properties</code>
- * como <code>modules.cart=true</code>, <code>modules.invoice=false</code>, etc.
+ * <p>Los valores se cargan desde la base de datos al iniciar la aplicación y se
+ * mantienen sincronizados. Cada cambio se persiste inmediatamente.</p>
  *
- * <p>
- * Los valores tienen por defecto <code>false</code> para que todos los módulos
- * arranquen deshabilitados. Pueden cambiarse dinámicamente llamando a los
- * setters
- * (por ejemplo desde un controlador de administración).
+ * <p>Si un módulo no existe en la BD, se crea automáticamente con valor {@code false}.</p>
  */
 @Component
-@ConfigurationProperties(prefix = "modules")
 public class ModuleProperties {
 
-    private boolean cart = false;
-    private boolean catalog = false;
-    private boolean company = false;
-    private boolean coupon = false;
-    private boolean invoice = false;
-    private boolean notification = false;
-    private boolean order = false;
-    private boolean wishlist = false;
+    private static final List<String> MODULE_NAMES = Arrays.asList(
+            "cart", "catalog", "company", "coupon",
+            "invoice", "notification", "order", "wishlist"
+    );
 
-    // getters & setters for each field
+    private final ModuleFlagRepository repository;
+    private final Map<String, Boolean> cache = new ConcurrentHashMap<>();
 
-    public boolean isCart() {
-        return cart;
-    }
-
-    public void setCart(boolean cart) {
-        this.cart = cart;
-    }
-
-    public boolean isCatalog() {
-        return catalog;
-    }
-
-    public void setCatalog(boolean catalog) {
-        this.catalog = catalog;
-    }
-
-    public boolean isCompany() {
-        return company;
-    }
-
-    public void setCompany(boolean company) {
-        this.company = company;
-    }
-
-    public boolean isCoupon() {
-        return coupon;
-    }
-
-    public void setCoupon(boolean coupon) {
-        this.coupon = coupon;
-    }
-
-    public boolean isInvoice() {
-        return invoice;
-    }
-
-    public void setInvoice(boolean invoice) {
-        this.invoice = invoice;
-    }
-
-    public boolean isNotification() {
-        return notification;
-    }
-
-    public void setNotification(boolean notification) {
-        this.notification = notification;
-    }
-
-    public boolean isOrder() {
-        return order;
-    }
-
-    public void setOrder(boolean order) {
-        this.order = order;
-    }
-
-    public boolean isWishlist() {
-        return wishlist;
-    }
-
-    public void setWishlist(boolean wishlist) {
-        this.wishlist = wishlist;
+    @Autowired
+    public ModuleProperties(ModuleFlagRepository repository) {
+        this.repository = repository;
     }
 
     /**
-     * Consulta genérica por nombre de módulo.
+     * Inicializa el cache cargando los valores desde la base de datos.
+     * Si algún módulo no existe, lo crea con valor false.
      */
-    public boolean isEnabled(String module) {
-        return switch (module) {
-            case "cart" -> cart;
-            case "catalog" -> catalog;
-            case "company" -> company;
-            case "coupon" -> coupon;
-            case "invoice" -> invoice;
-            case "notification" -> notification;
-            case "order" -> order;
-            case "wishlist" -> wishlist;
-            default -> false;
-        };
-    }
-
-    public void setEnabled(String module, boolean value) {
-        switch (module) {
-            case "cart" -> setCart(value);
-            case "catalog" -> setCatalog(value);
-            case "company" -> setCompany(value);
-            case "coupon" -> setCoupon(value);
-            case "invoice" -> setInvoice(value);
-            case "notification" -> setNotification(value);
-            case "order" -> setOrder(value);
-            case "wishlist" -> setWishlist(value);
-            default -> {
-                /* ignore */ }
+    @PostConstruct
+    public void init() {
+        for (String moduleName : MODULE_NAMES) {
+            ModuleFlag flag = repository.findByModuleName(moduleName)
+                    .orElseGet(() -> {
+                        ModuleFlag newFlag = ModuleFlag.builder()
+                                .moduleName(moduleName)
+                                .enabled(false)
+                                .build();
+                        return repository.save(newFlag);
+                    });
+            cache.put(moduleName, flag.getEnabled());
         }
     }
 
     /**
-     * Devuelve un mapa con los valores actuales (uso para administración).
+     * Consulta si un módulo está habilitado.
+     */
+    public boolean isEnabled(String module) {
+        return cache.getOrDefault(module, false);
+    }
+
+    /**
+     * Cambia el estado de un módulo y lo persiste en base de datos.
+     */
+    public void setEnabled(String module, boolean value) {
+        if (!MODULE_NAMES.contains(module)) {
+            return; // módulo no conocido, ignorar
+        }
+
+        cache.put(module, value);
+
+        // Persistir en BD
+        ModuleFlag flag = repository.findByModuleName(module)
+                .orElseGet(() -> ModuleFlag.builder()
+                        .moduleName(module)
+                        .enabled(value)
+                        .build());
+        flag.setEnabled(value);
+        repository.save(flag);
+    }
+
+    /**
+     * Devuelve un mapa con los valores actuales de todos los módulos.
      */
     public Map<String, Boolean> asMap() {
-        Map<String, Boolean> m = new HashMap<>();
-        m.put("cart", cart);
-        m.put("catalog", catalog);
-        m.put("company", company);
-        m.put("coupon", coupon);
-        m.put("invoice", invoice);
-        m.put("notification", notification);
-        m.put("order", order);
-        m.put("wishlist", wishlist);
-        return m;
+        return MODULE_NAMES.stream()
+                .collect(Collectors.toMap(
+                        name -> name,
+                        name -> cache.getOrDefault(name, false)
+                ));
     }
 }
