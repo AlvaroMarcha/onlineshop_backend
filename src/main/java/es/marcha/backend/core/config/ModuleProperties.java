@@ -16,18 +16,22 @@ import jakarta.annotation.PostConstruct;
 /**
  * Bean que gestiona el estado de habilitación de cada módulo de negocio.
  *
- * <p>Los valores se cargan desde la base de datos al iniciar la aplicación y se
- * mantienen sincronizados. Cada cambio se persiste inmediatamente.</p>
+ * <p>
+ * Los valores se cargan desde la base de datos al iniciar la aplicación y se
+ * mantienen sincronizados. Cada cambio se persiste inmediatamente.
+ * </p>
  *
- * <p>Si un módulo no existe en la BD, se crea automáticamente con valor {@code false}.</p>
+ * <p>
+ * Si un módulo no existe en la BD, se crea automáticamente con valor
+ * {@code false}.
+ * </p>
  */
 @Component
 public class ModuleProperties {
 
     private static final List<String> MODULE_NAMES = Arrays.asList(
             "cart", "catalog", "company", "coupon",
-            "invoice", "notification", "order", "wishlist"
-    );
+            "invoice", "notification", "order", "wishlist");
 
     private final ModuleFlagRepository repository;
     private final Map<String, Boolean> cache = new ConcurrentHashMap<>();
@@ -90,7 +94,6 @@ public class ModuleProperties {
         return MODULE_NAMES.stream()
                 .collect(Collectors.toMap(
                         name -> name,
-                        name -> cache.getOrDefault(name, false)
-                ));
+                        name -> cache.getOrDefault(name, false)));
     }
 }
