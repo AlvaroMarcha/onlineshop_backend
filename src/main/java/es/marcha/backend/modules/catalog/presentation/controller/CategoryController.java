@@ -34,7 +34,8 @@ public class CategoryController {
     /**
      * Obtiene todas las categorías activas del sistema.
      *
-     * @return {@link ResponseEntity} con la lista de {@link CategoryResponseDTO} y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con la lista de {@link CategoryResponseDTO} y
+     *         código HTTP 200 OK.
      */
     @GetMapping
     public ResponseEntity<List<CategoryResponseDTO>> getAllCategories() {
@@ -46,7 +47,8 @@ public class CategoryController {
      * Obtiene una categoría activa por su ID.
      *
      * @param id El ID de la categoría a obtener.
-     * @return {@link ResponseEntity} con el {@link CategoryResponseDTO} correspondiente y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con el {@link CategoryResponseDTO}
+     *         correspondiente y código HTTP 200 OK.
      */
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponseDTO> getCategoryById(@PathVariable Long id) {
@@ -58,7 +60,8 @@ public class CategoryController {
      * Crea y persiste una nueva categoría en el sistema.
      *
      * @param category La entidad {@link Category} a crear.
-     * @return {@link ResponseEntity} con el {@link CategoryResponseDTO} creado y código HTTP 201 CREATED.
+     * @return {@link ResponseEntity} con el {@link CategoryResponseDTO} creado y
+     *         código HTTP 201 CREATED.
      */
     @PostMapping
     public ResponseEntity<CategoryResponseDTO> saveCategory(@RequestBody Category category) {
@@ -69,8 +72,10 @@ public class CategoryController {
     /**
      * Actualiza una categoría existente con los nuevos datos proporcionados.
      *
-     * @param category La entidad {@link Category} con los datos actualizados. Debe incluir un ID válido.
-     * @return {@link ResponseEntity} con el {@link CategoryResponseDTO} actualizado y código HTTP 200 OK.
+     * @param category La entidad {@link Category} con los datos actualizados. Debe
+     *                 incluir un ID válido.
+     * @return {@link ResponseEntity} con el {@link CategoryResponseDTO} actualizado
+     *         y código HTTP 200 OK.
      */
     @PutMapping
     public ResponseEntity<CategoryResponseDTO> updateCategory(@RequestBody Category category) {
@@ -82,7 +87,8 @@ public class CategoryController {
      * Elimina una categoría por su ID.
      *
      * @param id El ID de la categoría a eliminar.
-     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP
+     *         200 OK.
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
@@ -94,8 +100,10 @@ public class CategoryController {
     /**
      * Crea una nueva subcategoría asociada a una categoría existente.
      *
-     * @param subcategory La entidad {@link Subcategory} a crear. Debe incluir el ID de su categoría padre.
-     * @return {@link ResponseEntity} con el {@link SubcategoryResponseDTO} creado y código HTTP 200 OK.
+     * @param subcategory La entidad {@link Subcategory} a crear. Debe incluir el ID
+     *                    de su categoría padre.
+     * @return {@link ResponseEntity} con el {@link SubcategoryResponseDTO} creado y
+     *         código HTTP 200 OK.
      */
     @PostMapping("/subcategories")
     public ResponseEntity<SubcategoryResponseDTO> createSubcategory(@RequestBody Subcategory subcategory) {
@@ -106,8 +114,10 @@ public class CategoryController {
     /**
      * Actualiza una subcategoría existente con los nuevos datos proporcionados.
      *
-     * @param subcategory La entidad {@link Subcategory} con los datos actualizados. Debe incluir un ID válido.
-     * @return {@link ResponseEntity} con el {@link SubcategoryResponseDTO} actualizado y código HTTP 200 OK.
+     * @param subcategory La entidad {@link Subcategory} con los datos actualizados.
+     *                    Debe incluir un ID válido.
+     * @return {@link ResponseEntity} con el {@link SubcategoryResponseDTO}
+     *         actualizado y código HTTP 200 OK.
      */
     @PutMapping("/subcategories")
     public ResponseEntity<SubcategoryResponseDTO> updateSubcategory(@RequestBody Subcategory subcategory) {
@@ -119,7 +129,8 @@ public class CategoryController {
      * Elimina una subcategoría por su ID.
      *
      * @param id El ID de la subcategoría a eliminar.
-     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP 200 OK.
+     * @return {@link ResponseEntity} con un mensaje de confirmación y código HTTP
+     *         200 OK.
      */
     @DeleteMapping("/subcategories/{id}")
     public ResponseEntity<String> deleteSubcategory(@PathVariable Long id) {
