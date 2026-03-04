@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.config.MailConfig;
+import es.marcha.backend.core.config.MailConfig;
 import es.marcha.backend.services.mail.google.GoogleOAuthService;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;

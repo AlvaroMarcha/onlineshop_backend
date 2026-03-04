@@ -9,13 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
-import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.mapper.ecommerce.ProductReviewMapper;
 import es.marcha.backend.model.ecommerce.product.ProductReview;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.repository.ecommerce.ProductReviewRepository;
-import es.marcha.backend.services.user.UserService;
-import es.marcha.backend.utils.ProductUtils;
+import es.marcha.backend.core.user.application.service.UserService;
+import es.marcha.backend.core.shared.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service

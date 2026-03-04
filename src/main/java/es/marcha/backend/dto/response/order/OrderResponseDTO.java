@@ -3,7 +3,7 @@ package es.marcha.backend.dto.response.order;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import es.marcha.backend.model.enums.OrderStatus;
+import es.marcha.backend.core.shared.domain.enums.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

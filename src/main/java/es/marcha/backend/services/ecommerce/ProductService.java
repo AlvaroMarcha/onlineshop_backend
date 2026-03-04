@@ -18,14 +18,14 @@ import es.marcha.backend.dto.request.ecommerce.ProductRequestDTO;
 import es.marcha.backend.dto.request.ecommerce.ProductSearchFilter;
 import es.marcha.backend.dto.response.ecommerce.product.ProductResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO;
-import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.mapper.ecommerce.ProductMapper;
 import es.marcha.backend.model.ecommerce.Inventory;
 import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.repository.ecommerce.InventoryRepository;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.ecommerce.specification.ProductSpecification;
-import es.marcha.backend.utils.ProductUtils;
+import es.marcha.backend.core.shared.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service

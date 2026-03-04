@@ -4,7 +4,7 @@ import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseDTO
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewResponseProductDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductReviewUserResponseDTO;
 import es.marcha.backend.model.ecommerce.product.ProductReview;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.user.domain.model.User;
 
 public class ProductReviewMapper {
 

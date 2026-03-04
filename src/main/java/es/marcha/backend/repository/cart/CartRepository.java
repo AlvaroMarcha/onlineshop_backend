@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import es.marcha.backend.model.cart.Cart;
-import es.marcha.backend.model.enums.CartStatus;
+import es.marcha.backend.core.shared.domain.enums.CartStatus;
 
 @Repository
 public interface CartRepository extends JpaRepository<Cart, Long> {

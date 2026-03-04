@@ -6,16 +6,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import es.marcha.backend.exception.AddressException;
-import es.marcha.backend.exception.CartException;
-import es.marcha.backend.exception.InvoiceException;
-import es.marcha.backend.exception.MediaException;
-import es.marcha.backend.exception.NoHandlerException;
-import es.marcha.backend.exception.OrderException;
-import es.marcha.backend.exception.ProductException;
-import es.marcha.backend.exception.ProductImageException;
-import es.marcha.backend.exception.RateLimitException;
-import es.marcha.backend.exception.UserException;
+import es.marcha.backend.core.error.exception.AddressException;
+import es.marcha.backend.core.error.exception.CartException;
+import es.marcha.backend.core.error.exception.InvoiceException;
+import es.marcha.backend.core.error.exception.MediaException;
+import es.marcha.backend.core.error.exception.NoHandlerException;
+import es.marcha.backend.core.error.exception.OrderException;
+import es.marcha.backend.core.error.exception.ProductException;
+import es.marcha.backend.core.error.exception.ProductImageException;
+import es.marcha.backend.core.error.exception.RateLimitException;
+import es.marcha.backend.core.error.exception.UserException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

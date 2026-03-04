@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import es.marcha.backend.model.enums.OrderStatus;
+import es.marcha.backend.core.shared.domain.enums.OrderStatus;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
@@ -22,8 +22,8 @@ import org.thymeleaf.context.Context;
 import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.OrderItems;
-import es.marcha.backend.model.user.User;
-import es.marcha.backend.services.media.MediaService;
+import es.marcha.backend.core.user.domain.model.User;
+import es.marcha.backend.core.filestorage.application.service.MediaService;
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

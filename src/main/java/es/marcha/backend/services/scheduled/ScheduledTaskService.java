@@ -7,9 +7,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import es.marcha.backend.repository.user.UserRepository;
+import es.marcha.backend.core.user.infrastructure.persistence.UserRepository;
 import es.marcha.backend.services.cart.CartService;
-import es.marcha.backend.services.security.RefreshTokenService;
+import es.marcha.backend.core.auth.application.service.RefreshTokenService;
 import lombok.extern.slf4j.Slf4j;
 
 /**

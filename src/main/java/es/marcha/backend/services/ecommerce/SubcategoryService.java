@@ -8,11 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.ecommerce.SubcategoryResponseDTO;
-import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.mapper.ecommerce.SubcategoryMapper;
 import es.marcha.backend.model.ecommerce.Subcategory;
 import es.marcha.backend.repository.ecommerce.SubcategoryRepository;
-import es.marcha.backend.utils.ProductUtils;
+import es.marcha.backend.core.shared.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service

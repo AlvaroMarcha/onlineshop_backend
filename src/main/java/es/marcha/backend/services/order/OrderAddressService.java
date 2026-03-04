@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
-import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.core.error.exception.OrderException;
 import es.marcha.backend.mapper.order.OrderAddrMapper;
 import es.marcha.backend.model.order.OrderAddresses;
 import es.marcha.backend.repository.order.OrderAddrRepository;

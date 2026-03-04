@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import es.marcha.backend.config.CompanyProperties;
+import es.marcha.backend.core.config.CompanyProperties;
 import es.marcha.backend.dto.response.company.CompanyConfigDTO;
 import es.marcha.backend.model.company.CompanyConfig;
 import es.marcha.backend.repository.company.CompanyConfigRepository;

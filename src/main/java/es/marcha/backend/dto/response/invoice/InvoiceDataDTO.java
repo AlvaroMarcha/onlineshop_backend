@@ -3,7 +3,7 @@ package es.marcha.backend.dto.response.invoice;
 import java.math.BigDecimal;
 import java.util.List;
 
-import es.marcha.backend.model.enums.DiscountType;
+import es.marcha.backend.core.shared.domain.enums.DiscountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

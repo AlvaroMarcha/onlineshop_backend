@@ -2,7 +2,7 @@ package es.marcha.backend.model.coupon;
 
 import java.time.LocalDateTime;
 
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.user.domain.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

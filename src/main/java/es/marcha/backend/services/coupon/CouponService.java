@@ -14,14 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import es.marcha.backend.dto.request.coupon.CouponRequestDTO;
 import es.marcha.backend.dto.response.coupon.CouponResponseDTO;
 import es.marcha.backend.dto.response.coupon.CouponValidationResponseDTO;
-import es.marcha.backend.exception.CouponException;
+import es.marcha.backend.core.error.exception.CouponException;
 import es.marcha.backend.model.coupon.Coupon;
 import es.marcha.backend.model.coupon.CouponUserUsage;
-import es.marcha.backend.model.enums.DiscountType;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.shared.domain.enums.DiscountType;
+import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.repository.coupon.CouponRepository;
 import es.marcha.backend.repository.coupon.CouponUserUsageRepository;
-import es.marcha.backend.repository.user.UserRepository;
+import es.marcha.backend.core.user.infrastructure.persistence.UserRepository;
 
 @Service
 public class CouponService {

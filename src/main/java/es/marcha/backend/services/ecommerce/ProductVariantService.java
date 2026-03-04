@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.request.ecommerce.product.ProductVariantRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.product.variant.ProductVariantResponseDTO;
-import es.marcha.backend.exception.ProductAttribException;
-import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.core.error.exception.ProductAttribException;
+import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.mapper.ecommerce.ProductVariantMapper;
 import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.model.ecommerce.product.ProductAttrib;
@@ -20,7 +20,7 @@ import es.marcha.backend.repository.ecommerce.ProductAttribValueRepository;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.ecommerce.ProductVariantAttribRepository;
 import es.marcha.backend.repository.ecommerce.ProductVariantRepository;
-import es.marcha.backend.utils.ProductUtils;
+import es.marcha.backend.core.shared.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service
