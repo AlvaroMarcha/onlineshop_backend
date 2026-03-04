@@ -14,7 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import es.marcha.backend.dto.response.company.CompanyConfigDTO;
 import es.marcha.backend.services.company.CompanyService;
-import es.marcha.backend.services.media.MediaService;
+import es.marcha.backend.core.filestorage.application.service.MediaService;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor

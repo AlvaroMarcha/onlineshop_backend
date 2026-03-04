@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import es.marcha.backend.dto.request.payment.CreatePaymentIntentRequestDTO;
 import es.marcha.backend.dto.request.payment.StripeConfirmRequestDTO;
 import es.marcha.backend.dto.response.payment.StripePaymentIntentResponseDTO;
-import es.marcha.backend.exception.StripePaymentException;
+import es.marcha.backend.core.error.exception.StripePaymentException;
 import es.marcha.backend.services.order.StripeService;
 
 @RestController

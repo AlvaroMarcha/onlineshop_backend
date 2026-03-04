@@ -16,10 +16,10 @@ import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.dto.response.order.OrderResponseDTO;
 import org.springframework.context.annotation.Lazy;
 
-import es.marcha.backend.exception.AddressException;
-import es.marcha.backend.exception.InvoiceException;
-import es.marcha.backend.exception.OrderException;
-import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.core.error.exception.AddressException;
+import es.marcha.backend.core.error.exception.InvoiceException;
+import es.marcha.backend.core.error.exception.OrderException;
+import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.model.coupon.Coupon;
 import es.marcha.backend.model.order.Invoice;
 import es.marcha.backend.services.coupon.CouponService;
@@ -27,17 +27,17 @@ import es.marcha.backend.services.invoice.InvoiceService;
 import es.marcha.backend.mapper.order.OrderAddrMapper;
 import es.marcha.backend.mapper.order.OrderMapper;
 import es.marcha.backend.model.ecommerce.product.Product;
-import es.marcha.backend.model.enums.OrderStatus;
+import es.marcha.backend.core.shared.domain.enums.OrderStatus;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.OrderItems;
-import es.marcha.backend.model.user.Address;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.user.domain.model.Address;
+import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.order.OrderRepository;
-import es.marcha.backend.repository.user.AddressRepository;
+import es.marcha.backend.core.user.infrastructure.persistence.AddressRepository;
 import es.marcha.backend.services.cart.CartService;
 import es.marcha.backend.services.mail.UserEmailNotificationService;
-import es.marcha.backend.services.user.UserService;
+import es.marcha.backend.core.user.application.service.UserService;
 import jakarta.transaction.Transactional;
 
 @Service

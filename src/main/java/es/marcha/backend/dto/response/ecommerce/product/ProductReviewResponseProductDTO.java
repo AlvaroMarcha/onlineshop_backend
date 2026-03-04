@@ -1,6 +1,6 @@
 package es.marcha.backend.dto.response.ecommerce.product;
 
-import es.marcha.backend.dto.response.user.UserResponseDTO;
+import es.marcha.backend.core.user.application.dto.response.UserResponseDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

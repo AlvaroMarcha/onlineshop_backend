@@ -1,6 +1,6 @@
 package es.marcha.backend.dto.request.ecommerce.product;
 
-import es.marcha.backend.model.enums.AttribType;
+import es.marcha.backend.core.shared.domain.enums.AttribType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

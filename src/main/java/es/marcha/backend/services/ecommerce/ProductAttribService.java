@@ -10,14 +10,14 @@ import es.marcha.backend.dto.request.ecommerce.product.ProductAttribRequestDTO;
 import es.marcha.backend.dto.request.ecommerce.product.ProductAttribValueRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.product.attrib.ProductAttribResponseDTO;
 import es.marcha.backend.dto.response.ecommerce.product.attrib.ProductAttribValueResponseDTO;
-import es.marcha.backend.exception.ProductAttribException;
+import es.marcha.backend.core.error.exception.ProductAttribException;
 import es.marcha.backend.mapper.ecommerce.ProductAttribMapper;
 import es.marcha.backend.mapper.ecommerce.ProductAttribValueMapper;
 import es.marcha.backend.model.ecommerce.product.ProductAttrib;
 import es.marcha.backend.model.ecommerce.product.ProductAttribValue;
 import es.marcha.backend.repository.ecommerce.ProductAttribRepository;
 import es.marcha.backend.repository.ecommerce.ProductAttribValueRepository;
-import es.marcha.backend.utils.ProductUtils;
+import es.marcha.backend.core.shared.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
 @Service

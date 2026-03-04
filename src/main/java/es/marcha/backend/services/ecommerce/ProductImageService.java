@@ -11,14 +11,14 @@ import org.springframework.web.multipart.MultipartFile;
 import es.marcha.backend.dto.request.ecommerce.ProductImageReorderItemDTO;
 import es.marcha.backend.dto.request.ecommerce.ProductImageUpdateRequestDTO;
 import es.marcha.backend.dto.response.ecommerce.product.ProductImageResponseDTO;
-import es.marcha.backend.exception.ProductException;
-import es.marcha.backend.exception.ProductImageException;
+import es.marcha.backend.core.error.exception.ProductException;
+import es.marcha.backend.core.error.exception.ProductImageException;
 import es.marcha.backend.mapper.ecommerce.ProductMapper;
 import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.model.ecommerce.product.ProductImage;
 import es.marcha.backend.repository.ecommerce.ProductImageRepository;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
-import es.marcha.backend.services.media.MediaService;
+import es.marcha.backend.core.filestorage.application.service.MediaService;
 
 @Service
 public class ProductImageService {

@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.order.OrderItemsResponseDTO;
-import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.core.error.exception.OrderException;
 import es.marcha.backend.mapper.order.OrderItemMapper;
 import es.marcha.backend.model.order.OrderItems;
 import es.marcha.backend.repository.order.OrderItemRepository;

@@ -2,7 +2,7 @@ package es.marcha.backend.mapper.order;
 
 import es.marcha.backend.dto.response.order.OrderResponseDTO;
 import es.marcha.backend.model.order.Order;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.user.domain.model.User;
 
 public class OrderMapper {
 

@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import es.marcha.backend.model.enums.InvoiceStatus;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.shared.domain.enums.InvoiceStatus;
+import es.marcha.backend.core.user.domain.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

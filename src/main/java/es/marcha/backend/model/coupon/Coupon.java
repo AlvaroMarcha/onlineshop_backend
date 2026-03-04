@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import es.marcha.backend.model.enums.DiscountType;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.shared.domain.enums.DiscountType;
+import es.marcha.backend.core.user.domain.model.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

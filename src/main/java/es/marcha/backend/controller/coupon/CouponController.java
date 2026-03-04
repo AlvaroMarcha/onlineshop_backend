@@ -22,7 +22,7 @@ import es.marcha.backend.dto.request.coupon.CouponRequestDTO;
 import es.marcha.backend.dto.response.coupon.CouponResponseDTO;
 import es.marcha.backend.dto.response.coupon.CouponValidationResponseDTO;
 import es.marcha.backend.services.coupon.CouponService;
-import es.marcha.backend.services.user.UserService;
+import es.marcha.backend.core.user.application.service.UserService;
 import jakarta.validation.Valid;
 
 @RestController

@@ -11,17 +11,17 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.dto.request.cart.AddCartItemRequestDTO;
 import es.marcha.backend.dto.response.cart.CartResponseDTO;
 import es.marcha.backend.dto.response.wishlist.WishlistResponseDTO;
-import es.marcha.backend.exception.WishlistException;
+import es.marcha.backend.core.error.exception.WishlistException;
 import es.marcha.backend.mapper.wishlist.WishlistMapper;
 import es.marcha.backend.model.ecommerce.product.Product;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.model.wishlist.Wishlist;
 import es.marcha.backend.model.wishlist.WishlistItem;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.wishlist.WishlistItemRepository;
 import es.marcha.backend.repository.wishlist.WishlistRepository;
 import es.marcha.backend.services.cart.CartService;
-import es.marcha.backend.services.user.UserService;
+import es.marcha.backend.core.user.application.service.UserService;
 import jakarta.transaction.Transactional;
 
 @Service

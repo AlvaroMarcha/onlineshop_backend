@@ -17,10 +17,10 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
 
-import es.marcha.backend.config.StripeConfig;
+import es.marcha.backend.core.config.StripeConfig;
 import es.marcha.backend.dto.response.payment.StripePaymentIntentResponseDTO;
-import es.marcha.backend.exception.StripePaymentException;
-import es.marcha.backend.model.enums.PaymentStatus;
+import es.marcha.backend.core.error.exception.StripePaymentException;
+import es.marcha.backend.core.shared.domain.enums.PaymentStatus;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.Payment;
 import es.marcha.backend.repository.order.PaymentRepository;

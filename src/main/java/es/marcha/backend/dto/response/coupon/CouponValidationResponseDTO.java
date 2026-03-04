@@ -2,7 +2,7 @@ package es.marcha.backend.dto.response.coupon;
 
 import java.math.BigDecimal;
 
-import es.marcha.backend.model.enums.DiscountType;
+import es.marcha.backend.core.shared.domain.enums.DiscountType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

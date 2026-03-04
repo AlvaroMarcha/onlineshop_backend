@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
-import es.marcha.backend.model.enums.OrderStatus;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.shared.domain.enums.OrderStatus;
+import es.marcha.backend.core.user.domain.model.User;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

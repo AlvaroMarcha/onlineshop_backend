@@ -3,7 +3,7 @@ package es.marcha.backend.mapper.order;
 import es.marcha.backend.dto.response.order.OrderAddrResponseDTO;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.OrderAddresses;
-import es.marcha.backend.model.user.Address;
+import es.marcha.backend.core.user.domain.model.Address;
 
 public class OrderAddrMapper {
     public static OrderAddrResponseDTO toOrderAddressDTO(OrderAddresses orderAddress) {

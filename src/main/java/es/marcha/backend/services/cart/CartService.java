@@ -11,20 +11,20 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.dto.request.cart.AddCartItemRequestDTO;
 import es.marcha.backend.dto.request.cart.UpdateCartItemRequestDTO;
 import es.marcha.backend.dto.response.cart.CartResponseDTO;
-import es.marcha.backend.exception.CartException;
-import es.marcha.backend.exception.ProductException;
+import es.marcha.backend.core.error.exception.CartException;
+import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.mapper.cart.CartMapper;
 import es.marcha.backend.model.cart.Cart;
 import es.marcha.backend.model.cart.CartItem;
 import es.marcha.backend.model.ecommerce.product.Product;
 import es.marcha.backend.model.ecommerce.product.ProductVariant;
-import es.marcha.backend.model.enums.CartStatus;
-import es.marcha.backend.model.user.User;
+import es.marcha.backend.core.shared.domain.enums.CartStatus;
+import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.repository.cart.CartItemRepository;
 import es.marcha.backend.repository.cart.CartRepository;
 import es.marcha.backend.repository.ecommerce.ProductRepository;
 import es.marcha.backend.repository.ecommerce.ProductVariantRepository;
-import es.marcha.backend.services.user.UserService;
+import es.marcha.backend.core.user.application.service.UserService;
 import jakarta.transaction.Transactional;
 
 @Service

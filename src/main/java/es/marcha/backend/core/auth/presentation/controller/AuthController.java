@@ -1,0 +1,241 @@
+package es.marcha.backend.core.auth.presentation.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import es.marcha.backend.core.auth.application.dto.request.LoginRequestDTO;
+import es.marcha.backend.core.auth.application.dto.request.LogoutRequestDTO;
+import es.marcha.backend.core.auth.application.dto.request.PasswordResetConfirmDTO;
+import es.marcha.backend.core.auth.application.dto.request.PasswordResetRequestDTO;
+import es.marcha.backend.core.auth.application.dto.request.RefreshTokenRequestDTO;
+import es.marcha.backend.core.auth.application.dto.request.RegisterRequestDTO;
+import es.marcha.backend.core.auth.application.dto.request.ResendVerificationRequestDTO;
+import es.marcha.backend.core.auth.application.dto.response.AuthResponseDTO;
+import es.marcha.backend.core.user.application.dto.response.LogoutResponseDTO;
+import es.marcha.backend.core.auth.application.service.AuthService;
+import es.marcha.backend.core.auth.application.service.PasswordResetService;
+import es.marcha.backend.core.auth.application.service.RateLimitService;
+import es.marcha.backend.core.auth.application.service.RateLimitService.EndpointType;
+import jakarta.servlet.http.HttpServletRequest;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+    @Autowired
+    private AuthService aService;
+    @Autowired
+    private PasswordResetService passwordResetService;
+    @Autowired
+    private RateLimitService rateLimitService;
+
+    /**
+     * Autentica un usuario mediante sus credenciales (username o email y
+     * contraseña).
+     *
+     * <p>
+     * Rate limit: máximo 5 intentos por IP cada 15 minutos.
+     * Los intentos exitosos resetean el contador.
+     * </p>
+     *
+     * @param credentials DTO con el username/email y la contraseña del usuario.
+     * @param request     Petición HTTP para obtener la IP del cliente.
+     * @return {@link ResponseEntity} con el {@link AuthResponseDTO} que incluye
+     *         el usuario autenticado y el token JWT generado, con código HTTP 200
+     *         OK.
+     */
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponseDTO> login(
+            @RequestBody LoginRequestDTO credentials,
+            HttpServletRequest request) {
+
+        String ip = getClientIp(request);
+        rateLimitService.checkRateLimit(ip, EndpointType.LOGIN);
+        AuthResponseDTO response = aService.login(credentials);
+        rateLimitService.resetCounter(ip, EndpointType.LOGIN);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Registra un nuevo usuario en el sistema.
+     *
+     * <p>
+     * Rate limit: máximo 10 peticiones por IP cada hora.
+     * Los registros exitosos resetean el contador.
+     * </p>
+     *
+     * @param userData DTO con los datos necesarios para el registro (nombre,
+     *                 apellido, username, email, contraseña y teléfono).
+     * @param request  Petición HTTP para obtener la IP del cliente.
+     * @return {@link ResponseEntity} con el {@link AuthResponseDTO} que incluye
+     *         el usuario registrado y el token JWT generado, con código HTTP 200
+     *         OK.
+     */
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponseDTO> register(
+            @RequestBody RegisterRequestDTO userData,
+            HttpServletRequest request) {
+
+        String ip = getClientIp(request);
+        rateLimitService.checkRateLimit(ip, EndpointType.REGISTER);
+        AuthResponseDTO response = aService.register(userData);
+        rateLimitService.resetCounter(ip, EndpointType.REGISTER);
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Cierra la sesión del usuario indicado, marcándolo como inactivo.
+     *
+     * @param data DTO que contiene el ID del usuario cuya sesión se desea cerrar.
+     * @return {@link ResponseEntity} con el {@link LogoutResponseDTO} que confirma
+     *         el cierre de sesión, con código HTTP 200 OK.
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<LogoutResponseDTO> logout(@RequestBody LogoutRequestDTO data) {
+        LogoutResponseDTO msg = aService.logout(data.getUserId());
+        return new ResponseEntity<>(msg, HttpStatus.OK);
+    }
+
+    /**
+     * Renueva el access token usando un refresh token válido.
+     * <p>
+     * El cliente envía el refresh token recibido en el login. Si es válido
+     * y no ha expirado ni sido revocado, se devuelve un nuevo access token JWT.
+     * El refresh token no cambia.
+     * </p>
+     *
+     * @param body DTO con el refresh token UUID.
+     * @return {@link ResponseEntity} con el nuevo {@link AuthResponseDTO} y código
+     *         HTTP 200 OK.
+     * @throws es.marcha.backend.core.error.exception.UserException con
+     *                                                   {@code REFRESH_TOKEN_INVALID}
+     *                                                   si no existe.
+     * @throws es.marcha.backend.core.error.exception.UserException con
+     *                                                   {@code REFRESH_TOKEN_EXPIRED}
+     *                                                   si ha caducado.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponseDTO> refresh(@RequestBody RefreshTokenRequestDTO body) {
+        AuthResponseDTO response = aService.refreshAccessToken(body.getRefreshToken());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    /**
+     * Inicia el flujo de restablecimiento de contraseña.
+     *
+     * <p>
+     * Genera un token con validez de 1 hora y envía un email con el enlace
+     * de restablecimiento. Si el email no existe, responde igualmente con 200
+     * para no revelar qué cuentas están registradas.
+     * </p>
+     *
+     * <p>
+     * Rate limit: máximo 3 intentos por IP cada hora.
+     * Las solicitudes exitosas resetean el contador.
+     * </p>
+     *
+     * @param body    DTO con el email del usuario.
+     * @param request Petición HTTP para obtener la IP del cliente.
+     * @return {@link ResponseEntity} con código HTTP 200 OK.
+     */
+    @PostMapping("/password-reset/request")
+    public ResponseEntity<Void> requestPasswordReset(
+            @RequestBody PasswordResetRequestDTO body,
+            HttpServletRequest request) {
+
+        String ip = getClientIp(request);
+        rateLimitService.checkRateLimit(ip, EndpointType.PASSWORD_RESET);
+        passwordResetService.requestReset(body.getEmail());
+
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Confirma el restablecimiento de contraseña con el token recibido por email.
+     *
+     * Valida el token, actualiza la contraseña y envía un email de notificación
+     * de cambio.
+     *
+     * @param body DTO con el token y la nueva contraseña.
+     * @return {@link ResponseEntity} con código HTTP 200 OK.
+     * @throws es.marcha.backend.core.error.exception.UserException con código
+     *                                                   {@code INVALID_RESET_TOKEN}
+     *                                                   si el token no existe,
+     *                                                   o
+     *                                                   {@code RESET_TOKEN_EXPIRED}
+     *                                                   si ha caducado.
+     */
+    @PostMapping("/password-reset/confirm")
+    public ResponseEntity<Void> confirmPasswordReset(@RequestBody PasswordResetConfirmDTO body) {
+        passwordResetService.confirmReset(body.getToken(), body.getNewPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Verifica el email del usuario mediante el token recibido por correo.
+     * <p>
+     * El cliente redirige al usuario a esta URL desde el enlace del email.
+     * Si el token es válido y no ha expirado, el usuario queda verificado.
+     * </p>
+     *
+     * @param token UUID de verificación enviado por email
+     * @return {@link ResponseEntity} vacío con código HTTP 200 OK
+     * @throws es.marcha.backend.core.error.exception.UserException con
+     *                                                   {@code VERIFICATION_TOKEN_INVALID}
+     *                                                   si el token no existe
+     * @throws es.marcha.backend.core.error.exception.UserException con
+     *                                                   {@code VERIFICATION_TOKEN_EXPIRED}
+     *                                                   si el token ha caducado
+     * @throws es.marcha.backend.core.error.exception.UserException con
+     *                                                   {@code EMAIL_ALREADY_VERIFIED}
+     *                                                   si ya estaba verificado
+     */
+    @GetMapping("/verify-email")
+    public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
+        aService.verifyEmail(token);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Reenvía el email de verificación al usuario.
+     * <p>
+     * Genera un nuevo token con expiración de 24h y envía el email.
+     * Útil cuando el enlace original ha expirado.
+     * </p>
+     *
+     * @param body DTO con el username o email del usuario
+     * @return {@link ResponseEntity} vacío con código HTTP 200 OK
+     * @throws es.marcha.backend.core.error.exception.UserException con
+     *                                                   {@code EMAIL_ALREADY_VERIFIED}
+     *                                                   si ya estaba verificado
+     */
+    @PostMapping("/resend-verification")
+    public ResponseEntity<Void> resendVerification(@RequestBody ResendVerificationRequestDTO body) {
+        aService.resendVerification(body.getUsernameOrEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Obtiene la IP real del cliente teniendo en cuenta proxies/balanceadores.
+     * Prioriza el header {@code X-Forwarded-For}; si no está presente, usa la IP
+     * directa de la conexión.
+     *
+     * @param request la petición HTTP entrante
+     * @return la IP del cliente como cadena de texto
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
+    }
+}

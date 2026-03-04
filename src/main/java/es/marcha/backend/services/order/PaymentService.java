@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.dto.response.order.PaymentResponseDTO;
-import es.marcha.backend.exception.OrderException;
+import es.marcha.backend.core.error.exception.OrderException;
 import es.marcha.backend.mapper.order.PaymentMapper;
-import es.marcha.backend.model.enums.OrderStatus;
-import es.marcha.backend.model.enums.PaymentStatus;
+import es.marcha.backend.core.shared.domain.enums.OrderStatus;
+import es.marcha.backend.core.shared.domain.enums.PaymentStatus;
 import es.marcha.backend.model.order.Order;
 import es.marcha.backend.model.order.Payment;
 import es.marcha.backend.repository.order.PaymentRepository;
