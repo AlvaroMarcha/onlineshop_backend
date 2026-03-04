@@ -3,6 +3,7 @@ package es.marcha.backend.core.presentation.controller;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,8 +35,8 @@ public class ModuleAdminController {
      * Lista el estado actual de todos los módulos.
      */
     @GetMapping
-    public Map<String, Boolean> list() {
-        return moduleProps.asMap();
+    public ResponseEntity<Map<String, Boolean>> list() {
+        return new ResponseEntity<>(moduleProps.asMap(), HttpStatus.OK);
     }
 
     /**
@@ -47,6 +48,6 @@ public class ModuleAdminController {
     @PostMapping("/{module}/{enabled}")
     public ResponseEntity<Map<String, Boolean>> set(@PathVariable String module, @PathVariable boolean enabled) {
         moduleProps.setEnabled(module, enabled);
-        return ResponseEntity.ok(moduleProps.asMap());
+        return new ResponseEntity<>(moduleProps.asMap(), HttpStatus.OK);
     }
 }
