@@ -68,8 +68,14 @@ public class CompanyController {
      * @return ruta absoluta del logo guardado en disco
      */
     @PostMapping("/logo")
-    public ResponseEntity<String> uploadLogo(@RequestParam("file") MultipartFile file) {
-        String savedPath = mService.saveCompanyLogo(file);
-        return ResponseEntity.ok(savedPath);
+    public ResponseEntity<CompanyConfigDTO> uploadLogo(@RequestParam("file") MultipartFile file) {
+        // guardamos el fichero en disco y obtenemos la ruta del sistema
+        mService.saveCompanyLogo(file);
+        // construimos la URL pública a partir del almacenamiento
+        String logoUrl = mService.getCompanyLogoUrl();
+        // persistimos la URL en la configuración de empresa
+        CompanyConfigDTO updated = companyService.updateConfig(
+                CompanyConfigDTO.builder().logoPath(logoUrl).build());
+        return ResponseEntity.ok(updated);
     }
 }

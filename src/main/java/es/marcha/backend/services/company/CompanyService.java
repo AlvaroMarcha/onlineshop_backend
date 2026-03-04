@@ -80,7 +80,7 @@ public class CompanyService {
                 dto.getSecondaryColor() != null ? dto.getSecondaryColor() : current.getSecondaryColor());
         config.setAccentColor(dto.getAccentColor() != null ? dto.getAccentColor() : current.getAccentColor());
         config.setTextColor(dto.getTextColor() != null ? dto.getTextColor() : current.getTextColor());
-        config.setLogoPath(dto.getLogoPath() != null ? dto.getLogoPath() : current.getLogoPath());
+        config.setLogoPath(dto.getLogoPath() != null ? dto.getLogoPath() : current.getLogoPath()); // path/url del logo
         config.setUpdatedAt(LocalDateTime.now());
 
         return toDTO(companyConfigRepository.save(config));
