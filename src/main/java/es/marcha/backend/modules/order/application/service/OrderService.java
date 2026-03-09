@@ -282,6 +282,58 @@ public class OrderService {
     }
 
     /**
+     * Maneja la transición de una orden al estado PAID: genera la factura PDF
+     * y envía el email de confirmación con la factura adjunta.
+     * <p>
+     * Este método se invoca tanto desde {@code nextStatus()} como desde
+     * {@code PaymentService.updateOrderStatusFromPayments()} para garantizar
+     * que la factura se genere independientemente del flujo (webhook o manual).
+     * </p>
+     *
+     * @param orderId ID de la orden que acaba de pasar a PAID
+     */
+    public void handleOrderPaidTransition(long orderId) {
+        log.info("[OrderService] ========== handleOrderPaidTransition iniciado para orderId={} ==========", orderId);
+        Order order = getOrderByIdHandler(orderId);
+        log.info("[OrderService] Orden recuperada: id={}, status={}, userId={}",
+                order.getId(), order.getStatus(), order.getUser().getId());
+        List<OrderItems> loadedItems = oItemsService.getItemsByOrderId(orderId);
+        log.info("[OrderService] Items de la orden cargados: {} items", loadedItems.size());
+
+        try {
+            log.info("[OrderService] Intentando generar factura para orderId={}...", orderId);
+            Invoice invoice = invoiceService.generateInvoice(orderId);
+            log.info("[OrderService] ✓ Factura {} generada automáticamente para el pedido {} al pasar a PAID.",
+                    invoice.getInvoiceNumber(), orderId);
+            log.info("[OrderService] Ruta del PDF: {}", invoice.getPdfPath());
+            log.info("[OrderService] Enviando email con factura adjunta...");
+            userEmailNotificationService.sendOrderStatusUpdateEmailWithInvoice(
+                    order.getUser(), order, loadedItems,
+                    invoice.getPdfPath(),
+                    invoice.getInvoiceNumber() + ".pdf");
+            log.info("[OrderService] Email con factura enviado exitosamente");
+        } catch (InvoiceException e) {
+            log.error(
+                    "[OrderService] ✗ ERROR al generar la factura para el pedido {} — se enviará el email sin adjunto",
+                    orderId, e);
+            log.error("[OrderService] Tipo de excepción: {}", e.getClass().getName());
+            log.error("[OrderService] Mensaje: {}", e.getMessage());
+            if (e.getCause() != null) {
+                log.error("[OrderService] Causa raíz: {}", e.getCause().getMessage(), e.getCause());
+            }
+            // Fallback: enviar email normal sin adjunto si la factura falla
+            log.info("[OrderService] Enviando email SIN adjunto como fallback...");
+            userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, loadedItems);
+            log.info("[OrderService] Email sin adjunto enviado");
+        } catch (Exception e) {
+            log.error("[OrderService] ✗ ERROR INESPERADO al procesar transición a PAID para orderId={}",
+                    orderId, e);
+            throw e;
+        }
+        log.info("[OrderService] ========== handleOrderPaidTransition finalizado para orderId={} ==========", orderId);
+    }
+
+    /**
      * Avanza el estado de una orden según la lógica de negocio definida.
      * <p>
      * Este método recupera la orden por su ID y actualiza su estado según las
@@ -374,22 +426,8 @@ public class OrderService {
         // Si el pedido acaba de pasar a PAID, generar la factura PDF automáticamente
         // y enviar el email con la factura adjunta
         if (currentStatus == OrderStatus.PAID) {
-            try {
-                Invoice invoice = invoiceService.generateInvoice(orderId);
-                log.info("[OrderService] Factura {} generada automáticamente para el pedido {} al pasar a PAID.",
-                        invoice.getInvoiceNumber(), orderId);
-                // Enviar email de pago confirmado con la factura como adjunto
-                userEmailNotificationService.sendOrderStatusUpdateEmailWithInvoice(
-                        order.getUser(), order, loadedItems,
-                        invoice.getPdfPath(),
-                        invoice.getInvoiceNumber() + ".pdf");
-                return order.getStatus();
-            } catch (InvoiceException e) {
-                log.error(
-                        "[OrderService] Error al generar la factura para el pedido {} — se enviará el email sin adjunto: {}",
-                        orderId, e.getMessage(), e);
-                // Fallback: enviar email normal sin adjunto si la factura falla
-            }
+            handleOrderPaidTransition(orderId);
+            return order.getStatus();
         }
 
         userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, loadedItems);

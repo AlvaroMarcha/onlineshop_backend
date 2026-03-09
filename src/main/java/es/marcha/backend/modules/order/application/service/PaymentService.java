@@ -159,7 +159,11 @@ public class PaymentService {
         payment.setStatus(currentStatus);
         pRepository.save(payment);
 
-        updateOrderStatusFromPayments(payment.getOrder());
+        // NOTA: No llamamos a updateOrderStatusFromPayments aquí para evitar múltiples
+        // llamadas cuando se avanza el estado varias veces seguidas (como en
+        // confirmPayment).
+        // Los llamadores deben invocar updateOrderStatusFromPayments explícitamente si
+        // es necesario.
 
         return payment.getStatus();
     }
@@ -198,7 +202,8 @@ public class PaymentService {
      *
      * @param order La orden cuyo estado debe recalcularse en base a sus pagos.
      */
-    private void updateOrderStatusFromPayments(Order order) {
+    @Transactional
+    public void updateOrderStatusFromPayments(Order order) {
         List<Payment> payments = pRepository.findAllByOrderId(order.getId());
 
         boolean hasSuccess = payments.stream()
@@ -216,19 +221,28 @@ public class PaymentService {
                 .allMatch(p -> p.getStatus() == PaymentStatus.FAILED ||
                         p.getStatus() == PaymentStatus.CANCELLED);
 
+        OrderStatus previousStatus = order.getStatus();
+        OrderStatus newStatus;
+
         if (hasSuccess && hasRefunded) {
-            order.setStatus(OrderStatus.RETURNED);
+            newStatus = OrderStatus.RETURNED;
         } else if (hasSuccess) {
-            order.setStatus(OrderStatus.PAID);
+            newStatus = OrderStatus.PAID;
         } else if (allFailedOrCancelled) {
-            order.setStatus(OrderStatus.CANCELLED);
+            newStatus = OrderStatus.CANCELLED;
         } else if (hasInProgress) {
-            order.setStatus(OrderStatus.PROCESSING);
+            newStatus = OrderStatus.PROCESSING;
         } else {
-            order.setStatus(OrderStatus.CANCELLED);
+            newStatus = OrderStatus.CANCELLED;
         }
 
+        order.setStatus(newStatus);
         oService.saveOrder(order);
+
+        // Si la orden acaba de pasar a PAID, generar factura y enviar email
+        if (newStatus == OrderStatus.PAID && previousStatus != OrderStatus.PAID) {
+            oService.handleOrderPaidTransition(order.getId());
+        }
     }
 
     /**
