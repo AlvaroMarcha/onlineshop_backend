@@ -212,10 +212,12 @@ public class UserService {
      *
      * @param token el UUID de verificación enviado al correo del usuario
      * @return la entidad {@link User} asociada al token
-     * @throws UserException si el token no existe en la base de datos
+     * @throws UserException si el token no existe en la base de datos o el usuario
+     *                       está eliminado/baneado
      */
     public User getUserByVerificationToken(String token) {
         return uRepository.findByVerificationToken(token)
+                .filter(user -> !user.isDeleted() && !user.isBanned())
                 .orElseThrow(() -> new UserException(UserException.VERIFICATION_TOKEN_INVALID));
     }
 
