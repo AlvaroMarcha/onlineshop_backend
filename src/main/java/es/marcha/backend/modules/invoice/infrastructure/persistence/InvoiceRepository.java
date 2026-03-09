@@ -25,11 +25,14 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     Optional<Invoice> findByInvoiceNumber(String invoiceNumber);
 
     /**
-     * Devuelve la última factura emitida en el año indicado bloqueando la fila
+     * Devuelve el número de la última factura emitida en el año indicado bloqueando
+     * la fila
      * para evitar números duplicados ante peticiones concurrentes.
      * El prefijo debe tener el formato {@code INV-YYYY-}.
+     * Solo devuelve el invoiceNumber (proyección escalar) para evitar cargar
+     * entidades Order/User que podrían haber sido eliminadas.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT i FROM Invoice i WHERE i.invoiceNumber LIKE CONCAT(:prefix, '%') ORDER BY i.invoiceNumber DESC")
-    List<Invoice> findLastByYearPrefix(@Param("prefix") String prefix);
+    @Query("SELECT i.invoiceNumber FROM Invoice i WHERE i.invoiceNumber LIKE CONCAT(:prefix, '%') ORDER BY i.invoiceNumber DESC")
+    List<String> findLastByYearPrefix(@Param("prefix") String prefix);
 }

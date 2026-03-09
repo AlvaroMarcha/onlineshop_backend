@@ -19,10 +19,12 @@ import com.stripe.param.PaymentIntentCreateParams;
 
 import es.marcha.backend.core.config.StripeConfig;
 import es.marcha.backend.modules.order.application.dto.response.StripePaymentIntentResponseDTO;
+import es.marcha.backend.core.error.exception.OrderException;
 import es.marcha.backend.core.error.exception.StripePaymentException;
 import es.marcha.backend.modules.order.domain.enums.PaymentStatus;
 import es.marcha.backend.modules.order.domain.model.Order;
 import es.marcha.backend.modules.order.domain.model.Payment;
+import es.marcha.backend.modules.order.infrastructure.persistence.OrderRepository;
 import es.marcha.backend.modules.order.infrastructure.persistence.PaymentRepository;
 
 @Service
@@ -37,6 +39,9 @@ public class StripeService {
 
     @Autowired
     private OrderService orderService;
+
+    @Autowired
+    private OrderRepository orderRepository;
 
     @Autowired
     private PaymentRepository paymentRepository;
@@ -212,6 +217,10 @@ public class StripeService {
         paymentRepository.save(payment);
         log.info("Payment id={} status updated to {} via Stripe webhook (intentId={})",
                 payment.getId(), targetStatus, intentId);
+
+        // Sincronizar el estado de la orden con los pagos para disparar la generación
+        // de factura
+        paymentService.updateOrderStatusFromPayments(payment.getOrder());
     }
 
     /**
@@ -249,18 +258,31 @@ public class StripeService {
                 } else if (payment.getStatus() == PaymentStatus.AUTHORIZED) {
                     paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.SUCCESS);
                 }
+                // Actualizar el estado de la orden una sola vez después de avanzar todos los
+                // estados
+                payment = paymentRepository.findById(payment.getId())
+                        .orElseThrow(() -> new StripePaymentException(StripePaymentException.PAYMENT_NOT_FOUND));
+                Order order = orderRepository.findById(payment.getOrder().getId())
+                        .orElseThrow(() -> new OrderException(OrderException.DEFAULT));
+                paymentService.updateOrderStatusFromPayments(order);
             } else if ("processing".equalsIgnoreCase(stripeStatus)
                     || "requires_action".equalsIgnoreCase(stripeStatus)
                     || "requires_payment_method".equalsIgnoreCase(stripeStatus)) {
                 if (payment.getStatus() == PaymentStatus.CREATED) {
                     paymentService.nextPaymentStatus(payment.getId(), PaymentStatus.PENDING);
                 }
+                payment = paymentRepository.findById(payment.getId())
+                        .orElseThrow(() -> new StripePaymentException(StripePaymentException.PAYMENT_NOT_FOUND));
+                Order order = orderRepository.findById(payment.getOrder().getId())
+                        .orElseThrow(() -> new OrderException(OrderException.DEFAULT));
+                paymentService.updateOrderStatusFromPayments(order);
             } else if ("canceled".equalsIgnoreCase(stripeStatus)) {
                 paymentService.cancelPayment(payment.getId());
+                // cancelPayment ya llama a updateOrderStatusFromPayments internamente
             }
         } catch (Exception e) {
             log.error("Error advancing payment status for local payment id={} intent={}: {}",
-                    payment.getId(), intentId, e.getMessage());
+                    payment.getId(), intentId, e.getMessage(), e);
             throw new StripePaymentException(StripePaymentException.FAILED_UPDATE_PAYMENT);
         }
     }

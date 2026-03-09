@@ -104,8 +104,11 @@ public class InvoiceService {
      */
     @Transactional
     public Invoice generateInvoice(long orderId) {
+        log.info("[InvoiceService] generateInvoice llamado para orderId={}", orderId);
         return invoiceRepository.findByOrderId(orderId)
                 .map(existing -> {
+                    log.info("[InvoiceService] Factura existente encontrada: {} (id={})",
+                            existing.getInvoiceNumber(), existing.getId());
                     // Si la entidad existe pero el PDF no está en disco, regenerar solo el archivo
                     boolean pdfMissing = existing.getPdfPath() == null
                             || Files.notExists(Path.of(existing.getPdfPath()));
@@ -121,9 +124,14 @@ public class InvoiceService {
                         existing.setPdfPath(newPath);
                         return invoiceRepository.save(existing);
                     }
+                    log.info("[InvoiceService] Factura {} ya tiene PDF válido en: {}",
+                            existing.getInvoiceNumber(), existing.getPdfPath());
                     return existing;
                 })
-                .orElseGet(() -> createInvoice(orderId));
+                .orElseGet(() -> {
+                    log.info("[InvoiceService] No existe factura previa, creando nueva para orderId={}", orderId);
+                    return createInvoice(orderId);
+                });
     }
 
     /**
@@ -252,10 +260,10 @@ public class InvoiceService {
     private synchronized String buildInvoiceNumber() {
         int year = LocalDate.now().getYear();
         String prefix = "INV-" + year + "-";
-        List<Invoice> last = invoiceRepository.findLastByYearPrefix(prefix);
+        List<String> last = invoiceRepository.findLastByYearPrefix(prefix);
         int nextSeq = 1;
         if (!last.isEmpty()) {
-            String lastNumber = last.get(0).getInvoiceNumber();
+            String lastNumber = last.get(0);
             try {
                 nextSeq = Integer.parseInt(lastNumber.substring(prefix.length())) + 1;
             } catch (NumberFormatException e) {
@@ -563,13 +571,23 @@ public class InvoiceService {
         // el ID de BD se añade al nombre del archivo para identificación rápida
         Path target = invoiceDir.resolve(invoiceNumber + "_" + invoiceId + ".pdf");
 
+        log.info("[InvoiceService] Intentando guardar PDF en: {}", target.toAbsolutePath());
+        log.info("[InvoiceService] storagePath configurado: {}", storagePath);
+        log.info("[InvoiceService] Tamaño del PDF: {} bytes", pdfBytes.length);
+
         try {
             if (Files.notExists(invoiceDir)) {
+                log.info("[InvoiceService] Directorio no existe, creando: {}", invoiceDir.toAbsolutePath());
                 Files.createDirectories(invoiceDir);
+                log.info("[InvoiceService] Directorio creado exitosamente");
+            } else {
+                log.info("[InvoiceService] Directorio ya existe: {}", invoiceDir.toAbsolutePath());
             }
             Files.write(target, pdfBytes, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
+            log.info("[InvoiceService] PDF guardado exitosamente en: {}", target.toAbsolutePath());
         } catch (IOException e) {
+            log.error("[InvoiceService] ERROR al guardar PDF en {}: {}", target.toAbsolutePath(), e.getMessage(), e);
             throw new InvoiceException(InvoiceException.STORAGE_ERROR, e);
         }
 
