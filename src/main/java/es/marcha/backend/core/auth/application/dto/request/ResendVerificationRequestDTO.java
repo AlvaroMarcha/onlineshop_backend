@@ -10,7 +10,7 @@ import lombok.Setter;
 public class ResendVerificationRequestDTO {
 
     /**
-     * Username o email del usuario que solicita reenvío del email de verificación.
+     * Email del usuario que solicita reenvío del email de verificación.
      */
-    private String usernameOrEmail;
+    private String email;
 }

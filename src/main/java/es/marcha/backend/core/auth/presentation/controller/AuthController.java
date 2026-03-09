@@ -116,11 +116,11 @@ public class AuthController {
      * @return {@link ResponseEntity} con el nuevo {@link AuthResponseDTO} y código
      *         HTTP 200 OK.
      * @throws es.marcha.backend.core.error.exception.UserException con
-     *                                                   {@code REFRESH_TOKEN_INVALID}
-     *                                                   si no existe.
+     *                                                              {@code REFRESH_TOKEN_INVALID}
+     *                                                              si no existe.
      * @throws es.marcha.backend.core.error.exception.UserException con
-     *                                                   {@code REFRESH_TOKEN_EXPIRED}
-     *                                                   si ha caducado.
+     *                                                              {@code REFRESH_TOKEN_EXPIRED}
+     *                                                              si ha caducado.
      */
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponseDTO> refresh(@RequestBody RefreshTokenRequestDTO body) {
@@ -167,11 +167,12 @@ public class AuthController {
      * @param body DTO con el token y la nueva contraseña.
      * @return {@link ResponseEntity} con código HTTP 200 OK.
      * @throws es.marcha.backend.core.error.exception.UserException con código
-     *                                                   {@code INVALID_RESET_TOKEN}
-     *                                                   si el token no existe,
-     *                                                   o
-     *                                                   {@code RESET_TOKEN_EXPIRED}
-     *                                                   si ha caducado.
+     *                                                              {@code INVALID_RESET_TOKEN}
+     *                                                              si el token no
+     *                                                              existe,
+     *                                                              o
+     *                                                              {@code RESET_TOKEN_EXPIRED}
+     *                                                              si ha caducado.
      */
     @PostMapping("/password-reset/confirm")
     public ResponseEntity<Void> confirmPasswordReset(@RequestBody PasswordResetConfirmDTO body) {
@@ -189,14 +190,17 @@ public class AuthController {
      * @param token UUID de verificación enviado por email
      * @return {@link ResponseEntity} vacío con código HTTP 200 OK
      * @throws es.marcha.backend.core.error.exception.UserException con
-     *                                                   {@code VERIFICATION_TOKEN_INVALID}
-     *                                                   si el token no existe
+     *                                                              {@code VERIFICATION_TOKEN_INVALID}
+     *                                                              si el token no
+     *                                                              existe
      * @throws es.marcha.backend.core.error.exception.UserException con
-     *                                                   {@code VERIFICATION_TOKEN_EXPIRED}
-     *                                                   si el token ha caducado
+     *                                                              {@code VERIFICATION_TOKEN_EXPIRED}
+     *                                                              si el token ha
+     *                                                              caducado
      * @throws es.marcha.backend.core.error.exception.UserException con
-     *                                                   {@code EMAIL_ALREADY_VERIFIED}
-     *                                                   si ya estaba verificado
+     *                                                              {@code EMAIL_ALREADY_VERIFIED}
+     *                                                              si ya estaba
+     *                                                              verificado
      */
     @GetMapping("/verify-email")
     public ResponseEntity<Void> verifyEmail(@RequestParam String token) {
@@ -214,12 +218,13 @@ public class AuthController {
      * @param body DTO con el username o email del usuario
      * @return {@link ResponseEntity} vacío con código HTTP 200 OK
      * @throws es.marcha.backend.core.error.exception.UserException con
-     *                                                   {@code EMAIL_ALREADY_VERIFIED}
-     *                                                   si ya estaba verificado
+     *                                                              {@code EMAIL_ALREADY_VERIFIED}
+     *                                                              si ya estaba
+     *                                                              verificado
      */
     @PostMapping("/resend-verification")
     public ResponseEntity<Void> resendVerification(@RequestBody ResendVerificationRequestDTO body) {
-        aService.resendVerification(body.getUsernameOrEmail());
+        aService.resendVerification(body.getEmail());
         return ResponseEntity.ok().build();
     }
 
