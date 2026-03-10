@@ -56,6 +56,9 @@ public class ProductService {
     @Lazy
     private ProductImageService imageService;
 
+    @Autowired
+    private InventoryService inventoryService;
+
     public static final String PRODUCT_DELETED = "PRODUCT WAS DELETED";
 
     /**
@@ -200,6 +203,12 @@ public class ProductService {
                 .build();
         inventoryRepository.save(inventory);
 
+        // Registrar movimiento PURCHASE como trazabilidad del stock inicial
+        inventoryService.recordMovementInternal(
+                saved, saved.getStock(), 0, saved.getStock(),
+                es.marcha.backend.modules.catalog.domain.enums.MovementType.PURCHASE,
+                "Stock inicial al crear el producto", "ADMIN");
+
         return ProductMapper.toProductDTO(saved);
     }
 
@@ -316,9 +325,22 @@ public class ProductService {
         Product product = prodRepository.findById(id)
                 .orElseThrow(() -> new ProductException(ProductException.DEFAULT));
 
+        int previousStock = product.getStock();
+        int quantity = Math.abs(newStock - previousStock);
+
         product.setStock(newStock);
         product.setUpdatedAt(LocalDateTime.now());
         prodRepository.save(product);
+
+        // Registrar movimiento y sincronizar inventario solo si hay cambio real
+        if (quantity > 0) {
+            es.marcha.backend.modules.catalog.domain.enums.MovementType type = (newStock >= previousStock)
+                    ? es.marcha.backend.modules.catalog.domain.enums.MovementType.ADJUSTMENT
+                    : es.marcha.backend.modules.catalog.domain.enums.MovementType.OUT;
+            inventoryService.recordMovementInternal(
+                    product, quantity, previousStock, newStock, type,
+                    "Ajuste manual de stock desde el dashboard", "ADMIN");
+        }
 
         return ProductException.STOCK_UPDATED;
     }

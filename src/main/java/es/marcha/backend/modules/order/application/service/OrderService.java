@@ -8,6 +8,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.modules.order.application.dto.request.OrderItemRequestDTO;
@@ -36,6 +38,8 @@ import es.marcha.backend.modules.catalog.infrastructure.persistence.ProductRepos
 import es.marcha.backend.modules.order.infrastructure.persistence.OrderRepository;
 import es.marcha.backend.core.user.infrastructure.persistence.AddressRepository;
 import es.marcha.backend.modules.cart.application.service.CartService;
+import es.marcha.backend.modules.catalog.application.service.InventoryService;
+import es.marcha.backend.modules.catalog.domain.enums.MovementType;
 import es.marcha.backend.modules.notification.application.service.UserEmailNotificationService;
 import es.marcha.backend.core.user.application.service.UserService;
 import jakarta.transaction.Transactional;
@@ -68,6 +72,9 @@ public class OrderService {
 
     @Autowired
     private CartService cartService;
+
+    @Autowired
+    private InventoryService inventoryService;
 
     @Autowired
     private CouponService couponService;
@@ -116,6 +123,29 @@ public class OrderService {
         }
 
         return orders;
+    }
+
+    /**
+     * Obtiene todas las órdenes del sistema con paginación para el panel de
+     * administración.
+     * Incluye todas las órdenes independientemente de su estado o usuario.
+     *
+     * @param pageable Configuración de paginación y ordenamiento.
+     * @return {@link Page} de {@link OrderResponseDTO} con las órdenes paginadas.
+     */
+    public Page<OrderResponseDTO> getAllOrdersForAdmin(Pageable pageable) {
+        return oRepository.findAllWithUser(pageable)
+                .map(OrderMapper::toOrderDTO)
+                .map(order -> {
+                    try {
+                        OrderAddrResponseDTO addressSnapshot = oAddrService.getOrderAddressByOrderId(order.getId());
+                        order.setAddress(addressSnapshot);
+                    } catch (Exception e) {
+                        // Si no hay dirección de envío, continuar sin ella
+                        log.warn("No se pudo cargar la dirección para la orden {}: {}", order.getId(), e.getMessage());
+                    }
+                    return order;
+                });
     }
 
     /**
@@ -171,8 +201,16 @@ public class OrderService {
                 throw new ProductException(ProductException.INSUFFICIENT_STOCK);
 
             // Decrementar stock atómicamente dentro de la transacción
-            product.setStock(product.getStock() - itemDto.getQuantity());
+            int previousStock = product.getStock();
+            int newStock = previousStock - itemDto.getQuantity();
+            product.setStock(newStock);
             productRepository.save(product);
+
+            // Registrar movimiento SALE y sincronizar inventario
+            inventoryService.recordMovementInternal(
+                    product, itemDto.getQuantity(), previousStock, newStock,
+                    MovementType.SALE,
+                    "Venta generada por pedido", "SYSTEM");
 
             BigDecimal effectivePrice = (product.getDiscountPrice() != null
                     && product.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0)
@@ -388,6 +426,23 @@ public class OrderService {
             // Cargar los items dentro de la transacción para evitar
             // LazyInitializationException en el hilo async
             List<OrderItems> cancelledItems = oItemsService.getItemsByOrderId(orderId);
+
+            // Restaurar stock y registrar movimiento RETURN por cada ítem cancelado
+            for (OrderItems item : cancelledItems) {
+                Product p = productRepository.findById(item.getProduct().getId()).orElse(null);
+                if (p != null) {
+                    int prevStock = p.getStock();
+                    int restoredStock = prevStock + item.getQuantity();
+                    p.setStock(restoredStock);
+                    p.setUpdatedAt(java.time.LocalDateTime.now());
+                    productRepository.save(p);
+                    inventoryService.recordMovementInternal(
+                            p, item.getQuantity(), prevStock, restoredStock,
+                            MovementType.RETURN,
+                            "Devolución por cancelación del pedido #" + orderId, "SYSTEM");
+                }
+            }
+
             userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, cancelledItems);
             return order.getStatus();
         }
@@ -406,6 +461,23 @@ public class OrderService {
                         // Cargar los items dentro de la transacción para evitar
                         // LazyInitializationException en el hilo async
                         List<OrderItems> returnedItems = oItemsService.getItemsByOrderId(orderId);
+
+                        // Restaurar stock y registrar movimiento RETURN por cada ítem devuelto
+                        for (OrderItems item : returnedItems) {
+                            Product p = productRepository.findById(item.getProduct().getId()).orElse(null);
+                            if (p != null) {
+                                int prevStock = p.getStock();
+                                int restoredStock = prevStock + item.getQuantity();
+                                p.setStock(restoredStock);
+                                p.setUpdatedAt(java.time.LocalDateTime.now());
+                                productRepository.save(p);
+                                inventoryService.recordMovementInternal(
+                                        p, item.getQuantity(), prevStock, restoredStock,
+                                        MovementType.RETURN,
+                                        "Devolución por retorno del pedido #" + orderId, "SYSTEM");
+                            }
+                        }
+
                         userEmailNotificationService.sendOrderStatusUpdateEmail(order.getUser(), order, returnedItems);
                         return order.getStatus();
                     }
