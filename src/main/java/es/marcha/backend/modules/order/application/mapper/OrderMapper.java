@@ -9,7 +9,7 @@ public class OrderMapper {
         public static OrderResponseDTO toOrderDTO(Order order) {
                 return OrderResponseDTO.builder()
                                 .id(order.getId())
-                                .userId(order.getUser().getId())
+                                .userId(order.getUser() != null ? order.getUser().getId() : 0L)
                                 .status(order.getStatus())
                                 .totalAmount(order.getTotalAmount())
                                 .discountAmount(order.getDiscountAmount())
