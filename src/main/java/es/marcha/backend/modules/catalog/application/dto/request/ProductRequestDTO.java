@@ -22,6 +22,15 @@ public class ProductRequestDTO {
     private BigDecimal price;
     private BigDecimal discountPrice;
     private BigDecimal taxRate;
+    /**
+     * IDs de categorías (opcional - usar solo si el producto no tiene subcategorías
+     * específicas)
+     */
+    private List<Long> categoryIds;
+    /**
+     * IDs de subcategorías (opcional - las categorías se derivan automáticamente si
+     * se proporcionan)
+     */
     private List<Long> subcategoryIds;
     /** Usuario que crea el producto (nombre o email del admin) */
     private String createdBy;

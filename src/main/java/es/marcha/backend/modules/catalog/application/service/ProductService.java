@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -20,7 +21,9 @@ import es.marcha.backend.modules.catalog.application.dto.response.product.Produc
 import es.marcha.backend.modules.catalog.application.dto.response.product.ProductReviewResponseDTO;
 import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.modules.catalog.application.mapper.ProductMapper;
+import es.marcha.backend.modules.catalog.domain.model.Category;
 import es.marcha.backend.modules.catalog.domain.model.Inventory;
+import es.marcha.backend.modules.catalog.domain.model.Subcategory;
 import es.marcha.backend.modules.catalog.domain.model.product.Product;
 import es.marcha.backend.modules.catalog.infrastructure.persistence.InventoryRepository;
 import es.marcha.backend.modules.catalog.infrastructure.persistence.ProductRepository;
@@ -39,6 +42,12 @@ public class ProductService {
 
     @Autowired
     private ProductReviewService prService;
+
+    @Autowired
+    private SubcategoryService subcategoryService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     /**
      * Inyectado con @Lazy para evitar dependencia circular con ProductImageService
@@ -113,6 +122,7 @@ public class ProductService {
      * @throws ProductException si el producto es {@code null} o la creación falla
      */
     @Transactional
+    @SuppressWarnings("deprecation") // Autorizados a sincronizar Product.categories desde subcategorías
     public ProductResponseDTO createProduct(Product product) {
         if (product == null) {
             throw new ProductException(ProductException.FAILED_CREATE);
@@ -154,6 +164,27 @@ public class ProductService {
             product.setLowStockThreshold(5);
         }
 
+        // Validar que tenga categorías O subcategorías (al menos una)
+        boolean hasSubcategories = product.getSubcategories() != null && !product.getSubcategories().isEmpty();
+        boolean hasCategories = product.getCategories() != null && !product.getCategories().isEmpty();
+
+        if (!hasSubcategories && !hasCategories) {
+            throw new IllegalArgumentException("El producto debe tener al menos una categoría o subcategoría");
+        }
+
+        // Caso 1: Si tiene subcategorías → Derivar categorías desde subcategorías
+        // (Opción 1)
+        if (hasSubcategories) {
+            List<Category> categories = product.getSubcategories().stream()
+                    .map(Subcategory::getCategory)
+                    .distinct()
+                    .collect(Collectors.toList());
+            product.setCategories(categories);
+        }
+        // Caso 2: Si solo tiene categorías → Usar categorías directas, subcategorías
+        // vacías
+        // (product.getCategories() ya está asignado desde el mapper)
+
         Product saved = prodRepository.save(product);
 
         // Crear registro de Inventario con el stock inicial del producto
@@ -181,13 +212,19 @@ public class ProductService {
      * actualiza la marca de tiempo {@code updatedAt} y guarda los cambios
      * dentro de un contexto transaccional.
      * </p>
+     * <p>
+     * Las subcategorías se actualizan desde {@code subcategoryIds} del DTO.
+     * Las categorías se derivan automáticamente de las subcategorías asignadas
+     * para mantener consistencia (Opción 1: derivar categorías de subcategorías).
+     * </p>
      *
-     * @param updatedProduct objeto {@link Product} que contiene los datos
-     *                       actualizados
+     * @param id  ID del producto a actualizar
+     * @param dto DTO con los datos actualizados del producto
      * @return el producto actualizado mapeado a {@link ProductResponseDTO}
      * @throws ProductException si el producto no existe o la actualización falla
      */
     @Transactional
+    @SuppressWarnings("deprecation") // Autorizados a sincronizar Product.categories desde subcategorías
     public ProductResponseDTO updateProduct(long id, ProductRequestDTO dto) {
         Product product = prodRepository.findById(id)
                 .orElseThrow(() -> new ProductException(ProductException.FAILED_UPDATE));
@@ -202,6 +239,31 @@ public class ProductService {
         product.setWeight(dto.getWeight());
         product.setDigital(dto.isDigital());
         product.setFeatured(dto.isFeatured());
+
+        // Actualizar categorías/subcategorías si se proporcionan
+        boolean hasSubcategoryIds = dto.getSubcategoryIds() != null && !dto.getSubcategoryIds().isEmpty();
+        boolean hasCategoryIds = dto.getCategoryIds() != null && !dto.getCategoryIds().isEmpty();
+
+        if (hasSubcategoryIds) {
+            // Caso 1: Tiene subcategorías → Derivar categorías desde subcategorías
+            List<Subcategory> subcategories = subcategoryService.getAllSubcategoriesHandler(dto.getSubcategoryIds());
+            product.setSubcategories(subcategories);
+
+            List<Category> categories = subcategories.stream()
+                    .map(Subcategory::getCategory)
+                    .distinct()
+                    .collect(Collectors.toList());
+            product.setCategories(categories);
+
+        } else if (hasCategoryIds) {
+            // Caso 2: Solo tiene categorías → Usar categorías directas, limpiar
+            // subcategorías
+            List<Category> categories = categoryService.getAllCategoriesHandler(dto.getCategoryIds());
+            product.setCategories(categories);
+            product.setSubcategories(java.util.Collections.emptyList());
+        }
+        // Si no se envían ni categoryIds ni subcategoryIds → No actualizar (mantener
+        // actuales)
 
         return ProductMapper.toProductDTO(prodRepository.save(product));
     }

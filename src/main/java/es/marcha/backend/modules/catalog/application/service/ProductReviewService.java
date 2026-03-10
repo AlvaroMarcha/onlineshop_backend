@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import es.marcha.backend.modules.catalog.application.dto.response.product.ProductReviewResponseDTO;
 import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.modules.catalog.application.mapper.ProductReviewMapper;
+import es.marcha.backend.modules.catalog.domain.model.product.Product;
 import es.marcha.backend.modules.catalog.domain.model.product.ProductReview;
 import es.marcha.backend.core.user.domain.model.User;
+import es.marcha.backend.modules.catalog.infrastructure.persistence.ProductRepository;
 import es.marcha.backend.modules.catalog.infrastructure.persistence.ProductReviewRepository;
 import es.marcha.backend.core.user.application.service.UserService;
 import es.marcha.backend.core.shared.utils.ProductUtils;
@@ -25,6 +27,9 @@ public class ProductReviewService {
     private ProductReviewRepository pReviewRepository;
 
     @Autowired
+    private ProductRepository prodRepository;
+
+    @Autowired
     private UserService uService;
 
     public static final String REVIEW_DELETED = "REVIEW WAS DELETED";
@@ -34,7 +39,8 @@ public class ProductReviewService {
      * Lanza excepción si no hay ninguna reseña.
      *
      * @param productId El ID del producto cuyas reseñas se desean obtener.
-     * @return Lista de {@link ProductReviewResponseDTO} con las reseñas del producto.
+     * @return Lista de {@link ProductReviewResponseDTO} con las reseñas del
+     *         producto.
      * @throws ProductException si el producto no tiene reseñas activas.
      */
     public List<ProductReviewResponseDTO> getAllReviewsByProduct(long productId) {
@@ -51,8 +57,10 @@ public class ProductReviewService {
     }
 
     /**
-     * Obtiene todas las reseñas activas y no eliminadas de un producto para uso interno.
-     * A diferencia de {@link #getAllReviewsByProduct}, no lanza excepción si la lista está vacía.
+     * Obtiene todas las reseñas activas y no eliminadas de un producto para uso
+     * interno.
+     * A diferencia de {@link #getAllReviewsByProduct}, no lanza excepción si la
+     * lista está vacía.
      *
      * @param productId El ID del producto cuyas reseñas se desean obtener.
      * @return Lista de {@link ProductReviewResponseDTO}, posiblemente vacía.
@@ -88,7 +96,8 @@ public class ProductReviewService {
 
     /**
      * Persiste una reseña directamente en la base de datos para uso interno.
-     * No inicializa campos por defecto; debe usarse cuando la entidad ya está preparada.
+     * No inicializa campos por defecto; debe usarse cuando la entidad ya está
+     * preparada.
      *
      * @param review La reseña {@link ProductReview} a guardar.
      * @return La entidad {@link ProductReview} persistida.
@@ -109,11 +118,33 @@ public class ProductReviewService {
         ProductReview updatedReview = pReviewRepository.findById(review.getId())
                 .orElseThrow(() -> new ProductException(ProductException.FAILED_FETCH_REVIEW));
 
-        // !! Pensar como se modificará para no romper rating
-        // updatedReview.setRating(review.getRating());
+        // Guardar el rating antiguo para recalcular el rating del producto si cambia
+        int oldRating = updatedReview.getRating();
+        boolean ratingChanged = false;
+
+        // Actualizar rating si se proporciona y es diferente
+        if (review.getRating() != oldRating) {
+            ProductUtils.validateRating(review.getRating());
+            updatedReview.setRating(review.getRating());
+            ratingChanged = true;
+        }
+
+        // Actualizar título y comentario
         updatedReview.setTitle(review.getTitle());
         updatedReview.setComment(review.getComment());
         updatedReview.setUpdatedAt(LocalDateTime.now());
+
+        // Si cambió el rating, recalcular el rating del producto
+        if (ratingChanged) {
+            Product product = updatedReview.getProduct();
+
+            // Ajustar el rating del producto: restar el antiguo y sumar el nuevo
+            double currentTotalRating = product.getRating() != null ? product.getRating() : 0.0;
+            double newTotalRating = currentTotalRating - oldRating + review.getRating();
+
+            product.setRating(newTotalRating);
+            prodRepository.save(product);
+        }
 
         return ProductReviewMapper.toProductReviewDTO(saveReview(updatedReview));
     }

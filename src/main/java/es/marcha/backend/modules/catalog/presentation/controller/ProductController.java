@@ -33,12 +33,14 @@ import es.marcha.backend.modules.catalog.application.dto.response.product.Produc
 import es.marcha.backend.modules.catalog.application.dto.response.product.ProductResponseDTO;
 import es.marcha.backend.modules.catalog.application.dto.response.product.ProductReviewResponseDTO;
 import es.marcha.backend.modules.catalog.application.mapper.ProductMapper;
+import es.marcha.backend.modules.catalog.domain.model.Category;
 import es.marcha.backend.modules.catalog.domain.model.Subcategory;
 import es.marcha.backend.modules.catalog.domain.model.product.Product;
 import es.marcha.backend.modules.catalog.domain.model.product.ProductReview;
 import es.marcha.backend.modules.catalog.application.service.ProductImageService;
 import es.marcha.backend.modules.catalog.application.service.ProductReviewService;
 import es.marcha.backend.modules.catalog.application.service.ProductService;
+import es.marcha.backend.modules.catalog.application.service.CategoryService;
 import es.marcha.backend.modules.catalog.application.service.SubcategoryService;
 import es.marcha.backend.modules.wishlist.application.service.WishlistService;
 
@@ -54,6 +56,9 @@ public class ProductController {
 
     @Autowired
     private SubcategoryService subcatService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     @Autowired
     private ProductImageService imageService;
@@ -160,8 +165,11 @@ public class ProductController {
      */
     @PostMapping
     public ResponseEntity<ProductResponseDTO> createProduct(@Valid @RequestBody ProductRequestDTO productDTO) {
+        // Obtener subcategorías y categorías según lo que se envíe en el DTO
         List<Subcategory> subcategories = subcatService.getAllSubcategoriesHandler(productDTO.getSubcategoryIds());
-        Product product = ProductMapper.toProductByRequestProduct(productDTO, subcategories);
+        List<Category> categories = categoryService.getAllCategoriesHandler(productDTO.getCategoryIds());
+
+        Product product = ProductMapper.toProductByRequestProduct(productDTO, subcategories, categories);
         ProductResponseDTO createdProduct = prodService.createProduct(product);
         return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
     }
