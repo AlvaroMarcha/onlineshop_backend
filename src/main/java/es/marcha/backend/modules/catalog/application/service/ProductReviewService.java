@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import es.marcha.backend.modules.catalog.application.dto.response.product.ProductReviewResponseDTO;
@@ -72,6 +74,21 @@ public class ProductReviewService {
                 .toList();
 
         return reviews;
+    }
+
+    /**
+     * Obtiene todas las reseñas del sistema con paginación para el panel de
+     * administración.
+     * Incluye todas las reseñas independientemente de su estado (activas,
+     * inactivas, eliminadas).
+     *
+     * @param pageable Configuración de paginación y ordenamiento.
+     * @return {@link Page} de {@link ProductReviewResponseDTO} con las reseñas
+     *         paginadas.
+     */
+    public Page<ProductReviewResponseDTO> getAllReviewsForAdmin(Pageable pageable) {
+        return pReviewRepository.findAll(pageable)
+                .map(ProductReviewMapper::toProductReviewDTO);
     }
 
     @Transactional

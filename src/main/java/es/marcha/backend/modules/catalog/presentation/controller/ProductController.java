@@ -6,6 +6,8 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -346,6 +348,28 @@ public class ProductController {
     @GetMapping("/reviews/{id}")
     public ResponseEntity<List<ProductReviewResponseDTO>> getProductReviews(@PathVariable long id) {
         List<ProductReviewResponseDTO> reviews = rService.getAllReviewsByProduct(id);
+        return new ResponseEntity<>(reviews, HttpStatus.OK);
+    }
+
+    /**
+     * Obtiene todas las reseñas del sistema con paginación para el panel de
+     * administración.
+     * Incluye todas las reseñas independientemente de su estado (activas,
+     * inactivas, eliminadas)
+     * y de a qué producto pertenecen.
+     *
+     * @param page número de página (0-based, por defecto 0).
+     * @param size tamaño de la página (por defecto 20).
+     * @return {@link ResponseEntity} con {@link Page} de
+     *         {@link ProductReviewResponseDTO}
+     *         y código HTTP 200 OK.
+     */
+    @GetMapping("/reviews/admin/all")
+    public ResponseEntity<Page<ProductReviewResponseDTO>> getAllReviewsForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<ProductReviewResponseDTO> reviews = rService.getAllReviewsForAdmin(
+                PageRequest.of(page, size, Sort.by("createdAt").descending()));
         return new ResponseEntity<>(reviews, HttpStatus.OK);
     }
 

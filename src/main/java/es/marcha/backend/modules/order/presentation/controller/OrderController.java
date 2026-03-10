@@ -3,6 +3,9 @@ package es.marcha.backend.modules.order.presentation.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,6 +43,27 @@ public class OrderController {
     @GetMapping("/users/{id}")
     public ResponseEntity<List<OrderResponseDTO>> getAllOrders(@PathVariable long id) {
         List<OrderResponseDTO> orders = oService.getAllOrders(id);
+        return new ResponseEntity<>(orders, HttpStatus.OK);
+    }
+
+    /**
+     * Obtiene todas las órdenes del sistema con paginación para el panel de
+     * administración.
+     * Este endpoint está destinado para uso administrativo y devuelve todas las
+     * órdenes
+     * de todos los usuarios con información completa.
+     *
+     * @param page número de página (0-based, por defecto 0).
+     * @param size tamaño de la página (por defecto 20).
+     * @return {@link ResponseEntity} con {@link Page} de {@link OrderResponseDTO}
+     *         y código HTTP 200 OK.
+     */
+    @GetMapping("/admin/all")
+    public ResponseEntity<Page<OrderResponseDTO>> getAllOrdersForAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Page<OrderResponseDTO> orders = oService.getAllOrdersForAdmin(
+                PageRequest.of(page, size, Sort.by("createdAt").descending()));
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
