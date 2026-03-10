@@ -21,6 +21,7 @@ import es.marcha.backend.modules.catalog.application.dto.response.product.Produc
 import es.marcha.backend.modules.catalog.application.dto.response.product.ProductReviewResponseDTO;
 import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.modules.catalog.application.mapper.ProductMapper;
+import es.marcha.backend.modules.catalog.domain.enums.MovementType;
 import es.marcha.backend.modules.catalog.domain.model.Category;
 import es.marcha.backend.modules.catalog.domain.model.Inventory;
 import es.marcha.backend.modules.catalog.domain.model.Subcategory;
@@ -206,7 +207,7 @@ public class ProductService {
         // Registrar movimiento PURCHASE como trazabilidad del stock inicial
         inventoryService.recordMovementInternal(
                 saved, saved.getStock(), 0, saved.getStock(),
-                es.marcha.backend.modules.catalog.domain.enums.MovementType.PURCHASE,
+                MovementType.PURCHASE,
                 "Stock inicial al crear el producto", "ADMIN");
 
         return ProductMapper.toProductDTO(saved);
@@ -334,9 +335,9 @@ public class ProductService {
 
         // Registrar movimiento y sincronizar inventario solo si hay cambio real
         if (quantity > 0) {
-            es.marcha.backend.modules.catalog.domain.enums.MovementType type = (newStock >= previousStock)
-                    ? es.marcha.backend.modules.catalog.domain.enums.MovementType.ADJUSTMENT
-                    : es.marcha.backend.modules.catalog.domain.enums.MovementType.OUT;
+            MovementType type = (newStock >= previousStock)
+                    ? MovementType.ADJUSTMENT
+                    : MovementType.OUT;
             inventoryService.recordMovementInternal(
                     product, quantity, previousStock, newStock, type,
                     "Ajuste manual de stock desde el dashboard", "ADMIN");
