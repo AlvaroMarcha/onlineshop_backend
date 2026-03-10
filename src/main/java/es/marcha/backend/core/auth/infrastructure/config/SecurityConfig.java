@@ -222,6 +222,17 @@ public class SecurityConfig {
                                                 .requestMatchers("/coupons/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN")
 
+                                                // === Inventario: lectura y gestión solo ADMIN ===
+                                                // GET /inventory/** — consultar inventario y movimientos
+                                                .requestMatchers(HttpMethod.GET, "/inventory/**")
+                                                .hasAnyRole("SUPER_ADMIN", "ADMIN")
+                                                // PUT /inventory/** — actualizar metadatos del inventario
+                                                .requestMatchers(HttpMethod.PUT, "/inventory/**")
+                                                .hasAnyRole("SUPER_ADMIN", "ADMIN")
+                                                // POST /inventory/** — registrar movimientos de stock
+                                                .requestMatchers(HttpMethod.POST, "/inventory/**")
+                                                .hasAnyRole("SUPER_ADMIN", "ADMIN")
+
                                                 // === Resto de endpoints: solo administradores ===
                                                 .anyRequest().hasAnyRole("SUPER_ADMIN", "ADMIN"))
                                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

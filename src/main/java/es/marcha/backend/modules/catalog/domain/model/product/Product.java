@@ -66,7 +66,7 @@ public class Product {
     private String name;
     @Column(name = "sku")
     private String sku;
-    @Column(name = "description")
+    @Column(name = "description", length = 700)
     private String description;
     @Column(name = "price", nullable = false)
     private BigDecimal price;
