@@ -40,7 +40,8 @@ public class CategoryService {
     /**
      * Obtiene todas las categorías activas del sistema.
      *
-     * @return Lista de {@link CategoryResponseDTO} con todas las categorías activas.
+     * @return Lista de {@link CategoryResponseDTO} con todas las categorías
+     *         activas.
      * @throws ProductException si no hay ninguna categoría activa.
      */
     public List<CategoryResponseDTO> getAllCategories() {
@@ -57,7 +58,8 @@ public class CategoryService {
 
     /**
      * Crea y persiste una nueva categoría en el sistema.
-     * Inicializa el estado activo, la fecha de creación y genera el slug a partir del nombre.
+     * Inicializa el estado activo, la fecha de creación y genera el slug a partir
+     * del nombre.
      *
      * @param category La entidad {@link Category} a crear.
      * @return {@link CategoryResponseDTO} con los datos de la categoría creada.
@@ -74,8 +76,10 @@ public class CategoryService {
     /**
      * Actualiza el nombre, descripción y slug de una categoría existente.
      *
-     * @param category La entidad {@link Category} con los nuevos datos. Debe incluir un ID válido.
-     * @return {@link CategoryResponseDTO} con los datos actualizados de la categoría.
+     * @param category La entidad {@link Category} con los nuevos datos. Debe
+     *                 incluir un ID válido.
+     * @return {@link CategoryResponseDTO} con los datos actualizados de la
+     *         categoría.
      * @throws ProductException si la categoría no existe o no está activa.
      */
     @Transactional
@@ -90,6 +94,31 @@ public class CategoryService {
         existingCategory.setUpdatedAt(LocalDateTime.now());
 
         return CategoryMapper.toCategoryDTO(catRepository.save(existingCategory));
+    }
+
+    /**
+     * Obtiene una lista de categorías a partir de una lista de IDs.
+     * <p>
+     * Este método consulta el repositorio y devuelve las entidades completas
+     * de Category correspondientes a los IDs proporcionados. Si no se encuentra
+     * ninguna categoría, lanza una excepción.
+     *
+     * @param categoryIds Lista de IDs de categorías a buscar.
+     * @return Lista de categorías correspondientes a los IDs.
+     * @throws ProductException Si no se encuentra ninguna categoría.
+     */
+    public List<Category> getAllCategoriesHandler(List<Long> categoryIds) {
+        // Lista nula o vacía es válida: el producto se crea sin categorías directas
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<Category> categories = catRepository.findAllById(categoryIds);
+
+        if (categories.isEmpty()) {
+            throw new ProductException(ProductException.FAILED_FETCH_CATEGORY);
+        }
+        return categories;
     }
 
     /**

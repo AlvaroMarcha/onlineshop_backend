@@ -77,6 +77,22 @@ public class Product {
     @OneToOne(mappedBy = "product", optional = true, fetch = FetchType.LAZY)
     @JsonIgnore
     private Inventory inventory;
+    /**
+     * @deprecated Desde la migración a derivación automática de categorías (Opción
+     *             1).
+     *             Las categorías ahora se derivan automáticamente desde las
+     *             subcategorías
+     *             en
+     *             {@link es.marcha.backend.modules.catalog.application.mapper.ProductMapper#deriveCategoriesFromSubcategories}.
+     *             Este campo aún existe por compatibilidad con BD, pero se
+     *             mantendrá sincronizado
+     *             automáticamente en
+     *             {@link es.marcha.backend.modules.catalog.application.service.ProductService}.
+     *             Usar
+     *             {@code product.getSubcategories().stream().map(Subcategory::getCategory).distinct().toList()}
+     *             para obtener las categorías actuales.
+     */
+    @Deprecated(since = "2026-03-10")
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "product_category", joinColumns = @JoinColumn(name = "product_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private List<Category> categories;
