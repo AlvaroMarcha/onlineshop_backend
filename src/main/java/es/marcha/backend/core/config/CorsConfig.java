@@ -12,9 +12,12 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**") // aplica a todas las rutas
-                        // .allowedOrigins("http://localhost:4200") // tu Angular
-                        .allowedOrigins("https://alanmarcha-shop.vercel.app") // testing
+                registry.addMapping("/**")
+                        .allowedOriginPatterns(
+                                "http://localhost:*",
+                                "http://127.0.0.1:*",
+                                "https://alanmarcha-shop.vercel.app",
+                                "https://alanmarcha-shop-*.vercel.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*").allowCredentials(true);
             }
