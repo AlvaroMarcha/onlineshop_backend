@@ -60,14 +60,10 @@ public class RoleService {
      * Obtiene todos los roles existentes en el sistema.
      *
      * @return Lista de {@link Role} con todos los roles.
-     * @throws RolePermissionsException si no hay ningún rol en la base de datos.
+     *         Si no hay roles, retorna una lista vacía.
      */
     public List<Role> getAllRoles() {
-        List<Role> roles = rRepository.findAll();
-        if (roles.isEmpty()) {
-            throw new RolePermissionsException(RolePermissionsException.FAILED_FETCH);
-        }
-        return roles;
+        return rRepository.findAll();
     }
 
     /**

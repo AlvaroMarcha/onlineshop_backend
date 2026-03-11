@@ -60,24 +60,18 @@ public class ProductVariantService {
      * Obtiene todas las variantes de un producto.
      *
      * @param productId identificador del producto
-     * @return lista de DTOs con las variantes del producto
-     * @throws ProductException       si el producto no existe
-     * @throws ProductAttribException si el producto no tiene variantes
+     * @return lista de DTOs con las variantes del producto.
+     *         Si no hay variantes, retorna una lista vacía.
+     * @throws ProductException si el producto no existe
      */
     public List<ProductVariantResponseDTO> getVariantsByProduct(long productId) {
         if (!productRepository.existsById(productId)) {
             throw new ProductException(ProductException.DEFAULT);
         }
 
-        List<ProductVariantResponseDTO> variants = variantRepository.findAllByProductId(productId).stream()
+        return variantRepository.findAllByProductId(productId).stream()
                 .map(ProductVariantMapper::toResponseDTO)
                 .toList();
-
-        if (variants.isEmpty()) {
-            throw new ProductAttribException(ProductAttribException.FAILED_FETCH_VARIANTS);
-        }
-
-        return variants;
     }
 
     /**
