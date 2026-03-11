@@ -1,7 +1,9 @@
 package es.marcha.backend.core.auth.infrastructure.config;
 
+import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -25,6 +27,15 @@ import es.marcha.backend.core.security.jwt.VerifiedUserFilter;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
+        /**
+         * Orígenes permitidos cargados desde la variable de entorno
+         * {@code CORS_ALLOWED_ORIGINS}.
+         * Soporta patrones con wildcard (p. ej.
+         * {@code http://localhost:*,https://miapp-*.vercel.app}).
+         */
+        @Value("${app.cors.allowed-origin-patterns}")
+        private String allowedOriginPatterns;
 
         /**
          * Codificador de contraseñas BCrypt con coste 12 (recomendación OWASP).
@@ -54,12 +65,14 @@ public class SecurityConfig {
 
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
+                // Parsear los patrones de orígenes permitidos desde la configuración
+                List<String> patterns = Arrays.stream(allowedOriginPatterns.split(","))
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .toList();
+
                 CorsConfiguration configuration = new CorsConfiguration();
-                configuration.setAllowedOriginPatterns(List.of(
-                                "http://localhost:*",
-                                "http://127.0.0.1:*",
-                                "https://alanmarcha-shop.vercel.app",
-                                "https://alanmarcha-shop-*.vercel.app"));
+                configuration.setAllowedOriginPatterns(patterns);
                 configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                 configuration.setAllowedHeaders(List.of("*"));
                 configuration.setAllowCredentials(true);
@@ -70,8 +83,9 @@ public class SecurityConfig {
         }
 
         /**
-         * Cadena de seguridad para el entorno de pruebas (Live Server :5500).
-         * Permite todas las peticiones sin autenticación.
+         * Cadena de seguridad para el entorno de desarrollo local (localhost /
+         * 127.0.0.1).
+         * Permite todas las peticiones sin autenticación desde cualquier puerto local.
          * Se evalúa primero gracias a {@code @Order(1)}.
          */
         @Bean
@@ -81,8 +95,8 @@ public class SecurityConfig {
                                 .securityMatcher(request -> {
                                         String origin = request.getHeader("Origin");
                                         return origin != null
-                                                        && (origin.equals("http://localhost:5500")
-                                                                        || origin.equals("http://127.0.0.1:5500"));
+                                                        && (origin.startsWith("http://localhost:")
+                                                                        || origin.startsWith("http://127.0.0.1:"));
                                 })
                                 .csrf(csrf -> csrf.disable())
                                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
