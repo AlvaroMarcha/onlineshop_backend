@@ -138,14 +138,11 @@ public class InvoiceService {
      * Devuelve todas las facturas del usuario indicado.
      *
      * @param userId ID del usuario propietario.
-     * @return lista de entidades {@link Invoice} (puede estar vacía).
+     * @return lista de entidades {@link Invoice}. Si no hay facturas, retorna una
+     *         lista vacía.
      */
     public List<Invoice> getInvoicesByUser(long userId) {
-        List<Invoice> invoices = invoiceRepository.findAllByUserId(userId);
-        if (invoices.isEmpty()) {
-            throw new InvoiceException(InvoiceException.FAILED_FETCH);
-        }
-        return invoices;
+        return invoiceRepository.findAllByUserId(userId);
     }
 
     /**

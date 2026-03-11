@@ -30,18 +30,12 @@ public class AddressService {
      *
      * @param id El ID del usuario cuyas direcciones se desean obtener.
      * @return Lista de {@link AddressResponseDTO} con las direcciones del usuario.
-     * @throws AddressException si el usuario no tiene direcciones registradas.
+     *         Si no hay direcciones, retorna una lista vacía.
      */
     public List<AddressResponseDTO> getAllAddressesByUserId(long id) {
-        List<AddressResponseDTO> addresses = aRepository.findAllByUserId(id).stream()
+        return aRepository.findAllByUserId(id).stream()
                 .map(AddressMapper::toAddressdDTO)
                 .toList();
-
-        if (addresses.isEmpty()) {
-            throw new AddressException(AddressException.ADDRESSES_NOT_FOUND);
-        }
-
-        return addresses;
     }
 
     /**
@@ -59,11 +53,13 @@ public class AddressService {
 
     /**
      * Crea y persiste una nueva dirección asociada a un usuario existente.
-     * Resuelve la entidad {@link User} a partir del ID contenido en la dirección recibida.
+     * Resuelve la entidad {@link User} a partir del ID contenido en la dirección
+     * recibida.
      *
-     * @param address La dirección a guardar. Debe incluir el ID del usuario al que pertenece.
+     * @param address La dirección a guardar. Debe incluir el ID del usuario al que
+     *                pertenece.
      * @return {@link AddressResponseDTO} con los datos de la dirección guardada.
-     * @throws UserException si el usuario referenciado no existe.
+     * @throws UserException    si el usuario referenciado no existe.
      * @throws AddressException si ocurre un error al persistir la dirección.
      */
     public AddressResponseDTO saveAddress(Address address) {

@@ -51,19 +51,13 @@ public class ProductAttribService {
     /**
      * Obtiene todos los atributos registrados en el sistema.
      *
-     * @return lista de DTOs con todos los atributos y sus valores
-     * @throws ProductAttribException si no hay atributos registrados
+     * @return lista de DTOs con todos los atributos y sus valores.
+     *         Si no hay atributos, retorna una lista vacía.
      */
     public List<ProductAttribResponseDTO> getAllAttribs() {
-        List<ProductAttribResponseDTO> attribs = attribRepository.findAll().stream()
+        return attribRepository.findAll().stream()
                 .map(ProductAttribMapper::toResponseDTO)
                 .toList();
-
-        if (attribs.isEmpty()) {
-            throw new ProductAttribException(ProductAttribException.FAILED_FETCH_ATTRIBS);
-        }
-
-        return attribs;
     }
 
     /**
@@ -145,23 +139,18 @@ public class ProductAttribService {
      * Obtiene todos los valores definidos para un atributo concreto.
      *
      * @param attribId identificador del atributo padre
-     * @return lista de DTOs con los valores del atributo
-     * @throws ProductAttribException si el atributo no existe o no tiene valores
+     * @return lista de DTOs con los valores del atributo.
+     *         Si no hay valores, retorna una lista vacía.
+     * @throws ProductAttribException si el atributo no existe
      */
     public List<ProductAttribValueResponseDTO> getAttribValues(long attribId) {
         if (!attribRepository.existsById(attribId)) {
             throw new ProductAttribException(ProductAttribException.ATTRIB_NOT_FOUND);
         }
 
-        List<ProductAttribValueResponseDTO> values = attribValueRepository.findAllByAttribId(attribId).stream()
+        return attribValueRepository.findAllByAttribId(attribId).stream()
                 .map(ProductAttribValueMapper::toResponseDTO)
                 .toList();
-
-        if (values.isEmpty()) {
-            throw new ProductAttribException(ProductAttribException.FAILED_FETCH_ATTRIB_VALUES);
-        }
-
-        return values;
     }
 
     /**

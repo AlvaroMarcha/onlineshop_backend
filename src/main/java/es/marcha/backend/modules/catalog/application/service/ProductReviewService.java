@@ -38,24 +38,16 @@ public class ProductReviewService {
 
     /**
      * Obtiene todas las reseñas activas y no eliminadas de un producto.
-     * Lanza excepción si no hay ninguna reseña.
      *
      * @param productId El ID del producto cuyas reseñas se desean obtener.
      * @return Lista de {@link ProductReviewResponseDTO} con las reseñas del
-     *         producto.
-     * @throws ProductException si el producto no tiene reseñas activas.
+     *         producto. Si no hay reseñas, retorna una lista vacía.
      */
     public List<ProductReviewResponseDTO> getAllReviewsByProduct(long productId) {
-        List<ProductReviewResponseDTO> reviews = pReviewRepository.findAllByProductId(productId).stream()
+        return pReviewRepository.findAllByProductId(productId).stream()
                 .filter(review -> review.isActive() && !review.isDeleted())
                 .map(ProductReviewMapper::toProductReviewDTO)
                 .toList();
-
-        if (reviews == null || reviews.isEmpty()) {
-            throw new ProductException(ProductException.FAILED_FETCH_REVIEWS);
-        }
-
-        return reviews;
     }
 
     /**

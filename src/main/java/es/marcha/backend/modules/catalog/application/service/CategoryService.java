@@ -41,19 +41,13 @@ public class CategoryService {
      * Obtiene todas las categorías activas del sistema.
      *
      * @return Lista de {@link CategoryResponseDTO} con todas las categorías
-     *         activas.
-     * @throws ProductException si no hay ninguna categoría activa.
+     *         activas. Si no hay categorías, retorna una lista vacía.
      */
     public List<CategoryResponseDTO> getAllCategories() {
-        List<CategoryResponseDTO> categories = catRepository.findAll().stream()
+        return catRepository.findAll().stream()
                 .filter(c -> c.isActive())
                 .map(CategoryMapper::toCategoryDTO)
                 .toList();
-        if (categories.isEmpty()) {
-            throw new ProductException(ProductException.FAILED_FETCH_CATEGORY);
-        }
-
-        return categories;
     }
 
     /**

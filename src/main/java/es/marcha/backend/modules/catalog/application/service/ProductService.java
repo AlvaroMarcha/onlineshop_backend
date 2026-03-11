@@ -81,8 +81,7 @@ public class ProductService {
      * incluyendo las reseñas activas de cada uno.
      *
      * @return Lista de {@link ProductResponseDTO} con todos los productos
-     *         disponibles.
-     * @throws ProductException si no hay productos activos.
+     *         disponibles. Si no hay productos, retorna una lista vacía.
      */
     public List<ProductResponseDTO> getAllProducts() {
         List<ProductResponseDTO> products = prodRepository.findAll().stream()
@@ -90,15 +89,16 @@ public class ProductService {
                 .map(ProductMapper::toProductDTO)
                 .toList();
 
+        // Si no hay productos, retornar lista vacía directamente
+        if (products.isEmpty()) {
+            return products;
+        }
+
         // Conseguir lista de reviews filtradas
         products.forEach(product -> {
             List<ProductReviewResponseDTO> reviews = prService.getAllReviewsByProductHandler(product.getId());
             product.setReviews(reviews);
         });
-
-        if (products == null || products.isEmpty()) {
-            throw new ProductException(ProductException.FAILED_FETCH);
-        }
 
         return products;
     }

@@ -106,7 +106,7 @@ public class OrderService {
      *
      * @param userId El ID del usuario cuyas órdenes se desean obtener.
      * @return Lista de {@link OrderResponseDTO} con las órdenes del usuario.
-     * @throws OrderException si el usuario no tiene órdenes.
+     *         Si no hay órdenes, retorna una lista vacía.
      */
     public List<OrderResponseDTO> getAllOrders(long userId) {
         List<OrderResponseDTO> orders = oRepository.findAllByUserId(userId).stream()
@@ -117,10 +117,6 @@ public class OrderService {
                     return order;
                 })
                 .toList();
-
-        if (orders == null || orders.isEmpty()) {
-            throw new OrderException(OrderException.FAILED_FETCH);
-        }
 
         return orders;
     }
