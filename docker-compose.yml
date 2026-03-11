@@ -17,8 +17,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: marcha-backend
-    depends_on:
-      - mysql
     env_file:
       - .env
     ports:
