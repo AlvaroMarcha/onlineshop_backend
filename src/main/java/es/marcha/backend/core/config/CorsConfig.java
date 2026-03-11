@@ -14,7 +14,7 @@ public class CorsConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**") // aplica a todas las rutas
                         // .allowedOrigins("http://localhost:4200") // tu Angular
-                        .allowedOrigins("http://localhost:5500") // testing
+                        .allowedOrigins("https://alanmarcha-shop.vercel.app") // testing
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*").allowCredentials(true);
             }
