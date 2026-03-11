@@ -18,6 +18,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Montar volumen de Maven durante el build para cachear dependencias
+      # IMPORTANTE: Esto evita descargar dependencias en cada build
+      cache_from:
+        - marcha-backend:latest
     container_name: marcha-backend
     env_file:
       - .env
@@ -26,6 +30,8 @@ services:
       - "8080"
     volumes:
       - ./uploads:/uploads
+      # Volumen para caché de Maven (solo durante build)
+      - maven_cache:/root/.m2
     restart: always
     depends_on:
       - mysql
@@ -55,3 +61,4 @@ networks:
 volumes:
   mysql_data:
   nginx_logs:
+  maven_cache:  # Caché persistente de dependencias Maven (~/.m2)
