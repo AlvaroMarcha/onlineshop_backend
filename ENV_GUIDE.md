@@ -19,38 +19,46 @@
 
 ---
 
-## 🌐 Configuración para Producción (Render/Railway)
+## 🌐 Configuración para Producción (VPS con alanmarcha.com)
 
 ### Variables críticas a cambiar:
 
-| Variable | Desarrollo | Producción |
-|----------|-----------|-----------|
-| `DB_URL` | `jdbc:mysql://localhost:3306/...` | `jdbc:mysql://HOST:PORT/DATABASE?useSSL=true...` |
+| Variable | Desarrollo | Producción (VPS) |
+|----------|-----------|-----------------|
+| `DB_URL` | `jdbc:mysql://localhost:3306/...` | `jdbc:mysql://mysql:3306/onlineshop?useSSL=false` |
 | `DB_SHOW_SQL` | `true` | `false` |
-| `APP_BASE_URL` | `http://localhost:8080` | `https://tu-backend.onrender.com` |
-| `APP_FRONTEND_URL` | `http://localhost:5500` | `https://tu-frontend.vercel.app` |
-| `IMAGES_STORAGE_PATH` | `C:/uploads/images` | `/opt/render/project/src/uploads/images` |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:*,...` | `https://tu-frontend.vercel.app,...` |
+| `APP_BASE_URL` | `http://localhost:8080` | `https://alanmarcha.com` |
+| `APP_FRONTEND_URL` | `http://localhost:5500` | `https://alanmarcha.com` |
+| `IMAGES_STORAGE_PATH` | `C:/uploads/images` | `/uploads/images` |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:*,...` | `https://alanmarcha.com,https://www.alanmarcha.com` |
 | `ADMIN_PASSWORD` | `Admin123!` | **Cambia por contraseña segura** |
 | `SUPER_ADMIN_PASSWORD` | `SuperAdmin123!` | **Cambia por contraseña segura** |
 | `STRIPE_SECRET_KEY` | `sk_test_...` | `sk_live_...` (claves reales) |
 | `STRIPE_WEBHOOK_SECRET` | `whsec_test...` | `whsec_live...` (claves reales) |
+| `JWT_SECRET` | Cualquiera (dev) | **Generar con** `openssl rand -base64 64` |
 
-### Configuración en Render:
+### Configuración en VPS:
 
-1. Ve a tu servicio → **Environment**
-2. Añade cada variable como "Key-Value"
-3. **NO** pegues líneas completas tipo `DB_URL=jdbc:...` — solo el valor
-4. Guarda y redespliega
-
-### Configuración en Railway (MySQL):
-
-1. Copia la **connection string** del dashboard
-2. Úsala en `DB_URL` de Render
-3. Formato esperado:
+1. Conecta por SSH a tu servidor
+2. Edita el archivo `.env` en el directorio del proyecto:
+   ```bash
+   cd ~/onlineshop_backend
+   nano .env
    ```
-   jdbc:mysql://HOST:PORT/DATABASE?useSSL=true&requireSSL=true&serverTimezone=UTC
+3. Actualiza todas las variables de producción
+4. Guarda (`Ctrl+O`, `Enter`, `Ctrl+X`)
+5. Reinicia servicios:
+   ```bash
+   docker compose down
+   docker compose up -d --build
    ```
+
+### Diferencias VPS vs Desarrollo:
+
+- **Base de datos**: En VPS, `mysql` es el hostname del container (red Docker interna)
+- **Rutas**: Linux usa `/uploads/` en lugar de `C:/uploads/`
+- **SSL**: URL base debe ser HTTPS (`https://alanmarcha.com`)
+- **CORS**: Restringe a tu dominio real, no wildcards en producción
 
 ---
 

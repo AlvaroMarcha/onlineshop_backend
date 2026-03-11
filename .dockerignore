@@ -1,0 +1,73 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+
+# IDEs
+.vscode
+.idea
+*.iml
+*.ipr
+*.iws
+
+# Documentación
+*.md
+!README.md
+
+# Node (si usas frontend en el mismo repo)
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+
+# Environment
+.env
+.env.local
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Temp
+tmp/
+temp/
+
+# Scripts de desarrollo
+dev.sh
+*.sh
+!mvnw
+
+# Docker
+docker-compose.local.yml
+nginx/nginx.local.conf
+
+# Tests
+coverage/
+.coverage
+htmlcov/
+
+# Backups
+*.bak
+*.backup
+*.sql

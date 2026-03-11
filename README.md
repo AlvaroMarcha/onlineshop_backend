@@ -2,6 +2,21 @@
 
 Este proyecto es una plantilla básica de backend desarrollada con [Spring Boot](https://spring.io/projects/spring-boot) y Maven. Incluye ejemplos de entidades JPA, un controlador de salud y está preparado para conectarse a una base de datos MariaDB/MySQL mediante variables de entorno.
 
+---
+
+## 📚 Documentación Rápida
+
+| Guía | Descripción |
+|------|-------------|
+| **[📖 SETUP_LOCAL.md](./SETUP_LOCAL.md)** | **Guía paso a paso para levantar el proyecto en local** |
+| [🌐 NGINX_GUIDE.md](./NGINX_GUIDE.md) | Configuración de Nginx como reverse proxy |
+| [🚀 DEPLOY_VPS.md](./DEPLOY_VPS.md) | Deploy completo en VPS con alanmarcha.com |
+| [🔧 ENV_GUIDE.md](./ENV_GUIDE.md) | Variables de entorno (desarrollo vs producción) |
+
+**¿Primera vez?** → Lee [SETUP_LOCAL.md](./SETUP_LOCAL.md) para configurar tu entorno de desarrollo.
+
+---
+
 ## Requisitos
 
 - Java 21

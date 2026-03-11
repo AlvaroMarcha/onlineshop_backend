@@ -18,6 +18,29 @@ stop_all() {
     docker compose down
 }
 
+start_nginx_local() {
+    echo "🌐 Levantando Nginx + MySQL para desarrollo local..."
+    echo "   (Spring Boot debe ejecutarse con mvn spring-boot:run)"
+    docker compose -f docker-compose.local.yml up -d
+    echo "✅ Accede a http://localhost (nginx proxy a localhost:8080)"
+}
+
+stop_nginx_local() {
+    echo "🛑 Deteniendo entorno local con Nginx..."
+    docker compose -f docker-compose.local.yml down
+}
+
+start_production_stack() {
+    echo "🚀 Levantando stack completo de producción (MySQL + App + Nginx)..."
+    docker compose up -d --build
+    echo "✅ Accede a http://localhost (todo en Docker)"
+}
+
+logs_nginx() {
+    echo "📋 Logs de Nginx en tiempo real..."
+    docker compose logs -f nginx
+}
+
 start_app_hotreload() {
     echo "🛑 Parando contenedor app si existe..."
     docker compose stop app
@@ -35,17 +58,35 @@ start_app() {
 }
 
 help_menu() {
-    echo "Uso: ./dev.sh [db-start|db-stop|app|app-hotreload|stop|all]"
-    echo "  db-start      : Levanta solo la base de datos"
-    echo "  db-stop       : Detiene solo la base de datos"
-    echo "  app           : Construye y levanta Spring Boot en Docker"
-    echo "  app-hotreload : Ejecuta Spring Boot en modo hot-reload"
-    echo "  stop          : Detiene TODO (contenedores y red)"
-    echo "  all           : Levanta DB y Spring Boot (por defecto)"
+    echo "========================================="
+    echo "🛠️  Script de Desarrollo - Online Shop"
+    echo "========================================="
+    echo ""
+    echo "Uso: ./dev.sh [comando]"
+    echo ""
+    echo "📦 Base de datos:"
+    echo "  db-start         : Levanta solo MySQL"
+    echo "  db-stop          : Detiene solo MySQL"
+    echo ""
+    echo "🚀 Aplicación:"
+    echo "  app              : Build + levanta Spring Boot en Docker"
+    echo "  app-hotreload    : Ejecuta Spring Boot con hot-reload (mvn)"
+    echo ""
+    echo "🌐 Nginx (Reverse Proxy):"
+    echo "  nginx-local      : MySQL + Nginx (app en host con mvn)"
+    echo "  nginx-stop       : Detiene entorno nginx local"
+    echo "  nginx-logs       : Ver logs de nginx en tiempo real"
+    echo "  production       : Stack completo (MySQL + App + Nginx en Docker)"
+    echo ""
+    echo "🛑 Control:"
+    echo "  stop             : Detiene TODO"
+    echo "  all              : Levanta DB + App (sin nginx)"
+    echo ""
+    echo "========================================="
 }
 
-# Si no se pasa parámetro, usar 'all'
-param=${1:-all}
+# Si no se pasa parámetro, mostrar ayuda
+param=${1:-help}
 
 case "$param" in
     db-start)
@@ -60,6 +101,18 @@ case "$param" in
     app-hotreload)
         start_app_hotreload
         ;;
+    nginx-local)
+        start_nginx_local
+        ;;
+    nginx-stop)
+        stop_nginx_local
+        ;;
+    nginx-logs)
+        logs_nginx
+        ;;
+    production)
+        start_production_stack
+        ;;
     stop)
         stop_all
         ;;
@@ -69,7 +122,7 @@ case "$param" in
         sleep 10
         start_app
         ;;
-    *)
+    help|*)
         help_menu
         ;;
 esac
