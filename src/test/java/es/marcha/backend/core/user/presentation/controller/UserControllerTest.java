@@ -2,7 +2,6 @@ package es.marcha.backend.core.user.presentation.controller;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -83,11 +83,12 @@ class UserControllerTest {
     class DeleteMyAccountTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("usuario autenticado → devuelve 200 y llama a anonymizeAndDelete")
         void deleteMyAccount_autenticado_devuelve200() throws Exception {
             doNothing().when(userDeletionService).anonymizeAndDelete("testuser");
 
-            mockMvc.perform(delete("/users/me").with(user("testuser")))
+            mockMvc.perform(delete("/users/me"))
                     .andExpect(status().isOk());
 
             verify(userDeletionService).anonymizeAndDelete("testuser");
@@ -103,6 +104,7 @@ class UserControllerTest {
     class DataExportTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("sin rate limit → devuelve 200 con datos exportados")
         void exportMyData_sinRateLimit_devuelve200() throws Exception {
             DataExportResponseDTO export = new DataExportResponseDTO();
@@ -110,7 +112,7 @@ class UserControllerTest {
                     .checkRateLimit(eq("testuser"), eq(RateLimitService.EndpointType.DATA_EXPORT));
             when(dataExportService.export("testuser")).thenReturn(export);
 
-            mockMvc.perform(get("/users/me/data-export").with(user("testuser")))
+            mockMvc.perform(get("/users/me/data-export"))
                     .andExpect(status().isOk());
         }
     }

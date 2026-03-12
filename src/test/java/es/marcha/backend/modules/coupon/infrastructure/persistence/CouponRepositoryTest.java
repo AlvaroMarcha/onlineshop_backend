@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.TestPropertySource;
 
 import es.marcha.backend.core.shared.domain.enums.DiscountType;
@@ -37,13 +38,16 @@ import es.marcha.backend.modules.coupon.domain.model.Coupon;
 class CouponRepositoryTest {
 
     @Autowired
+    private TestEntityManager em;
+
+    @Autowired
     private CouponRepository couponRepository;
 
     private Coupon savedCoupon;
 
     @BeforeEach
     void setUp() {
-        savedCoupon = couponRepository.save(buildCoupon("SAVE10"));
+        savedCoupon = em.persistAndFlush(buildCoupon("SAVE10"));
     }
 
     // =========================================================================
@@ -86,7 +90,7 @@ class CouponRepositoryTest {
         @DisplayName("id diferente con mismo código → retorna true")
         void existsByCodeAndIdNot_idDiferente_retornaTrue() {
             // Otro cupón distinto existe → detecta duplicado
-            Coupon otroCupon = couponRepository.save(buildCoupon("OTRO20"));
+            Coupon otroCupon = em.persistAndFlush(buildCoupon("OTRO20"));
             // Al buscar "SAVE10" excluyendo el id de 'otroCupon', el código SAVE10 sí
             // existe
             assertTrue(couponRepository.existsByCodeAndIdNot("SAVE10", otroCupon.getId()));
