@@ -152,13 +152,4 @@ class WishlistServiceTest {
         return wishlist;
     }
 
-    private Wishlist buildWishlistWithProduct(User user, Product product) {
-        Wishlist wishlist = buildWishlist(user);
-        WishlistItem item = new WishlistItem();
-        item.setId(1L);
-        item.setProduct(product);
-        item.setWishlist(wishlist);
-        wishlist.getItems().add(item);
-        return wishlist;
-    }
 }

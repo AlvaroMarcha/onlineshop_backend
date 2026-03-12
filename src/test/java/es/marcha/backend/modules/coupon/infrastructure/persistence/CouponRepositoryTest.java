@@ -90,7 +90,7 @@ class CouponRepositoryTest {
         @DisplayName("id diferente con mismo código → retorna true")
         void existsByCodeAndIdNot_idDiferente_retornaTrue() {
             // Otro cupón distinto existe → detecta duplicado
-            Coupon otroCupon = couponRepository.save(buildCoupon("OTRO20"));
+            Coupon otroCupon = em.persistAndFlush(buildCoupon("OTRO20"));
             // Al buscar "SAVE10" excluyendo el id de 'otroCupon', el código SAVE10 sí
             // existe
             assertTrue(couponRepository.existsByCodeAndIdNot("SAVE10", otroCupon.getId()));
