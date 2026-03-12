@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -73,6 +74,7 @@ class CartControllerTest {
     class GetCartTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("devuelve 200 con el carrito del usuario autenticado")
         void getCart_autenticado_devuelve200() throws Exception {
             CartResponseDTO cart = new CartResponseDTO();
@@ -94,6 +96,7 @@ class CartControllerTest {
     class AddItemTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("añade ítem válido → devuelve 201")
         void addItem_peticionValida_devuelve201() throws Exception {
             AddCartItemRequestDTO request = new AddCartItemRequestDTO();
@@ -120,8 +123,7 @@ class CartControllerTest {
     @DisplayName("DELETE /cart")
     class ClearCartTests {
 
-        @Test
-        @DisplayName("vaciado del carrito → devuelve 204")
+        @Test        @WithMockUser(username = "testuser")        @DisplayName("vaciado del carrito → devuelve 204")
         void clearCart_autenticado_devuelve204() throws Exception {
             doNothing().when(cartService).clearCartByUsername("testuser");
 

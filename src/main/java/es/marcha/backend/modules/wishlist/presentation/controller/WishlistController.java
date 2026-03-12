@@ -123,6 +123,9 @@ public class WishlistController {
      */
     private String getAuthenticatedUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return (String) auth.getPrincipal();
+        if (auth.getPrincipal() instanceof String) {
+            return (String) auth.getPrincipal();
+        }
+        return auth.getName();
     }
 }

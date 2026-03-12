@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -73,6 +74,7 @@ class WishlistControllerTest {
     class GetWishlistTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("devuelve 200 con la wishlist del usuario")
         void getWishlist_autenticado_devuelve200() throws Exception {
             WishlistResponseDTO wishlist = new WishlistResponseDTO();
@@ -94,6 +96,7 @@ class WishlistControllerTest {
     class AddItemTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("añade producto a wishlist → devuelve 201")
         void addItem_productoValido_devuelve201() throws Exception {
             AddWishlistItemRequestDTO request = new AddWishlistItemRequestDTO();
@@ -118,8 +121,7 @@ class WishlistControllerTest {
     @DisplayName("DELETE /wishlist/items/{id}")
     class RemoveItemTests {
 
-        @Test
-        @DisplayName("elimina ítem de la wishlist → devuelve 200")
+        @Test        @WithMockUser(username = "testuser")        @DisplayName("elimina ítem de la wishlist → devuelve 200")
         void removeItem_autenticado_devuelve200() throws Exception {
             WishlistResponseDTO wishlist = new WishlistResponseDTO();
             when(wishlistService.removeItem(eq("testuser"), eq(5L))).thenReturn(wishlist);

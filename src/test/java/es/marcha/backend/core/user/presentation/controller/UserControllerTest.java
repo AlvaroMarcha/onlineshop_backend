@@ -11,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -83,6 +84,7 @@ class UserControllerTest {
     class DeleteMyAccountTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("usuario autenticado → devuelve 200 y llama a anonymizeAndDelete")
         void deleteMyAccount_autenticado_devuelve200() throws Exception {
             doNothing().when(userDeletionService).anonymizeAndDelete("testuser");
@@ -103,6 +105,7 @@ class UserControllerTest {
     class DataExportTests {
 
         @Test
+        @WithMockUser(username = "testuser")
         @DisplayName("sin rate limit → devuelve 200 con datos exportados")
         void exportMyData_sinRateLimit_devuelve200() throws Exception {
             DataExportResponseDTO export = new DataExportResponseDTO();
