@@ -2,7 +2,6 @@ package es.marcha.backend.modules.cart.presentation.controller;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -80,7 +79,7 @@ class CartControllerTest {
             CartResponseDTO cart = new CartResponseDTO();
             when(cartService.getCartByUsername("testuser")).thenReturn(cart);
 
-            mockMvc.perform(get("/cart").with(user("testuser")))
+            mockMvc.perform(get("/cart"))
                     .andExpect(status().isOk());
 
             verify(cartService).getCartByUsername("testuser");
@@ -108,7 +107,6 @@ class CartControllerTest {
                     .thenReturn(cart);
 
             mockMvc.perform(post("/cart/items")
-                    .with(user("testuser"))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                     .andExpect(status().isCreated());
@@ -129,7 +127,7 @@ class CartControllerTest {
         void clearCart_autenticado_devuelve204() throws Exception {
             doNothing().when(cartService).clearCartByUsername("testuser");
 
-            mockMvc.perform(delete("/cart").with(user("testuser")))
+            mockMvc.perform(delete("/cart"))
                     .andExpect(status().isNoContent());
         }
     }
