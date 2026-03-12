@@ -71,7 +71,7 @@ class WishlistServiceTest {
             Wishlist wishlist = buildWishlist(user);
 
             when(userService.getUserByUsernameOrEmail("testuser")).thenReturn(user);
-            when(wishlistRepository.findByUserUsername("testuser")).thenReturn(Optional.of(wishlist));
+            when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.of(wishlist));
             when(productRepository.findById(999L)).thenReturn(Optional.empty());
 
             WishlistException ex = assertThrows(WishlistException.class,
@@ -84,11 +84,16 @@ class WishlistServiceTest {
         void addItem_productoYaEnWishlist_lanzaDuplicado() {
             User user = buildUser();
             Product product = buildProduct(1L);
-            Wishlist wishlist = buildWishlistWithProduct(user, product);
+            Wishlist wishlist = buildWishlist(user);
+            WishlistItem existingItem = new WishlistItem();
+            existingItem.setId(1L);
+            existingItem.setProduct(product);
 
             when(userService.getUserByUsernameOrEmail("testuser")).thenReturn(user);
-            when(wishlistRepository.findByUserUsername("testuser")).thenReturn(Optional.of(wishlist));
+            when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.of(wishlist));
             when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+            when(wishlistItemRepository.findByWishlistIdAndProductId(1L, 1L))
+                    .thenReturn(Optional.of(existingItem));
 
             WishlistException ex = assertThrows(WishlistException.class,
                     () -> wishlistService.addItem("testuser", 1L));
@@ -111,7 +116,9 @@ class WishlistServiceTest {
             Wishlist wishlist = buildWishlist(user);
 
             when(userService.getUserByUsernameOrEmail("testuser")).thenReturn(user);
-            when(wishlistRepository.findByUserUsername("testuser")).thenReturn(Optional.of(wishlist));
+            when(wishlistRepository.findByUserId(1L)).thenReturn(Optional.of(wishlist));
+            when(wishlistItemRepository.findByWishlistIdAndId(1L, 999L))
+                    .thenReturn(Optional.empty());
 
             WishlistException ex = assertThrows(WishlistException.class,
                     () -> wishlistService.removeItem("testuser", 999L));

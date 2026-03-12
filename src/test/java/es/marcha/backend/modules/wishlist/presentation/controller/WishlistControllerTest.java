@@ -121,7 +121,9 @@ class WishlistControllerTest {
     @DisplayName("DELETE /wishlist/items/{id}")
     class RemoveItemTests {
 
-        @Test        @WithMockUser(username = "testuser")        @DisplayName("elimina ítem de la wishlist → devuelve 200")
+        @Test
+        @WithMockUser(username = "testuser")
+        @DisplayName("elimina ítem de la wishlist → devuelve 200")
         void removeItem_autenticado_devuelve200() throws Exception {
             WishlistResponseDTO wishlist = new WishlistResponseDTO();
             when(wishlistService.removeItem(eq("testuser"), eq(5L))).thenReturn(wishlist);

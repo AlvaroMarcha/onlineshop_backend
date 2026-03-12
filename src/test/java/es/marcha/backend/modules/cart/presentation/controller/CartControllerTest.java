@@ -123,7 +123,9 @@ class CartControllerTest {
     @DisplayName("DELETE /cart")
     class ClearCartTests {
 
-        @Test        @WithMockUser(username = "testuser")        @DisplayName("vaciado del carrito → devuelve 204")
+        @Test
+        @WithMockUser(username = "testuser")
+        @DisplayName("vaciado del carrito → devuelve 204")
         void clearCart_autenticado_devuelve204() throws Exception {
             doNothing().when(cartService).clearCartByUsername("testuser");
 
