@@ -1,47 +1,64 @@
 backend:
-  - 'src/main/**'
+  - changed-files:
+    - any-glob-to-any-file: 'src/main/**'
 
 tests:
-  - 'src/test/**'
+  - changed-files:
+    - any-glob-to-any-file: 'src/test/**'
 
 dependencies:
-  - 'pom.xml'
+  - changed-files:
+    - any-glob-to-any-file: 'pom.xml'
 
 ci-cd:
-  - '.github/workflows/**'
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**'
 
 core:
-  - '**/core/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/core/**'
 
 catalog:
-  - '**/modules/catalog/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/catalog/**'
 
 orders:
-  - '**/modules/order/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/order/**'
 
 invoices:
-  - '**/modules/invoice/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/invoice/**'
 
 cart:
-  - '**/modules/cart/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/cart/**'
 
 wishlist:
-  - '**/modules/wishlist/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/wishlist/**'
 
 company:
-  - '**/modules/company/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/company/**'
 
 coupon:
-  - '**/modules/coupon/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/coupon/**'
 
 notification:
-  - '**/modules/notification/**'
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/notification/**'
 
 infra:
-  - 'nginx/**'
-  - 'docker-compose*.yml'
-  - 'Dockerfile'
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'nginx/**'
+      - 'docker-compose*.yml'
+      - 'Dockerfile'
 
 documentation:
-  - '*.md'
-  - '.github/instructions/**'
+  - changed-files:
+    - any-glob-to-any-file:
+      - '*.md'
+      - '.github/instructions/**'
