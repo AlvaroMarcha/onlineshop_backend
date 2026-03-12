@@ -109,9 +109,6 @@ public class CartController {
      */
     private String getAuthenticatedUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth.getPrincipal() instanceof String) {
-            return (String) auth.getPrincipal();
-        }
         return auth.getName();
     }
 }
