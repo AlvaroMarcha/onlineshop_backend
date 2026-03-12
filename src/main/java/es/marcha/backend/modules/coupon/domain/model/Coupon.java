@@ -47,7 +47,7 @@ public class Coupon {
     @Column(name = "discount_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private DiscountType discountType;
-    @Column(name = "value", nullable = false, precision = 10, scale = 2)
+    @Column(name = "`value`", nullable = false, precision = 10, scale = 2)
     private BigDecimal value;
     @Column(name = "min_order_amount", precision = 10, scale = 2)
     private BigDecimal minOrderAmount;

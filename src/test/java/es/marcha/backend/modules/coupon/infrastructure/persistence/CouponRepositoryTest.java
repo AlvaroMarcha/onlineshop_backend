@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.TestPropertySource;
 
 import es.marcha.backend.core.shared.domain.enums.DiscountType;
@@ -37,13 +38,16 @@ import es.marcha.backend.modules.coupon.domain.model.Coupon;
 class CouponRepositoryTest {
 
     @Autowired
+    private TestEntityManager em;
+
+    @Autowired
     private CouponRepository couponRepository;
 
     private Coupon savedCoupon;
 
     @BeforeEach
     void setUp() {
-        savedCoupon = couponRepository.save(buildCoupon("SAVE10"));
+        savedCoupon = em.persistAndFlush(buildCoupon("SAVE10"));
     }
 
     // =========================================================================
