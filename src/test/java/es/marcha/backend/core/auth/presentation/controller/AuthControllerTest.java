@@ -42,123 +42,123 @@ import java.util.Map;
  * - POST /auth/register aplica rate limiting independiente del login
  */
 @WebMvcTest(value = AuthController.class,
-        // Deshabilitar security para testear los endpoints públicos de forma aislada
-        excludeAutoConfiguration = {
-                SecurityAutoConfiguration.class,
-                SecurityFilterAutoConfiguration.class
-        },
-        // Excluir filtros de seguridad (@Component) que no son relevantes para estos
-        // tests
-        excludeFilters = {
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtFilter.class),
-                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = VerifiedUserFilter.class)
-        })
+                // Deshabilitar security para testear los endpoints públicos de forma aislada
+                excludeAutoConfiguration = {
+                                SecurityAutoConfiguration.class,
+                                SecurityFilterAutoConfiguration.class
+                },
+                // Excluir filtros de seguridad (@Component) que no son relevantes para estos
+                // tests
+                excludeFilters = {
+                                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtFilter.class),
+                                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = VerifiedUserFilter.class)
+                })
 @DisplayName("AuthController — seguridad y anti-enumeración")
 class AuthControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @MockBean
-    private AuthService aService;
+        @MockBean
+        private AuthService aService;
 
-    @MockBean
-    private PasswordResetService passwordResetService;
+        @MockBean
+        private PasswordResetService passwordResetService;
 
-    @MockBean
-    private RateLimitService rateLimitService;
+        @MockBean
+        private RateLimitService rateLimitService;
 
-    // MockBean necesario porque ModuleFlagInterceptor (cargado por @WebMvcTest)
-    // depende de él
-    @MockBean
-    private ModuleProperties moduleProperties;
+        // MockBean necesario porque ModuleFlagInterceptor (cargado por @WebMvcTest)
+        // depende de él
+        @MockBean
+        private ModuleProperties moduleProperties;
 
-    // =========================================================================
-    // Anti-enumeración — password reset request
-    // =========================================================================
+        // =========================================================================
+        // Anti-enumeración — password reset request
+        // =========================================================================
 
-    @Nested
-    @DisplayName("POST /auth/password-reset/request — anti-enumeración")
-    class PasswordResetRequest {
+        @Nested
+        @DisplayName("POST /auth/password-reset/request — anti-enumeración")
+        class PasswordResetRequest {
 
-        @Test
-        @DisplayName("Responde 200 OK cuando el email existe")
-        void givenExistingEmail_whenPasswordResetRequest_thenReturns200() throws Exception {
-            doNothing().when(rateLimitService).checkRateLimit(anyString(),
-                    org.mockito.ArgumentMatchers.any());
-            doNothing().when(passwordResetService).requestReset(anyString());
+                @Test
+                @DisplayName("Responde 200 OK cuando el email existe")
+                void givenExistingEmail_whenPasswordResetRequest_thenReturns200() throws Exception {
+                        doNothing().when(rateLimitService).checkRateLimit(anyString(),
+                                        org.mockito.ArgumentMatchers.any());
+                        doNothing().when(passwordResetService).requestReset(anyString());
 
-            mockMvc.perform(post("/auth/password-reset/request")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(
-                            Map.of("email", "usuario@test.com"))))
-                    .andExpect(status().isOk());
+                        mockMvc.perform(post("/auth/password-reset/request")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        Map.of("email", "usuario@test.com"))))
+                                        .andExpect(status().isOk());
 
-            verify(passwordResetService).requestReset("usuario@test.com");
+                        verify(passwordResetService).requestReset("usuario@test.com");
+                }
+
+                @Test
+                @DisplayName("Responde 200 OK aunque el email NO exista — anti-enumeración")
+                void givenNonExistentEmail_whenPasswordResetRequest_thenReturns200() throws Exception {
+                        // El servicio no lanza excepción aunque el email no exista
+                        doNothing().when(rateLimitService).checkRateLimit(anyString(),
+                                        org.mockito.ArgumentMatchers.any());
+                        doNothing().when(passwordResetService).requestReset(anyString());
+
+                        mockMvc.perform(post("/auth/password-reset/request")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        Map.of("email", "noexiste@desconocido.com"))))
+                                        .andExpect(status().isOk());
+
+                        // Verificar que el servicio fue llamado (no cortocircuita antes)
+                        verify(passwordResetService).requestReset("noexiste@desconocido.com");
+                }
         }
 
-        @Test
-        @DisplayName("Responde 200 OK aunque el email NO exista — anti-enumeración")
-        void givenNonExistentEmail_whenPasswordResetRequest_thenReturns200() throws Exception {
-            // El servicio no lanza excepción aunque el email no exista
-            doNothing().when(rateLimitService).checkRateLimit(anyString(),
-                    org.mockito.ArgumentMatchers.any());
-            doNothing().when(passwordResetService).requestReset(anyString());
+        // =========================================================================
+        // Rate limiting
+        // =========================================================================
 
-            mockMvc.perform(post("/auth/password-reset/request")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(
-                            Map.of("email", "noexiste@desconocido.com"))))
-                    .andExpect(status().isOk());
+        @Nested
+        @DisplayName("Rate limiting — responde 429 al superar el límite")
+        class RateLimiting {
 
-            // Verificar que el servicio fue llamado (no cortocircuita antes)
-            verify(passwordResetService).requestReset("noexiste@desconocido.com");
+                @Test
+                @DisplayName("POST /auth/login → 429 al superar 5 intentos por IP")
+                void givenRateLimitExceeded_whenLogin_thenReturns429() throws Exception {
+                        // Simular que el rate limit está agotado para esta IP
+                        doThrow(new RateLimitException(60L))
+                                        .when(rateLimitService).checkRateLimit(anyString(),
+                                                        org.mockito.ArgumentMatchers.any());
+
+                        mockMvc.perform(post("/auth/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        Map.of("username", "test", "password", "pass"))))
+                                        .andExpect(status().isTooManyRequests());
+
+                        // El servicio de auth NO debe llamarse cuando el rate limit está agotado
+                        verify(aService, never()).login(org.mockito.ArgumentMatchers.any());
+                }
+
+                @Test
+                @DisplayName("POST /auth/password-reset/request → 429 al superar 3 intentos por IP")
+                void givenRateLimitExceeded_whenPasswordResetRequest_thenReturns429() throws Exception {
+                        doThrow(new RateLimitException(3600L))
+                                        .when(rateLimitService).checkRateLimit(anyString(),
+                                                        org.mockito.ArgumentMatchers.any());
+
+                        mockMvc.perform(post("/auth/password-reset/request")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        Map.of("email", "test@test.com"))))
+                                        .andExpect(status().isTooManyRequests());
+
+                        verify(passwordResetService, never()).requestReset(anyString());
+                }
         }
-    }
-
-    // =========================================================================
-    // Rate limiting
-    // =========================================================================
-
-    @Nested
-    @DisplayName("Rate limiting — responde 429 al superar el límite")
-    class RateLimiting {
-
-        @Test
-        @DisplayName("POST /auth/login → 429 al superar 5 intentos por IP")
-        void givenRateLimitExceeded_whenLogin_thenReturns429() throws Exception {
-            // Simular que el rate limit está agotado para esta IP
-            doThrow(new RateLimitException(60L))
-                    .when(rateLimitService).checkRateLimit(anyString(),
-                            org.mockito.ArgumentMatchers.any());
-
-            mockMvc.perform(post("/auth/login")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(
-                            Map.of("username", "test", "password", "pass"))))
-                    .andExpect(status().isTooManyRequests());
-
-            // El servicio de auth NO debe llamarse cuando el rate limit está agotado
-            verify(aService, never()).login(org.mockito.ArgumentMatchers.any());
-        }
-
-        @Test
-        @DisplayName("POST /auth/password-reset/request → 429 al superar 3 intentos por IP")
-        void givenRateLimitExceeded_whenPasswordResetRequest_thenReturns429() throws Exception {
-            doThrow(new RateLimitException(3600L))
-                    .when(rateLimitService).checkRateLimit(anyString(),
-                            org.mockito.ArgumentMatchers.any());
-
-            mockMvc.perform(post("/auth/password-reset/request")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(
-                            Map.of("email", "test@test.com"))))
-                    .andExpect(status().isTooManyRequests());
-
-            verify(passwordResetService, never()).requestReset(anyString());
-        }
-    }
 }
