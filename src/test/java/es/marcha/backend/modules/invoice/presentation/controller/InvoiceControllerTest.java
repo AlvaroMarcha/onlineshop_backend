@@ -24,6 +24,7 @@ import es.marcha.backend.core.config.ModuleProperties;
 import es.marcha.backend.core.security.jwt.JwtFilter;
 import es.marcha.backend.core.security.jwt.VerifiedUserFilter;
 import es.marcha.backend.modules.invoice.application.service.InvoiceService;
+import es.marcha.backend.modules.invoice.application.service.InvoiceService.InvoiceGenerationResult;
 import es.marcha.backend.modules.invoice.domain.model.Invoice;
 
 /**
@@ -34,9 +35,10 @@ import es.marcha.backend.modules.invoice.domain.model.Invoice;
  * Numeración: INV-YYYY-NNNNNN con bloqueo PESSIMISTIC_WRITE.
  *
  * Verifica:
- * - POST /invoices/orders/{orderId} → 201 CREATED
+ * - POST /invoices/orders/{orderId} → 201 CREATED cuando la factura es nueva
+ * - POST /invoices/orders/{orderId} → 200 OK cuando la factura ya existe
  * - GET /invoices/users/{userId} → 200 OK
- * - Idempotencia: segunda llamada devuelve mismo resultado
+ * - Idempotencia: segunda llamada devuelve 200 OK con la misma factura
  */
 @WebMvcTest(value = InvoiceController.class, excludeAutoConfiguration = {
         SecurityAutoConfiguration.class,
@@ -74,26 +76,26 @@ class InvoiceControllerTest {
         @DisplayName("genera factura → 201 CREATED")
         void generateInvoice_ordenValida_devuelve201() throws Exception {
             Invoice invoice = buildInvoice("INV-2024-000001");
-            when(invoiceService.generateInvoice(1L)).thenReturn(invoice);
+            when(invoiceService.generateInvoice(1L))
+                    .thenReturn(new InvoiceGenerationResult(invoice, true));
 
             mockMvc.perform(post("/invoices/orders/1"))
                     .andExpect(status().isCreated());
+
+            verify(invoiceService).generateInvoice(1L);
         }
 
         @Test
-        @DisplayName("factura ya existe (idempotente) → 201 CREATED sin duplicar")
-        void generateInvoice_yaExiste_devuelve201Idempotente() throws Exception {
+        @DisplayName("factura ya existe (idempotente) → 200 OK sin duplicar")
+        void generateInvoice_yaExiste_devuelve200Idempotente() throws Exception {
             Invoice existingInvoice = buildInvoice("INV-2024-000001");
-            // Ambas llamadas devuelven la misma factura
-            when(invoiceService.generateInvoice(1L)).thenReturn(existingInvoice);
+            when(invoiceService.generateInvoice(1L))
+                    .thenReturn(new InvoiceGenerationResult(existingInvoice, false));
 
             mockMvc.perform(post("/invoices/orders/1"))
-                    .andExpect(status().isCreated());
-            mockMvc.perform(post("/invoices/orders/1"))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().isOk());
 
-            // Solo una llamada real al servicio por cada petición del controller
-            verify(invoiceService, times(2)).generateInvoice(1L);
+            verify(invoiceService).generateInvoice(1L);
         }
     }
 

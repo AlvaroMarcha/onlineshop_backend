@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import es.marcha.backend.modules.invoice.domain.model.Invoice;
 import es.marcha.backend.modules.invoice.application.service.InvoiceService;
+import es.marcha.backend.modules.invoice.application.service.InvoiceService.InvoiceGenerationResult;
 
 @RestController
 @RequestMapping("/invoices")
@@ -33,12 +34,14 @@ public class InvoiceController {
      * (idempotente).
      *
      * @param orderId ID del pedido a facturar.
-     * @return la entidad {@link Invoice} con HTTP 201 Created.
+     * @return la entidad {@link Invoice} con HTTP 201 Created si es nueva,
+     *         o HTTP 200 OK si la factura ya existía.
      */
     @PostMapping("/orders/{orderId}")
     public ResponseEntity<Invoice> generateInvoice(@PathVariable long orderId) {
-        Invoice invoice = invoiceService.generateInvoice(orderId);
-        return new ResponseEntity<>(invoice, HttpStatus.CREATED);
+        InvoiceGenerationResult result = invoiceService.generateInvoice(orderId);
+        HttpStatus status = result.created() ? HttpStatus.CREATED : HttpStatus.OK;
+        return new ResponseEntity<>(result.invoice(), status);
     }
 
     /**
