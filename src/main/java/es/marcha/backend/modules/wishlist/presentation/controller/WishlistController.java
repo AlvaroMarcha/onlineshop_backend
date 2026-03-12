@@ -123,6 +123,6 @@ public class WishlistController {
      */
     private String getAuthenticatedUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return (String) auth.getPrincipal();
+        return auth.getName();
     }
 }

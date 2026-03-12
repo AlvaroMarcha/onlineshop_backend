@@ -336,7 +336,7 @@ public class OrderService {
 
         try {
             log.info("[OrderService] Intentando generar factura para orderId={}...", orderId);
-            Invoice invoice = invoiceService.generateInvoice(orderId);
+            Invoice invoice = invoiceService.generateInvoice(orderId).invoice();
             log.info("[OrderService] ✓ Factura {} generada automáticamente para el pedido {} al pasar a PAID.",
                     invoice.getInvoiceNumber(), orderId);
             log.info("[OrderService] Ruta del PDF: {}", invoice.getPdfPath());

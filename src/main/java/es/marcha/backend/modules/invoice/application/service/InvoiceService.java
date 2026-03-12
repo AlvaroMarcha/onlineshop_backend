@@ -92,18 +92,30 @@ public class InvoiceService {
     // =========================================================================
 
     /**
+     * Resultado de la operación de generación de factura.
+     *
+     * @param invoice la entidad {@link Invoice} persistida.
+     * @param created {@code true} si la factura fue recién creada;
+     *                {@code false} si ya existía para el pedido.
+     */
+    public record InvoiceGenerationResult(Invoice invoice, boolean created) {
+    }
+
+    /**
      * Genera, persiste y devuelve una factura para el pedido indicado.
      * Si ya existe una factura para ese pedido, se devuelve el registro existente
      * sin regenerar el PDF.
      *
      * @param orderId ID del pedido a facturar.
-     * @return la entidad {@link Invoice} persistida.
+     * @return {@link InvoiceGenerationResult} con la factura y un flag
+     *         que indica si fue recién creada ({@code true}) o ya existía
+     *         ({@code false}).
      * @throws InvoiceException si falta la dirección del pedido, falla la
      *                          generación del PDF
      *                          o no se puede escribir el archivo en disco.
      */
     @Transactional
-    public Invoice generateInvoice(long orderId) {
+    public InvoiceGenerationResult generateInvoice(long orderId) {
         log.info("[InvoiceService] generateInvoice llamado para orderId={}", orderId);
         return invoiceRepository.findByOrderId(orderId)
                 .map(existing -> {
@@ -122,15 +134,15 @@ public class InvoiceService {
                         String newPath = regeneratePdfFile(existing.getInvoiceNumber(), order, addr,
                                 existing.getUser().getId(), existing.getId());
                         existing.setPdfPath(newPath);
-                        return invoiceRepository.save(existing);
+                        return new InvoiceGenerationResult(invoiceRepository.save(existing), false);
                     }
                     log.info("[InvoiceService] Factura {} ya tiene PDF válido en: {}",
                             existing.getInvoiceNumber(), existing.getPdfPath());
-                    return existing;
+                    return new InvoiceGenerationResult(existing, false);
                 })
                 .orElseGet(() -> {
                     log.info("[InvoiceService] No existe factura previa, creando nueva para orderId={}", orderId);
-                    return createInvoice(orderId);
+                    return new InvoiceGenerationResult(createInvoice(orderId), true);
                 });
     }
 
