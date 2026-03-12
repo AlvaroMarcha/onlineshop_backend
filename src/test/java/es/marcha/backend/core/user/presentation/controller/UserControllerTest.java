@@ -2,7 +2,6 @@ package es.marcha.backend.core.user.presentation.controller;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -89,7 +88,7 @@ class UserControllerTest {
         void deleteMyAccount_autenticado_devuelve200() throws Exception {
             doNothing().when(userDeletionService).anonymizeAndDelete("testuser");
 
-            mockMvc.perform(delete("/users/me").with(user("testuser")))
+            mockMvc.perform(delete("/users/me"))
                     .andExpect(status().isOk());
 
             verify(userDeletionService).anonymizeAndDelete("testuser");
@@ -113,7 +112,7 @@ class UserControllerTest {
                     .checkRateLimit(eq("testuser"), eq(RateLimitService.EndpointType.DATA_EXPORT));
             when(dataExportService.export("testuser")).thenReturn(export);
 
-            mockMvc.perform(get("/users/me/data-export").with(user("testuser")))
+            mockMvc.perform(get("/users/me/data-export"))
                     .andExpect(status().isOk());
         }
     }
