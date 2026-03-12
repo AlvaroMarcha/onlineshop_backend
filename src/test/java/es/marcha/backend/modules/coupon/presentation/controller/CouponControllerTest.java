@@ -121,6 +121,8 @@ class CouponControllerTest {
                         "code": "NEWCOUPON",
                         "discountType": "PERCENTAGE",
                         "value": 10,
+                        "validFrom": "2026-01-01",
+                        "validUntil": "2026-12-31",
                         "isActive": true
                     }
                     """;

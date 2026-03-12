@@ -162,6 +162,7 @@ class ProductControllerTest {
                     {
                         "name": "Nuevo Producto",
                         "price": 29.99,
+                        "stock": 10,
                         "subcategoryIds": [],
                         "categoryIds": []
                     }
