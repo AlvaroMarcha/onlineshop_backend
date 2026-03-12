@@ -36,7 +36,7 @@ import es.marcha.backend.modules.cart.application.service.CartService;
  * Verifica:
  * - GET /cart devuelve 200 con el carrito
  * - POST /cart/items devuelve 201 al agregar ítem
- * - DELETE /cart devuelve 200 al vaciar el carrito
+ * - DELETE /cart devuelve 204 al vaciar el carrito
  */
 @WebMvcTest(value = CartController.class, excludeAutoConfiguration = {
         SecurityAutoConfiguration.class,
