@@ -1,0 +1,47 @@
+backend:
+  - 'src/main/**'
+
+tests:
+  - 'src/test/**'
+
+dependencies:
+  - 'pom.xml'
+
+ci-cd:
+  - '.github/workflows/**'
+
+core:
+  - '**/core/**'
+
+catalog:
+  - '**/modules/catalog/**'
+
+orders:
+  - '**/modules/order/**'
+
+invoices:
+  - '**/modules/invoice/**'
+
+cart:
+  - '**/modules/cart/**'
+
+wishlist:
+  - '**/modules/wishlist/**'
+
+company:
+  - '**/modules/company/**'
+
+coupon:
+  - '**/modules/coupon/**'
+
+notification:
+  - '**/modules/notification/**'
+
+infra:
+  - 'nginx/**'
+  - 'docker-compose*.yml'
+  - 'Dockerfile'
+
+documentation:
+  - '*.md'
+  - '.github/instructions/**'

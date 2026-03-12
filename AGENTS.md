@@ -73,11 +73,38 @@ Cada módulo tiene **4 capas fijas**: `domain/` → `application/` → `infrastr
 | Stripe | `stripe.instructions.md` | PaymentIntent, webhooks, firma Stripe |
 | Facturas | `invoice.instructions.md` | PDF, numeración correlativa, RGPD |
 | Tests | `testing.instructions.md` | JUnit 5, Mockito, MockMvc, @DataJpaTest |
+| Git y CI/CD | `git.instructions.md` | Flujo de ramas, conventional commits, workflows |
 
 ---
 
-## Git
+## Git y CI/CD
 
-- Rama de trabajo: `develop`. **Nunca PR directo a `main`.**
-- Ramas: `feature/descripcion-corta`, `bugfix/descripcion-corta`.
-- Commits y PRs en **español**, tiempo presente, concisos.
+### Flujo de trabajo (Automatizado)
+- **develop**: rama principal de trabajo
+- **main**: rama de producción con releases automáticas
+- **Flujo en cascada**:
+  1. Crear branch: `feature/`, `bugfix/`, `refactor/`, `hotfix/` + descripción-corta
+  2. PR a develop → auto-merge si tests pasan + 1 aprobación
+  3. develop → main automático cuando hay cambios aprobados
+  4. main → release + deploy automático
+
+### Conventional Commits (Obligatorio)
+- **Formato**: `tipo(scope): descripción`
+- **Tipos**: `feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `style`, `chore`
+- **Ejemplos**: 
+  - `feat(catalog): añadir filtro por categoría`
+  - `fix: resolver NPE en PaymentService`
+- Commits y PRs en **español**, código en **inglés**
+
+### CI/CD Pipeline
+- **Tests automáticos**: ejecutados en cada PR
+- **Auto-merge**: cuando tests pasan + 1 aprobación
+- **Releases**: semantic-release en main (versionado automático)
+  - `feat:` → minor, `fix:` → patch, `BREAKING CHANGE` → major
+- **Deploy**: automático a VPS vía Docker (ghcr.io)
+- **CHANGELOG.md**: generado automáticamente
+- **Branch cleanup**: branches mergeadas se borran automáticamente
+
+### Límites PR
+- **Warning**: > 500 líneas → label `size/large`
+- **Bloqueado**: > 1000 líneas → merge rechazado

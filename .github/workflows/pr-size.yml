@@ -1,0 +1,111 @@
+name: PR Size Check
+
+on:
+  pull_request:
+    types: 
+      - opened
+      - synchronize
+
+permissions:
+  pull-requests: write
+  checks: write
+
+jobs:
+  check-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Check PR size
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const additions = pr.additions;
+            const deletions = pr.deletions;
+            const changedFiles = pr.changed_files;
+            const totalLines = additions + deletions;
+            
+            console.log(`Lines changed: ${totalLines} (${additions} additions, ${deletions} deletions)`);
+            console.log(`Files changed: ${changedFiles}`);
+            
+            // Remove existing size labels
+            const { data: labels } = await github.rest.issues.listLabelsOnIssue({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+            
+            const sizeLabels = labels.filter(label => label.name.startsWith('size/'));
+            for (const label of sizeLabels) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                name: label.name,
+              });
+            }
+            
+            // Determine size and action
+            let size = 'small';
+            let shouldWarn = false;
+            let shouldBlock = false;
+            
+            if (totalLines > 1000 || changedFiles > 100) {
+              size = 'xl';
+              shouldBlock = true;
+            } else if (totalLines > 500 || changedFiles > 50) {
+              size = 'large';
+              shouldWarn = true;
+            }
+            
+            // Add appropriate label
+            if (size !== 'small') {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: [`size/${size}`],
+              });
+            }
+            
+            // Add comment if warning or blocking
+            if (shouldWarn || shouldBlock) {
+              const message = shouldBlock 
+                ? `⚠️ **Este PR es demasiado grande** (${totalLines} líneas, ${changedFiles} archivos)\n\n` +
+                  `Se recomienda dividirlo en PRs más pequeños para facilitar la revisión.\n\n` +
+                  `**El merge está bloqueado hasta que se reduzca el tamaño.**`
+                : `⚠️ **Este PR es grande** (${totalLines} líneas, ${changedFiles} archivos)\n\n` +
+                  `Considera dividirlo en PRs más pequeños si es posible para facilitar la revisión.`;
+              
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: message,
+              });
+            }
+            
+            // Create check run
+            const conclusion = shouldBlock ? 'failure' : 'success';
+            const summary = shouldBlock 
+              ? `PR demasiado grande: ${totalLines} líneas, ${changedFiles} archivos`
+              : `PR size OK: ${totalLines} líneas, ${changedFiles} archivos`;
+            
+            await github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'PR Size Check',
+              head_sha: pr.head.sha,
+              status: 'completed',
+              conclusion: conclusion,
+              output: {
+                title: 'PR Size Check',
+                summary: summary,
+                text: `Lines: ${additions} additions, ${deletions} deletions\nFiles: ${changedFiles}`,
+              },
+            });
+            
+            if (shouldBlock) {
+              core.setFailed('PR size exceeds limits');
+            }
