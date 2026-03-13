@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-wrapper {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #f3f3f3;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #c41e3a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .content h2 {
+            color: #c41e3a;
+            margin-top: 0;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .warning-box strong {
+            color: #856404;
+        }
+        .btn-support {
+            display: inline-block;
+            background-color: #232f3e;
+            color: white !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #f3f3f3;
+        }
+        .footer a {
+            color: #232f3e;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="header">
+                <img th:if="${hasLogo}" src="cid:logoImage" alt="Tu Empresa" />
+                <h1>Cuenta baneada</h1>
+            </div>
+            <div class="content">
+                <p>Hola <span th:text="${userName}">Usuario</span>,</p>
+                
+                <div class="warning-box">
+                    <strong>Tu cuenta ha sido permanentemente baneada.</strong>
+                </div>
+
+                <p th:text="${banReason}">
+                    Tu cuenta ha sido baneada debido al incumplimiento de nuestras políticas de uso y términos de servicio.
+                </p>
+
+                <p><strong>Fecha del baneo:</strong> <span th:text="${banDate}">13/03/2026</span></p>
+
+                <p>
+                    Si crees que este baneo ha sido un error o deseas apelar esta decisión, 
+                    puedes contactar con nuestro equipo de soporte haciendo clic en el botón de abajo:
+                </p>
+
+                <a th:href="${supportLink}" class="btn-support">Contactar con soporte</a>
+
+                <p style="margin-top: 30px; font-size: 13px; color: #666;">
+                    <strong>Importante:</strong> Durante el periodo de baneo, no podrás acceder a tu cuenta 
+                    ni realizar ninguna acción en la plataforma. Todos los pedidos pendientes han sido cancelados.
+                </p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tu Empresa. Todos los derechos reservados.</p>
+            <p>
+                <a href="#">Términos</a> | 
+                <a href="#">Privacidad</a> | 
+                <a href="#">Ayuda</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-wrapper {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #f3f3f3;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .content h2 {
+            color: #28a745;
+            margin-top: 0;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .ticket-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .ticket-info p {
+            margin: 5px 0;
+        }
+        .ticket-info strong {
+            color: #232f3e;
+        }
+        .resolution-box {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .resolution-box .title {
+            font-weight: bold;
+            color: #155724;
+            margin-bottom: 10px;
+        }
+        .checkmark {
+            color: #28a745;
+            font-size: 48px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .survey-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .btn-survey {
+            display: inline-block;
+            background-color: #ffc107;
+            color: #111 !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .btn-view-history {
+            display: inline-block;
+            background-color: #232f3e;
+            color: white !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #f3f3f3;
+        }
+        .footer a {
+            color: #232f3e;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="header">
+                <img th:if="${hasLogo}" src="cid:logoImage" alt="Tu Empresa" />
+                <h1>Ticket cerrado</h1>
+            </div>
+            <div class="content">
+                <div class="checkmark">&#10004;</div>
+                
+                <p style="text-align: center;">Hola <span th:text="${userName}">Usuario</span>,</p>
+                <p style="text-align: center;">Tu ticket de soporte ha sido cerrado exitosamente.</p>
+
+                <div class="ticket-info">
+                    <p><strong>Número de ticket:</strong> <span th:text="${ticketNumber}">#12345</span></p>
+                    <p><strong>Asunto:</strong> <span th:text="${ticketSubject}">Problema con el pedido</span></p>
+                    <p><strong>Fecha de creación:</strong> <span th:text="${createdDate}">10/03/2026</span></p>
+                    <p><strong>Fecha de cierre:</strong> <span th:text="${closedDate}">13/03/2026</span></p>
+                    <p><strong>Tiempo de resolución:</strong> <span th:text="${resolutionTime}">3 días</span></p>
+                    <p><strong>Cerrado por:</strong> <span th:text="${closedBy}">Equipo de Soporte</span></p>
+                </div>
+
+                <div class="resolution-box" th:if="${resolutionNotes != null}">
+                    <p class="title">Notas de resolución:</p>
+                    <p th:text="${resolutionNotes}">
+                        El problema ha sido resuelto satisfactoriamente. El pedido ha sido procesado 
+                        correctamente y se encuentra en camino.
+                    </p>
+                </div>
+
+                <p>Esperamos haber resuelto tu consulta satisfactoriamente. Si tienes alguna otra pregunta o problema, no dudes en contactarnos nuevamente.</p>
+
+                <div class="survey-box" th:if="${includeSurvey}">
+                    <p><strong>¿Cómo fue tu experiencia con nuestro soporte?</strong></p>
+                    <p style="font-size: 13px;">Tu opinión nos ayuda a mejorar nuestro servicio.</p>
+                    <a th:href="${surveyLink}" class="btn-survey">Calificar atención recibida</a>
+                </div>
+
+                <a th:href="${ticketHistoryLink}" class="btn-view-history">Ver historial completo</a>
+
+                <p style="margin-top: 30px; font-size: 13px; color: #666; text-align: center;">
+                    Este ticket ha sido archivado. Si necesitas ayuda con otro tema, 
+                    puedes crear un nuevo ticket desde tu panel de usuario.
+                </p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tu Empresa. Todos los derechos reservados.</p>
+            <p>
+                <a href="#">Términos</a> | 
+                <a href="#">Privacidad</a> | 
+                <a href="#">Ayuda</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
