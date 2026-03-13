@@ -1,0 +1,42 @@
+name: Cleanup Branches
+
+on:
+  pull_request:
+    types: 
+      - closed
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    name: Delete merged branch
+    runs-on: ubuntu-latest
+    
+    # Only delete if PR was merged and branch is not develop or main
+    if: |
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.ref != 'develop' &&
+      github.event.pull_request.head.ref != 'main'
+    
+    steps:
+      - name: Delete branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchName = context.payload.pull_request.head.ref;
+            
+            console.log(`Attempting to delete branch: ${branchName}`);
+            
+            try {
+              await github.rest.git.deleteRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `heads/${branchName}`,
+              });
+              
+              console.log(`✅ Successfully deleted branch: ${branchName}`);
+            } catch (error) {
+              console.log(`⚠️ Could not delete branch ${branchName}: ${error.message}`);
+              // Don't fail the workflow if branch deletion fails
+            }

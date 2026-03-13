@@ -1,0 +1,84 @@
+name: Auto-merge to develop
+
+on:
+  pull_request_review:
+    types: 
+      - submitted
+  check_suite:
+    types: 
+      - completed
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Auto-merge feature to develop
+    runs-on: ubuntu-latest
+    
+    # Only run when PR targets develop
+    if: |
+      github.event.pull_request.base.ref == 'develop' &&
+      github.event.pull_request.draft == false
+    
+    steps:
+      - name: Check PR approval and branch name
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const headRef = pr.head.ref;
+            
+            // Only auto-merge feature/bugfix/refactor/hotfix branches
+            const allowedPrefixes = ['feature/', 'bugfix/', 'refactor/', 'hotfix/'];
+            const isValidBranch = allowedPrefixes.some(prefix => headRef.startsWith(prefix));
+            
+            if (!isValidBranch) {
+              console.log(`Branch ${headRef} is not a feature/bugfix/refactor/hotfix branch`);
+              return { shouldMerge: false };
+            }
+            
+            // Check if PR is approved
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            
+            const approvedReviews = reviews.filter(review => review.state === 'APPROVED');
+            
+            if (approvedReviews.length === 0) {
+              console.log('PR has no approvals');
+              return { shouldMerge: false };
+            }
+            
+            // Check if all required checks passed
+            const { data: checkRuns } = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: pr.head.sha,
+            });
+            
+            const failedChecks = checkRuns.check_runs.filter(check => 
+              check.conclusion === 'failure' || check.conclusion === 'cancelled'
+            );
+            
+            if (failedChecks.length > 0) {
+              console.log('Some checks failed:', failedChecks.map(c => c.name));
+              return { shouldMerge: false };
+            }
+            
+            return { shouldMerge: true };
+        
+      - name: Enable auto-merge
+        if: fromJSON(steps.check.outputs.result).shouldMerge == true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --auto \
+            --merge \
+            --delete-branch \
+            --repo ${{ github.repository }}

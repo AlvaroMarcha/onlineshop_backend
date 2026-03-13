@@ -1,0 +1,47 @@
+name: Conventional Commits Check
+
+on:
+  pull_request:
+    types: 
+      - opened
+      - synchronize
+      - edited
+
+permissions:
+  pull-requests: write
+  checks: write
+
+jobs:
+  check-title:
+    name: Check PR Title
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            chore
+          requireScope: false
+          subjectPattern: ^.+$
+          subjectPatternError: |
+            El título del PR debe seguir el formato Conventional Commits.
+            
+            Ejemplos válidos:
+            - feat: añadir filtro de productos por categoría
+            - fix: resolver error en cálculo de totales
+            - feat(catalog): implementar búsqueda avanzada
+            - fix(auth): corregir validación de tokens
+            
+            El formato es: tipo(scope opcional): descripción
+            
+            Tipos válidos: feat, fix, docs, style, refactor, perf, test, chore

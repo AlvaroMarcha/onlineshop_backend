@@ -1,0 +1,64 @@
+backend:
+  - changed-files:
+    - any-glob-to-any-file: 'src/main/**'
+
+tests:
+  - changed-files:
+    - any-glob-to-any-file: 'src/test/**'
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file: 'pom.xml'
+
+ci-cd:
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**'
+
+core:
+  - changed-files:
+    - any-glob-to-any-file: '**/core/**'
+
+catalog:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/catalog/**'
+
+orders:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/order/**'
+
+invoices:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/invoice/**'
+
+cart:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/cart/**'
+
+wishlist:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/wishlist/**'
+
+company:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/company/**'
+
+coupon:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/coupon/**'
+
+notification:
+  - changed-files:
+    - any-glob-to-any-file: '**/modules/notification/**'
+
+infra:
+  - changed-files:
+    - any-glob-to-any-file: 
+      - 'nginx/**'
+      - 'docker-compose*.yml'
+      - 'Dockerfile'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '*.md'
+      - '.github/instructions/**'
