@@ -1,19 +1,26 @@
 package es.marcha.backend.modules.order.application.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import es.marcha.backend.modules.notification.application.service.UserEmailNotificationService;
 import es.marcha.backend.modules.order.application.dto.response.PaymentResponseDTO;
 import es.marcha.backend.core.error.exception.OrderException;
 import es.marcha.backend.modules.order.application.mapper.PaymentMapper;
 import es.marcha.backend.core.shared.domain.enums.OrderStatus;
+import es.marcha.backend.core.user.domain.model.User;
 import es.marcha.backend.modules.order.domain.enums.PaymentStatus;
 import es.marcha.backend.modules.order.domain.model.Order;
+import es.marcha.backend.modules.order.domain.model.OrderItems;
 import es.marcha.backend.modules.order.domain.model.Payment;
 import es.marcha.backend.modules.order.infrastructure.persistence.PaymentRepository;
 import jakarta.transaction.Transactional;
@@ -25,6 +32,8 @@ public class PaymentService {
     private PaymentRepository pRepository;
     @Autowired
     private OrderService oService;
+    @Autowired
+    private UserEmailNotificationService emailService;
 
     /**
      * Crea un nuevo pago asociado a una orden y actualiza el total de la orden.
@@ -347,7 +356,45 @@ public class PaymentService {
 
         payment.setStatus(PaymentStatus.REFUNDED);
         updateOrderStatusFromPayments(payment.getOrder());
-        return PaymentMapper.toPaymentDTO(pRepository.save(payment));
+        PaymentResponseDTO result = PaymentMapper.toPaymentDTO(pRepository.save(payment));
+
+        // Enviar email de notificación de devolución/reembolso
+        sendRefundNotificationEmail(payment);
+
+        return result;
+    }
+
+    /**
+     * Envía el email de notificación de devolución/reembolso al cliente.
+     * <p>
+     * Construye la lista de items devueltos a partir de los OrderItems de la orden
+     * y envía el email de forma asíncrona.
+     * </p>
+     *
+     * @param payment el pago que ha sido reembolsado
+     */
+    private void sendRefundNotificationEmail(Payment payment) {
+        Order order = payment.getOrder();
+        User user = order.getUser();
+        List<OrderItems> orderItems = order.getOrderItems();
+
+        // Construir lista de items devueltos para el email
+        List<Map<String, Object>> returnedItems = new ArrayList<>();
+        for (OrderItems item : orderItems) {
+            BigDecimal effectivePrice = (item.getDiscountPrice() != null
+                    && item.getDiscountPrice().compareTo(BigDecimal.ZERO) > 0)
+                            ? item.getDiscountPrice()
+                            : item.getPrice();
+
+            Map<String, Object> returnedItem = new HashMap<>();
+            returnedItem.put("name", item.getName());
+            returnedItem.put("quantity", item.getQuantity());
+            returnedItem.put("refundAmount", String.format("%.2f €", effectivePrice));
+            returnedItems.add(returnedItem);
+        }
+
+        BigDecimal totalRefund = BigDecimal.valueOf(payment.getAmount());
+        emailService.sendReturnRefundNotification(user, order, returnedItems, totalRefund);
     }
 
 }

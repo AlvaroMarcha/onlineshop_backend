@@ -84,7 +84,7 @@ Cada módulo tiene **4 capas fijas**: `domain/` → `application/` → `infrastr
 - **main**: rama de producción con releases automáticas
 - **Flujo en cascada**:
   1. Crear branch: `feature/`, `bugfix/`, `refactor/`, `hotfix/` + descripción-corta
-  2. PR a develop → auto-merge si tests pasan + 1 aprobación
+  2. PR a develop → requiere 1 aprobación manual del propietario + tests pasando
   3. develop → main automático cuando hay cambios aprobados
   4. main → release + deploy automático
 
@@ -98,7 +98,8 @@ Cada módulo tiene **4 capas fijas**: `domain/` → `application/` → `infrastr
 
 ### CI/CD Pipeline
 - **Tests automáticos**: ejecutados en cada PR
-- **Auto-merge**: cuando tests pasan + 1 aprobación
+- **Aprobación manual requerida**: NUNCA mergear PRs sin aprobación explícita del propietario
+- **Auto-merge**: solo después de aprobación manual + tests pasando
 - **Releases**: semantic-release en main (versionado automático)
   - `feat:` → minor, `fix:` → patch, `BREAKING CHANGE` → major
 - **Deploy**: automático a VPS vía Docker (ghcr.io)
@@ -108,3 +109,10 @@ Cada módulo tiene **4 capas fijas**: `domain/` → `application/` → `infrastr
 ### Límites PR
 - **Warning**: > 500 líneas → label `size/large`
 - **Bloqueado**: > 1000 líneas → merge rechazado
+
+### Reglas para Agentes IA
+- ✅ Crear PRs y reportar su estado
+- ✅ Dividir PRs grandes (> 1000 líneas) automáticamente
+- ✅ Ejecutar tests locales antes de push
+- ❌ **NUNCA mergear PRs sin aprobación manual explícita del usuario**
+- ❌ **NUNCA usar `gh pr merge` sin que el usuario lo solicite**

@@ -258,6 +258,9 @@ public class AuthService {
         user.setVerificationToken(null);
         user.setVerificationTokenExpiry(null);
         uService.saveUserForHandler(user);
+
+        // Enviar email de bienvenida tras la verificación exitosa
+        emailService.sendWelcomeEmail(user.getName(), user.getEmail());
     }
 
     /**
