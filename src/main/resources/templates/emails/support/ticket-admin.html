@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-wrapper {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #f3f3f3;
+        }
+        .email-container {
+            max-width: 650px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .content h2 {
+            color: #dc3545;
+            margin-top: 0;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .ticket-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .ticket-info p {
+            margin: 5px 0;
+        }
+        .ticket-info strong {
+            color: #232f3e;
+        }
+        .user-info {
+            background-color: #e7f3ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .message-box {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .priority-high {
+            background-color: #dc3545;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .priority-medium {
+            background-color: #ffc107;
+            color: #111;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .priority-low {
+            background-color: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .btn-manage-ticket {
+            display: inline-block;
+            background-color: #dc3545;
+            color: white !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #f3f3f3;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="header">
+                <img th:if="${hasLogo}" src="cid:logoImage" alt="Admin Dashboard" />
+                <h1>Nuevo ticket de soporte</h1>
+            </div>
+            <div class="content">
+                <p>Hola Admin,</p>
+                <p>Se ha creado un nuevo ticket de soporte que requiere atención:</p>
+
+                <div class="ticket-info">
+                    <p><strong>Número de ticket:</strong> <span th:text="${ticketNumber}">#12345</span></p>
+                    <p><strong>Asunto:</strong> <span th:text="${ticketSubject}">Problema con el pedido</span></p>
+                    <p><strong>Categoría:</strong> <span th:text="${ticketCategory}">Pedidos</span></p>
+                    <p>
+                        <strong>Prioridad:</strong> 
+                        <span th:class="${'priority-' + #strings.toLowerCase(ticketPriority)}" 
+                              th:text="${ticketPriority}">Alta</span>
+                    </p>
+                    <p><strong>Fecha de creación:</strong> <span th:text="${createdDate}">13/03/2026 14:30</span></p>
+                    <p><strong>Estado:</strong> <span th:text="${ticketStatus}">Abierto</span></p>
+                </div>
+
+                <div class="user-info">
+                    <p><strong>Información del cliente:</strong></p>
+                    <p><strong>Usuario:</strong> <span th:text="${userName}">Juan Pérez</span></p>
+                    <p><strong>Email:</strong> <span th:text="${userEmail}">juan@example.com</span></p>
+                    <p th:if="${orderId != null}">
+                        <strong>Pedido relacionado:</strong> <span th:text="${orderId}">#5678</span>
+                    </p>
+                </div>
+
+                <p><strong>Mensaje del cliente:</strong></p>
+                <div class="message-box">
+                    <p th:text="${userMessage}">
+                        Este es el mensaje inicial del cliente describiendo su problema o consulta.
+                    </p>
+                </div>
+
+                <a th:href="${adminTicketLink}" class="btn-manage-ticket">Gestionar ticket</a>
+
+                <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                    Este email es una notificación automática del sistema de soporte.
+                </p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tu Empresa - Panel de Administración</p>
+        </div>
+    </div>
+</body>
+</html>
