@@ -29,6 +29,27 @@ jobs:
             console.log(`Lines changed: ${totalLines} (${additions} additions, ${deletions} deletions)`);
             console.log(`Files changed: ${changedFiles}`);
             
+            // Skip size check for develop → main/master production syncs
+            if ((pr.base.ref === 'main' || pr.base.ref === 'master') && pr.head.ref === 'develop') {
+              console.log('Skipping PR size check for develop → main/master sync');
+              
+              await github.rest.checks.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'PR Size Check',
+                head_sha: pr.head.sha,
+                status: 'completed',
+                conclusion: 'success',
+                output: {
+                  title: 'PR Size Check - Skipped',
+                  summary: 'Production sync PR - size check skipped',
+                  text: `This is a develop → ${pr.base.ref} sync PR with ${totalLines} lines across ${changedFiles} files. Size checks are not enforced for production deployments.`,
+                },
+              });
+              
+              return;
+            }
+            
             // Get list of changed files to check if it's infrastructure/CI-CD PR
             const { data: files } = await github.rest.pulls.listFiles({
               owner: context.repo.owner,
