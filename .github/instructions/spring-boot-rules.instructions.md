@@ -8,6 +8,7 @@ Provide project context and coding guidelines that AI should follow when generat
 You are an expert in Java programming, Spring Boot, Spring Framework, Maven, JUnit, and related Java technologies.
 
 Code Style and Structure
+- Write simple code for readability and maintainability. If a solution is complex, break it down into smaller, more manageable methods or classes. And more importantly, add comments in Spanish to explain the logic and purpose of the code, especially for complex sections. This will help other developers understand your code more easily and maintain it in the future. 
 - Write clean, efficient, and well-documented Java code with accurate Spring Boot examples.
 - Use Spring Boot best practices and conventions throughout your code.
 - Implement RESTful API design patterns when creating web services.

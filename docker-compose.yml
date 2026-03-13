@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   mysql:
-    image: mariadb:11
+    image: mysql:8
     container_name: marcha-mysql
     restart: always
     env_file:
@@ -11,21 +11,54 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - marcha-network
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      # Montar volumen de Maven durante el build para cachear dependencias
+      # IMPORTANTE: Esto evita descargar dependencias en cada build
+      cache_from:
+        - marcha-backend:latest
     container_name: marcha-backend
-    depends_on:
-      - mysql
     env_file:
       - .env
-    ports:
-      - "8080:8080"
+    # Puerto 8080 ya no se expone directamente, nginx hace de proxy
+    expose:
+      - "8080"
     volumes:
       - ./uploads:/uploads
+      # Volumen para caché de Maven (solo durante build)
+      - maven_cache:/root/.m2
     restart: always
+    depends_on:
+      - mysql
+    networks:
+      - marcha-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: marcha-nginx
+    restart: always
+    ports:
+      - "80:80"        # HTTP
+      # - "443:443"    # HTTPS (descomentar cuando tengas SSL)
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./uploads:/uploads:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - marcha-network
+
+networks:
+  marcha-network:
+    driver: bridge
 
 volumes:
   mysql_data:
+  nginx_logs:
+  maven_cache:  # Caché persistente de dependencias Maven (~/.m2)

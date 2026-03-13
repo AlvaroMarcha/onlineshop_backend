@@ -1,0 +1,54 @@
+# Docker Compose para desarrollo LOCAL con Nginx
+# Uso: docker compose -f docker-compose.local.yml up -d
+# 
+# Configuración:
+# - MySQL en Docker (puerto 3306)
+# - Nginx en Docker (puerto 80)
+# - Spring Boot en HOST (mvn spring-boot:run) puerto 8080
+#
+# Nginx hace reverse proxy a host.docker.internal:8080
+
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: marcha-mysql-local
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_local_data:/var/lib/mysql
+    networks:
+      - marcha-local-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+  nginx:
+    image: nginx:alpine
+    container_name: marcha-nginx-local
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      # Usar configuración local que apunta a host.docker.internal
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf:ro
+      - ./uploads:/uploads:ro
+      - nginx_local_logs:/var/log/nginx
+    networks:
+      - marcha-local-network
+    # Añadir extra_hosts para que funcione en Windows/Mac
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  marcha-local-network:
+    driver: bridge
+
+volumes:
+  mysql_local_data:
+  nginx_local_logs:
