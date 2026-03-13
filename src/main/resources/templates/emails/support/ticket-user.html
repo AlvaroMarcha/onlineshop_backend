@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: "Arial", sans-serif;
+            background-color: #f3f3f3;
+            margin: 0;
+            padding: 0;
+            color: #333333;
+        }
+        .email-wrapper {
+            width: 100%;
+            padding: 20px 0;
+            background-color: #f3f3f3;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .header {
+            background-color: #232f3e;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px 25px;
+        }
+        .content h2 {
+            color: #232f3e;
+            margin-top: 0;
+        }
+        .content p {
+            line-height: 1.6;
+            font-size: 15px;
+        }
+        .ticket-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .ticket-info p {
+            margin: 5px 0;
+        }
+        .ticket-info strong {
+            color: #232f3e;
+        }
+        .message-box {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .btn-view-ticket {
+            display: inline-block;
+            background-color: #f90;
+            color: #111 !important;
+            font-weight: bold;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #777777;
+            text-align: center;
+            padding: 15px 20px;
+            background-color: #f3f3f3;
+        }
+        .footer a {
+            color: #232f3e;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="email-container">
+            <div class="header">
+                <img th:if="${hasLogo}" src="cid:logoImage" alt="Tu Empresa" />
+                <h1>Ticket de soporte creado</h1>
+            </div>
+            <div class="content">
+                <p>Hola <span th:text="${userName}">Usuario</span>,</p>
+                <p>Hemos recibido tu solicitud de soporte. Aquí tienes los detalles de tu ticket:</p>
+
+                <div class="ticket-info">
+                    <p><strong>Número de ticket:</strong> <span th:text="${ticketNumber}">#12345</span></p>
+                    <p><strong>Asunto:</strong> <span th:text="${ticketSubject}">Problema con el pedido</span></p>
+                    <p><strong>Categoría:</strong> <span th:text="${ticketCategory}">Pedidos</span></p>
+                    <p><strong>Prioridad:</strong> <span th:text="${ticketPriority}">Media</span></p>
+                    <p><strong>Fecha de creación:</strong> <span th:text="${createdDate}">13/03/2026 14:30</span></p>
+                </div>
+
+                <p><strong>Tu mensaje:</strong></p>
+                <div class="message-box">
+                    <p th:text="${userMessage}">
+                        Este es el mensaje inicial del usuario describiendo su problema o consulta.
+                    </p>
+                </div>
+
+                <p>Nuestro equipo de soporte revisará tu solicitud y te responderá lo antes posible.</p>
+                <p>Tiempo estimado de respuesta: <strong th:text="${estimatedResponseTime}">24-48 horas</strong></p>
+
+                <a th:href="${ticketLink}" class="btn-view-ticket">Ver ticket</a>
+
+                <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                    Recibirás una notificación por email cada vez que haya una actualización en tu ticket.
+                </p>
+            </div>
+        </div>
+        <div class="footer">
+            <p>© 2026 Tu Empresa. Todos los derechos reservados.</p>
+            <p>
+                <a href="#">Términos</a> | 
+                <a href="#">Privacidad</a> | 
+                <a href="#">Ayuda</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
