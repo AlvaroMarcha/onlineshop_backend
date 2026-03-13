@@ -1,3 +1,20 @@
+# [1.1.0](https://github.com/AlvaroMarcha/onlineshop_backend/compare/v1.0.0...v1.1.0) (2026-03-13)
+
+
+### Bug Fixes
+
+* **ci:** corregir workflow de release para auto-merge y permitir ejecución manual ([d21f4c7](https://github.com/AlvaroMarcha/onlineshop_backend/commit/d21f4c704b165810aafbceab89bba5da3b445ab2))
+
+
+### Features
+
+* **dashboard:** agregar DashboardController y configurar seguridad ([#216](https://github.com/AlvaroMarcha/onlineshop_backend/issues/216)) ([17fb873](https://github.com/AlvaroMarcha/onlineshop_backend/commit/17fb873d5f5769c9ba6aea8fb8386642707f785f)), closes [#114](https://github.com/AlvaroMarcha/onlineshop_backend/issues/114)
+* **dashboard:** agregar estructura base del módulo ([#214](https://github.com/AlvaroMarcha/onlineshop_backend/issues/214)) ([bbf68aa](https://github.com/AlvaroMarcha/onlineshop_backend/commit/bbf68aa4d6878e74a3f230cc5685f3f49088d508)), closes [#114](https://github.com/AlvaroMarcha/onlineshop_backend/issues/114)
+* **dashboard:** implementar DashboardService con lógica de métricas ([#215](https://github.com/AlvaroMarcha/onlineshop_backend/issues/215)) ([a6a3014](https://github.com/AlvaroMarcha/onlineshop_backend/commit/a6a301479b49517f2b995a73fce8b7f432a39d34)), closes [#114](https://github.com/AlvaroMarcha/onlineshop_backend/issues/114)
+* **notification:** agregar 13 métodos async de envío de emails ([#212](https://github.com/AlvaroMarcha/onlineshop_backend/issues/212)) ([8871956](https://github.com/AlvaroMarcha/onlineshop_backend/commit/887195629b868131506797f08da6560420ed901c)), closes [#116](https://github.com/AlvaroMarcha/onlineshop_backend/issues/116)
+* **notification:** agregar 5 plantillas HTML de email nuevas ([#211](https://github.com/AlvaroMarcha/onlineshop_backend/issues/211)) ([50275d0](https://github.com/AlvaroMarcha/onlineshop_backend/commit/50275d05ea962be3ce9d6e684eecaeddc5347b37)), closes [#116](https://github.com/AlvaroMarcha/onlineshop_backend/issues/116)
+* **notification:** integrar envío automático de emails ([#213](https://github.com/AlvaroMarcha/onlineshop_backend/issues/213)) ([73a5995](https://github.com/AlvaroMarcha/onlineshop_backend/commit/73a5995d7b4040f4af85e6726e46127cbcce2e24)), closes [#116](https://github.com/AlvaroMarcha/onlineshop_backend/issues/116)
+
 # 1.0.0 (2026-03-13)
 
 
