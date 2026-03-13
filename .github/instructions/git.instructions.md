@@ -45,7 +45,7 @@ Pull Requests (Automated)
   - El PR template se autocompleta con checklist
   - Requisitos para auto-merge:
     * ✅ Todos los tests pasan (CI check)
-    * ✅ Al menos 1 aprobación de reviewer
+    * ✅ Al menos 1 aprobación manual del propietario del repositorio
     * ✅ Título sigue Conventional Commits
     * ✅ PR no es draft
     * ✅ PR tiene menos de 1000 líneas (límite estricto)
@@ -53,7 +53,12 @@ Pull Requests (Automated)
   - Auto-labels aplicados según archivos modificados
   - Descripción clara en español de los cambios
   - Incluir screenshots/GIFs si afecta UI
-  - El sistema mergea automáticamente cuando se cumplen los requisitos
+  - **IMPORTANTE PARA AGENTES IA**: 
+    * ✋ **NUNCA mergear PRs sin aprobación manual explícita del usuario**
+    * Solo crear las PRs y reportar su estado
+    * Esperar a que el usuario revise y apruebe manualmente cada PR
+    * Solo mergear si el usuario lo solicita explícitamente
+  - El sistema mergea automáticamente cuando se cumplen los requisitos (después de aprobación)
   - **NUNCA** crear PR directo a main (solo develop → main automático)
 
 Best Practices
