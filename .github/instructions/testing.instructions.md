@@ -185,3 +185,34 @@ mvn test                    # todos los tests
 mvn test -pl . -Dtest=PaymentServiceTest   # test específico
 mvn verify                  # tests + build completo
 ```
+
+## 🔴 ANTES DE CREAR PULL REQUEST
+
+**REGLA ABSOLUTA**: SIEMPRE ejecutar `mvn clean test` localmente antes de hacer push o crear PR.
+
+- ✅ **Todos los tests deben pasar al 100%** - no hay excepciones
+- ✅ Si un solo test falla, **NO crear PR**. Arreglarlo primero
+- ✅ Los tests deben pasar **en tu branch de forma aislada**, sin depender de merges de otras PRs
+- ❌ **NUNCA** crear PR con tests rotos esperando "arreglarlo después"
+- ❌ **NUNCA** crear PRs interdependientes que necesiten mergearse entre sí para que pasen los tests
+
+**¿Por qué es crítico?**
+- Evita ciclos de dependencias complejos entre PRs
+- Mantiene develop siempre verde (sin tests rotos)
+- Facilita rollbacks limpios
+- Agiliza las revisiones de código
+- Previene bloqueos en el pipeline de CI/CD
+
+**Flujo correcto**:
+1. Haces tus cambios en tu branch
+2. Ejecutas `mvn clean test` localmente → ✅ todos pasan
+3. Haces commit y push
+4. Creas PR → ✅ CI también pasa
+5. PR revisado y aprobado → merge
+
+**Flujo incorrecto (NUNCA hacer esto)**:
+1. Haces cambios en branch A que rompen tests
+2. Haces cambios en branch B que arreglan tests de A
+3. Creas PR-A y PR-B → ❌ ambos fallan por separado
+4. Necesitas mergear PR-A y PR-B al mismo tiempo → ❌ lío
+5. Tests rotos en develop → ❌ pipeline bloqueado

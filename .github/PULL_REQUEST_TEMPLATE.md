@@ -24,7 +24,7 @@ Antes de solicitar revisión, verifica lo siguiente:
 - [ ] El título del PR sigue [Conventional Commits](https://www.conventionalcommits.org/): `tipo(scope opcional): descripción`
 - [ ] He actualizado la documentación si es necesario
 - [ ] He añadido tests para cubrir los cambios (si aplica)
-- [ ] El PR tiene menos de 500 líneas de código (o está justificado)
+- [ ] El PR tiene menos de 1000 líneas de código (o está justificado)
 - [ ] He revisado mi propio código antes de solicitar revisión
 
 ## Contexto adicional

@@ -46,6 +46,7 @@ Testing
 - Use MockMvc for testing web layers.
 - Implement integration tests using @SpringBootTest.
 - Use @DataJpaTest for repository layer tests.
+- **ALWAYS run `mvn clean test` locally before creating a PR** - all tests must pass 100%.
 
 Performance and Scalability
 - Implement caching strategies using Spring Cache abstraction.

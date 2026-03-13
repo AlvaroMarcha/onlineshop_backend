@@ -67,7 +67,7 @@ Cada módulo tiene **4 capas fijas**: `domain/` → `application/` → `infrastr
 
 | Skill | Archivo | Cuándo usarla |
 |---|---|---|
-| Crear módulo nuevo | `new-module.instructions.md` | Al crear un módulo o sección de `core` desde cero |
+| Crear módulo nuevo | `new-module.instructions.md` | Al crear un módulo o sección de `core` desde cero (**3 fases**: modelo → lógica → presentación) |
 | Catálogo | `catalog.instructions.md` | Productos, categorías, variantes, reseñas |
 | Pedidos y pagos | `orders-payments.instructions.md` | Order/Payment lifecycle, cupones |
 | Stripe | `stripe.instructions.md` | PaymentIntent, webhooks, firma Stripe |
@@ -75,18 +75,33 @@ Cada módulo tiene **4 capas fijas**: `domain/` → `application/` → `infrastr
 | Tests | `testing.instructions.md` | JUnit 5, Mockito, MockMvc, @DataJpaTest |
 | Git y CI/CD | `git.instructions.md` | Flujo de ramas, conventional commits, workflows |
 
+### 📋 Flujo para crear módulo nuevo (3 fases):
+1. **FASE 1 - Modelo**: Entidades + DTOs + Mappers (+ tests)
+2. **FASE 2 - Lógica**: Exceptions + Repository + Service (+ tests)
+3. **FASE 3 - Presentación**: Utils + Controllers + Config (+ tests)
+
+**Cada fase en PR separada** (< 900 líneas ideal). Tests OBLIGATORIOS en cada fase o PR final dedicada.
+
 ---
 
 ## Git y CI/CD
+
+### 🔴 REGLAS CRÍTICAS ANTES DE CREAR PR
+1. **Tests primero**: SIEMPRE ejecutar `mvn clean test` localmente - deben pasar al 100%
+2. **PRs pequeños**: < 900 líneas (ideal), máximo 1000 líneas. Si es mayor, dividir en PRs más pequeños
+3. **PRs autocontenidos**: Cada PR debe funcionar independientemente y pasar tests por sí solo
+4. **❌ NUNCA crear PRs interdependientes** que necesiten mergearse entre sí para pasar tests
+5. **❌ NUNCA hacer push con tests rotos** esperando "arreglarlo después"
 
 ### Flujo de trabajo (Automatizado)
 - **develop**: rama principal de trabajo
 - **main**: rama de producción con releases automáticas
 - **Flujo en cascada**:
   1. Crear branch: `feature/`, `bugfix/`, `refactor/`, `hotfix/` + descripción-corta
-  2. PR a develop → requiere 1 aprobación manual del propietario + tests pasando
-  3. develop → main automático cuando hay cambios aprobados
-  4. main → release + deploy automático
+  2. **ANTES del PR**: `mvn clean test` debe pasar al 100%
+  3. PR a develop → requiere 1 aprobación manual del propietario + tests pasando
+  4. develop → main automático cuando hay cambios aprobados
+  5. main → release + deploy automático
 
 ### Conventional Commits (Obligatorio)
 - **Formato**: `tipo(scope): descripción`
@@ -107,12 +122,20 @@ Cada módulo tiene **4 capas fijas**: `domain/` → `application/` → `infrastr
 - **Branch cleanup**: branches mergeadas se borran automáticamente
 
 ### Límites PR
-- **Warning**: > 500 líneas → label `size/large`
+- **Warning**: > 900 líneas → label `size/large`
 - **Bloqueado**: > 1000 líneas → merge rechazado
 
 ### Reglas para Agentes IA
-- ✅ Crear PRs y reportar su estado
-- ✅ Dividir PRs grandes (> 1000 líneas) automáticamente
+- ✅ **ANTES de cualquier push**: Ejecutar `mvn clean test` - debe pasar al 100%
+- ✅ Crear PRs pequeños (< 900 líneas ideal, < 1000 máximo)
+- ✅ Cada PR debe ser autocontenido y pasar tests independientemente
+- ✅ Dividir PRs grandes (> 900 líneas) automáticamente en PRs más pequeños y secuenciales
+- ✅ **Al crear módulo nuevo**: seguir flujo de 3 fases (modelo → lógica → presentación), una PR por fase
+- ✅ **Tests OBLIGATORIOS**: incluir tests en cada PR o crear PR final dedicada a tests
 - ✅ Ejecutar tests locales antes de push
+- ✅ Reportar estado de las PRs creadas
+- ❌ **NUNCA crear PRs interdependientes** que requieran mergearse entre sí para pasar tests
+- ❌ **NUNCA hacer push con tests rotos**
+- ❌ **NUNCA crear módulo o feature sin tests** - los tests no son opcionales
 - ❌ **NUNCA mergear PRs sin aprobación manual explícita del usuario**
 - ❌ **NUNCA usar `gh pr merge` sin que el usuario lo solicite**
