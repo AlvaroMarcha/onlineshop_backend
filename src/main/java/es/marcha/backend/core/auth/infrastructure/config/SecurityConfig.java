@@ -237,6 +237,10 @@ public class SecurityConfig {
                                                 .requestMatchers("/coupons/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN")
 
+                                                // === Dashboard: métricas y estadísticas solo SUPER_ADMIN y ADMIN ===
+                                                .requestMatchers("/dashboard/**")
+                                                .hasAnyRole("SUPER_ADMIN", "ADMIN")
+
                                                 // === Inventario: lectura y gestión solo ADMIN ===
                                                 // GET /inventory/** — consultar inventario y movimientos
                                                 .requestMatchers(HttpMethod.GET, "/inventory/**")
