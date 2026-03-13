@@ -237,7 +237,20 @@ public class SecurityConfig {
                                                 .requestMatchers("/coupons/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN")
 
-                                                // === Dashboard: métricas y estadísticas solo SUPER_ADMIN y ADMIN ===
+                                                // === Dashboard: métricas por rol (Issue #115) ===
+                                                // Dashboard de pedidos — rol ORDERS
+                                                .requestMatchers("/dashboard/orders/**")
+                                                .hasRole("ORDERS")
+                                                // Dashboard de catálogo — rol STORE
+                                                .requestMatchers("/dashboard/store/**")
+                                                .hasRole("STORE")
+                                                // Dashboard de clientes — rol CUSTOMERS_INVOICES
+                                                .requestMatchers("/dashboard/customers/**")
+                                                .hasRole("CUSTOMERS_INVOICES")
+                                                // Dashboard de soporte — rol SUPPORT
+                                                .requestMatchers("/dashboard/support/**")
+                                                .hasRole("SUPPORT")
+                                                // Dashboard general — SUPER_ADMIN y ADMIN
                                                 .requestMatchers("/dashboard/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN")
 
