@@ -56,6 +56,8 @@ public class User {
     private boolean isVerified;
     @Column(name = "is_banned")
     private boolean isBanned;
+    @Column(name = "locked")
+    private boolean locked;
     @Column(name = "is_deleted")
     private boolean isDeleted;
     @Column(name = "profile_image_url")

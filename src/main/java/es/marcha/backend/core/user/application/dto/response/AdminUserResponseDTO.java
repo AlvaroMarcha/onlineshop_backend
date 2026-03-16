@@ -36,6 +36,7 @@ public class AdminUserResponseDTO {
     private boolean isActive;
     private boolean isVerified;
     private boolean isBanned;
+    private boolean locked;
     private boolean isDeleted;
     private long sessionCount;
 }

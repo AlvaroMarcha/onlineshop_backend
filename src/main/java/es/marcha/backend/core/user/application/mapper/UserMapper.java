@@ -48,6 +48,7 @@ public class UserMapper {
                 .isActive(user.isActive())
                 .isVerified(user.isVerified())
                 .isBanned(user.isBanned())
+                .locked(user.isLocked())
                 .isDeleted(user.isDeleted())
                 .sessionCount(user.getSessionCount())
                 .build();
