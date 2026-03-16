@@ -139,6 +139,7 @@ public class AuthService {
                 .role(role)
                 .isActive(true)
                 .isVerified(false).isBanned(false)
+                .locked(false)
                 .isDeleted(false)
                 .lastLogin(null)
                 .createdAt(LocalDateTime.now())
