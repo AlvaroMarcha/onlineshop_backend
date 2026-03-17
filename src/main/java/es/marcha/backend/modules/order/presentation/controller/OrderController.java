@@ -68,6 +68,19 @@ public class OrderController {
     }
 
     /**
+     * Obtiene el detalle completo de una orden por su ID para el panel de
+     * administración.
+     *
+     * @param id El ID de la orden.
+     * @return ResponseEntity con el {@link OrderResponseDTO} y estado HTTP 200 OK.
+     */
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<OrderResponseDTO> getOrderByIdForAdmin(@PathVariable long id) {
+        OrderResponseDTO order = oService.getOrderByIdForAdmin(id);
+        return new ResponseEntity<>(order, HttpStatus.OK);
+    }
+
+    /**
      * Crea una nueva orden para un usuario.
      * Calcula el totalAmount en el backend a partir de los precios reales de cada
      * producto.

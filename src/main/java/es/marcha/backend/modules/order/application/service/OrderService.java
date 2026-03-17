@@ -145,6 +145,25 @@ public class OrderService {
     }
 
     /**
+     * Obtiene el detalle completo de una orden por su ID para el panel de
+     * administración.
+     *
+     * @param id El ID de la orden.
+     * @return {@link OrderResponseDTO} con la orden completa incluyendo dirección.
+     */
+    public OrderResponseDTO getOrderByIdForAdmin(long id) {
+        Order order = getOrderByIdHandler(id);
+        OrderResponseDTO dto = OrderMapper.toOrderDTO(order);
+        try {
+            OrderAddrResponseDTO addressSnapshot = oAddrService.getOrderAddressByOrderId(id);
+            dto.setAddress(addressSnapshot);
+        } catch (Exception e) {
+            log.warn("No se pudo cargar la dirección para la orden {}: {}", id, e.getMessage());
+        }
+        return dto;
+    }
+
+    /**
      * Crea una nueva orden calculando el totalAmount desde los precios reales de la
      * BD.
      * El precio unitario se snapshot-ea en cada OrderItem en el momento de la
