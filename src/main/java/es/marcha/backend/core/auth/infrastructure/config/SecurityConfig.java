@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -61,6 +62,30 @@ public class SecurityConfig {
         public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
                         throws Exception {
                 return config.getAuthenticationManager();
+        }
+
+        /**
+         * Deshabilita el registro automático de JwtFilter como servlet filter.
+         * Solo debe ejecutarse dentro de la cadena de Spring Security
+         * (prodFilterChain).
+         */
+        @Bean
+        public FilterRegistrationBean<JwtFilter> jwtFilterRegistration(JwtFilter filter) {
+                FilterRegistrationBean<JwtFilter> registration = new FilterRegistrationBean<>(filter);
+                registration.setEnabled(false);
+                return registration;
+        }
+
+        /**
+         * Deshabilita el registro automático de VerifiedUserFilter como servlet filter.
+         * Solo debe ejecutarse dentro de la cadena de Spring Security
+         * (prodFilterChain).
+         */
+        @Bean
+        public FilterRegistrationBean<VerifiedUserFilter> verifiedUserFilterRegistration(VerifiedUserFilter filter) {
+                FilterRegistrationBean<VerifiedUserFilter> registration = new FilterRegistrationBean<>(filter);
+                registration.setEnabled(false);
+                return registration;
         }
 
         @Bean
@@ -190,10 +215,13 @@ public class SecurityConfig {
                                                                 "/products/**", "/categories/**", "/subcategories/**")
                                                 .hasAnyRole("SUPER_ADMIN", "ADMIN", "STORE")
 
-                                                // === Lectura tienda y reseñas: cualquier usuario autenticado ===
+                                                // === Lectura tienda (catálogo público) ===
                                                 .requestMatchers(HttpMethod.GET,
                                                                 "/products/**", "/categories/**", "/subcategories/**")
-                                                .authenticated()
+                                                .permitAll()
+
+                                                // === Reseñas: lectura pública, escritura autenticada ===
+                                                .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll()
                                                 .requestMatchers("/reviews/**").authenticated()
 
                                                 // === Pedidos ===

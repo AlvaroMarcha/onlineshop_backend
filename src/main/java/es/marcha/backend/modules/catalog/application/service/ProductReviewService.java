@@ -100,7 +100,17 @@ public class ProductReviewService {
 
         review.setUser(user);
 
-        return ProductReviewMapper.toProductReviewDTO(pReviewRepository.save(review));
+        // Obtener el producto y actualizar su rating agregado
+        Product product = prodRepository.findById(review.getProduct().getId())
+                .orElseThrow(() -> new ProductException(ProductException.DEFAULT));
+        review.setProduct(product);
+
+        ProductReview savedReview = pReviewRepository.save(review);
+
+        ProductUtils.updateRating(product, review.getRating());
+        prodRepository.save(product);
+
+        return ProductReviewMapper.toProductReviewDTO(savedReview);
     }
 
     /**
@@ -147,11 +157,14 @@ public class ProductReviewService {
         if (ratingChanged) {
             Product product = updatedReview.getProduct();
 
-            // Ajustar el rating del producto: restar el antiguo y sumar el nuevo
-            double currentTotalRating = product.getRating() != null ? product.getRating() : 0.0;
-            double newTotalRating = currentTotalRating - oldRating + review.getRating();
+            double currentAvg = product.getRating() != null ? product.getRating() : 0.0;
+            double count = product.getRatingCount() != null ? product.getRatingCount() : 1.0;
 
-            product.setRating(newTotalRating);
+            // Fórmula correcta: el nº de reseñas no cambia (es una edición, no creación)
+            // newAvg = (currentAvg * count - oldRating + newRating) / count
+            double newAvg = (currentAvg * count - oldRating + review.getRating()) / count;
+
+            product.setRating(newAvg);
             prodRepository.save(product);
         }
 
@@ -175,6 +188,21 @@ public class ProductReviewService {
         deletedReview.setDeleted(true);
         deletedReview.setUpdatedAt(LocalDateTime.now());
         saveReview(deletedReview);
+
+        // Restar esta reseña del rating agregado del producto
+        Product product = deletedReview.getProduct();
+        double currentAvg = product.getRating() != null ? product.getRating() : 0.0;
+        double count = product.getRatingCount() != null ? product.getRatingCount() : 0.0;
+
+        if (count > 1) {
+            double newAvg = (currentAvg * count - deletedReview.getRating()) / (count - 1);
+            product.setRating(newAvg);
+            product.setRatingCount(count - 1);
+        } else {
+            product.setRating(0.0);
+            product.setRatingCount(0.0);
+        }
+        prodRepository.save(product);
 
         return REVIEW_DELETED;
     }
