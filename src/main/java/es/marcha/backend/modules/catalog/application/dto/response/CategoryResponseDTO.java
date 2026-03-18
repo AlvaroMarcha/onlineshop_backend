@@ -19,5 +19,6 @@ public class CategoryResponseDTO {
     private String name;
     private String description;
     private String slug;
+    private boolean active;
     private List<Subcategory> subcategories;
 }

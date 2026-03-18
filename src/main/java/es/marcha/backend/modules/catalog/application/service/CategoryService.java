@@ -11,6 +11,7 @@ import es.marcha.backend.core.error.exception.ProductException;
 import es.marcha.backend.modules.catalog.application.mapper.CategoryMapper;
 import es.marcha.backend.modules.catalog.domain.model.Category;
 import es.marcha.backend.modules.catalog.infrastructure.persistence.CategoryRepository;
+import es.marcha.backend.modules.catalog.infrastructure.persistence.SubcategoryRepository;
 import es.marcha.backend.core.shared.utils.ProductUtils;
 import jakarta.transaction.Transactional;
 
@@ -19,8 +20,22 @@ public class CategoryService {
     // Attribs
     @Autowired
     private CategoryRepository catRepository;
+    @Autowired
+    private SubcategoryRepository subcatRepository;
 
     public static final String CATEGORY_DELETED = "CATEGORY WAS DELETED";
+
+    /**
+     * Obtiene todas las categorías (activas e inactivas) para el uso del
+     * backoffice.
+     *
+     * @return Lista de {@link CategoryResponseDTO} con todas las categorías.
+     */
+    public List<CategoryResponseDTO> getAllCategoriesAdmin() {
+        return catRepository.findAll().stream()
+                .map(CategoryMapper::toCategoryDTO)
+                .toList();
+    }
 
     /**
      * Obtiene una categoría activa por su ID.
@@ -113,6 +128,31 @@ public class CategoryService {
             throw new ProductException(ProductException.FAILED_FETCH_CATEGORY);
         }
         return categories;
+    }
+
+    /**
+     * Alterna el estado activo/inactivo de una categoría (soft toggle).
+     * Al desactivar, desactiva también todas sus subcategorías.
+     * Al activar, reactiva también todas sus subcategorías.
+     *
+     * @param id El ID de la categoría.
+     * @return {@link CategoryResponseDTO} con el estado actualizado.
+     * @throws ProductException si la categoría no existe.
+     */
+    @Transactional
+    public CategoryResponseDTO toggleCategoryActive(long id) {
+        Category category = catRepository.findById(id)
+                .orElseThrow(() -> new ProductException(ProductException.FAILED_FETCH_CATEGORY));
+        boolean newActive = !category.isActive();
+        LocalDateTime now = LocalDateTime.now();
+        category.setActive(newActive);
+        category.setUpdatedAt(now);
+        catRepository.saveAndFlush(category); // flush explícito antes de que em.clear() limpie el contexto
+        subcatRepository.updateActiveByCategoryId(id, newActive, now);
+        // Reload para que la respuesta refleje el estado persistido
+        Category saved = catRepository.findById(id)
+                .orElseThrow(() -> new ProductException(ProductException.FAILED_FETCH_CATEGORY));
+        return CategoryMapper.toCategoryDTO(saved);
     }
 
     /**

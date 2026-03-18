@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -67,6 +68,42 @@ public class CategoryController {
     public ResponseEntity<CategoryResponseDTO> saveCategory(@RequestBody Category category) {
         CategoryResponseDTO savedCategory = catService.saveCategory(category);
         return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+    }
+
+    /**
+     * Obtiene todas las categorías (activas e inactivas) para el backoffice.
+     *
+     * @return {@link ResponseEntity} con la lista completa de
+     *         {@link CategoryResponseDTO}.
+     */
+    @GetMapping("/admin")
+    public ResponseEntity<List<CategoryResponseDTO>> getAllCategoriesAdmin() {
+        List<CategoryResponseDTO> categories = catService.getAllCategoriesAdmin();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
+    }
+
+    /**
+     * Alterna el estado activo/inactivo de una categoría.
+     *
+     * @param id El ID de la categoría.
+     * @return {@link ResponseEntity} con el {@link CategoryResponseDTO}
+     *         actualizado.
+     */
+    @PatchMapping("/{id}/toggle")
+    public ResponseEntity<CategoryResponseDTO> toggleCategory(@PathVariable Long id) {
+        return new ResponseEntity<>(catService.toggleCategoryActive(id), HttpStatus.OK);
+    }
+
+    /**
+     * Alterna el estado activo/inactivo de una subcategoría.
+     *
+     * @param id El ID de la subcategoría.
+     * @return {@link ResponseEntity} con el {@link SubcategoryResponseDTO}
+     *         actualizado.
+     */
+    @PatchMapping("/subcategories/{id}/toggle")
+    public ResponseEntity<SubcategoryResponseDTO> toggleSubcategory(@PathVariable Long id) {
+        return new ResponseEntity<>(subcatService.toggleSubcategoryActive(id), HttpStatus.OK);
     }
 
     /**

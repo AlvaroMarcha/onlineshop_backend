@@ -10,6 +10,7 @@ public class CategoryMapper {
                 .name(category.getName())
                 .description(category.getDescription())
                 .slug(category.getSlug())
+                .active(category.isActive())
                 .subcategories(category.getSubcategories())
                 .build();
     }
