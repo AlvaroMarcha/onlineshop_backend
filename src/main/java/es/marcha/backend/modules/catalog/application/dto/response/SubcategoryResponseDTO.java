@@ -16,5 +16,5 @@ public class SubcategoryResponseDTO {
     private String name;
     private String description;
     private String slug;
-
+    private boolean active;
 }

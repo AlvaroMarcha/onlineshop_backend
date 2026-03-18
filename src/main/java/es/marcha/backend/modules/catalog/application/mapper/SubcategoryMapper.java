@@ -10,6 +10,7 @@ public class SubcategoryMapper {
                 .name(subcategory.getName())
                 .description(subcategory.getDescription())
                 .slug(subcategory.getSlug())
+                .active(subcategory.isActive())
                 .build();
     }
 

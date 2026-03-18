@@ -165,6 +165,22 @@ public class SubcategoryService {
     }
 
     /**
+     * Alterna el estado activo/inactivo de una subcategoría (soft toggle).
+     *
+     * @param id El ID de la subcategoría.
+     * @return {@link SubcategoryResponseDTO} con el estado actualizado.
+     * @throws ProductException si la subcategoría no existe.
+     */
+    @Transactional
+    public SubcategoryResponseDTO toggleSubcategoryActive(long id) {
+        Subcategory subcategory = subcatRepository.findById(id)
+                .orElseThrow(() -> new ProductException(ProductException.FAILED_FETCH_SUBCATEGORY));
+        subcategory.setActive(!subcategory.isActive());
+        subcategory.setUpdatedAt(LocalDateTime.now());
+        return SubcategoryMapper.toResponseDTO(subcatRepository.save(subcategory));
+    }
+
+    /**
      * Elimina una subcategoría de la base de datos a partir de su ID.
      *
      * Este método busca la subcategoría por el ID proporcionado. Si no se
